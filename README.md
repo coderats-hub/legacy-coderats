@@ -1,6 +1,6 @@
 # CodeRats
 
-CodeRats é um aplicativo que transforma a rotina de codificação de estudates da área de tecnologia em um jogo amistoso. A ideia consiste em registrar progresso, somar pontos e comparar resultados em rankings para criar uma competição saudável que estimula consistência. Em vez de estudar sozinho, a pessoa entra em desafios compartilhados, vê sua evolução ao lado dos colegas e sente aquele empurrão extra para manter o ritmo.
+CodeRats é um aplicativo que transforma a rotina de codificação de estudantes da área de tecnologia em um jogo amistoso. A ideia consiste em registrar progresso, somar pontos e comparar resultados em rankings para criar uma competição saudável que estimula consistência. Em vez de estudar sozinho, a pessoa entra em desafios compartilhados, vê sua evolução ao lado dos colegas e sente aquele empurrão extra para manter o ritmo.
 
 O objetivo é proporcionar motivação para os estudos por comunidade e metas claras: grupos com objetivos definidos, check-ins rápidos para marcar presença e um placar que destaca quem está mandando bem na semana. Essa dinâmica de “pequenas vitórias + reconhecimento” torna o estudo mais leve, divertido e contínuo, ajudando cada aluno a transformar disciplina em hábito e hábito em resultados.
 
