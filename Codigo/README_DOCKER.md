@@ -74,7 +74,9 @@ Do **diretório raiz do projeto** (study-coderats/), execute todos os serviços:
 cd ../..
 
 # Inicie todos os serviços (backend, mobile, database)
-docker-compose up --build
+docker-compose up --build 
+# ou
+docker compose up --build 
 ```
 
 **✅ Isso é normal!** Os containers estão rodando e mostrando logs. 
