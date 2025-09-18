@@ -1,0 +1,39 @@
+# Flutter/Dart
+apps/mobile/.dart_tool/
+apps/mobile/.packages
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.pub-cache/
+apps/mobile/build/
+apps/mobile/ios/Flutter/Flutter.framework
+apps/mobile/ios/Flutter/Flutter.podspec
+apps/mobile/**/ios/Pods/
+apps/mobile/**/ios/Runner.xcworkspace/
+apps/mobile/**/ios/Runner/GeneratedPluginRegistrant.*
+apps/mobile/**/android/.gradle/
+apps/mobile/**/android/app/build/
+apps/mobile/**/android/build/
+apps/mobile/*.iml
+apps/mobile/*.apk
+apps/mobile/*.aab
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+/dist/
+/.env
+
+# Docker
+**/docker/*.env
+**/docker/*.log
+**/docker/tmp/
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Logs
+*.log
