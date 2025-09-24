@@ -1,0 +1,393 @@
+openapi: 3.0.3
+info:
+  title: GymRats Competition API
+  version: 1.0.0
+  description: API for managing users and competitions. Includes authentication via JWT.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+paths:
+  /users:
+    post:
+      summary: Register a new user
+      description: Create a new user account. Institution is optional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateDTO'
+            example:
+              email: user@example.com
+              password: StrongPass123
+              full_name: Mariana Almeida
+              institution: PUC Minas
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+              example:
+                id: 1
+                email: user@example.com
+                full_name: Mariana Almeida
+                institution: PUC Minas
+        '400':
+          description: Bad request - invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '409':
+          description: Conflict - email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+
+  /users/{id}:
+    get:  
+      summary: Get user profile
+      description: >
+        Retrieve a user's profile. If `id` is 'me', returns full profile of the authenticated user.
+        Otherwise, returns public information only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID or 'me' for the authenticated user
+      responses:
+        '200':
+          description: Successful retrieval of user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+
+    patch:
+      summary: Update authenticated user profile
+      description: Update the authenticated user's profile. Only `full_name`, `institution`, and `photo_url` can be updated.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Must be 'me' for updating own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateDTO'
+            example:
+              full_name: Mariana Almeida Mendonça
+              institution: PUC Minas
+              photo_url: https://example.com/newphoto.jpg
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '400':
+          description: Bad request - invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '403':
+          description: Forbidden - cannot update another user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and return a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginDTO'
+            example:
+              email: user@example.com
+              password: StrongPass123
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '400':
+          description: Bad request - invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+        '401':
+          description: Unauthorized - invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+
+  /groups:
+    post:
+      summary: Create a new group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreateDTO'
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDTO'
+        '400':
+          description: Bad request - invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+
+  /groups/{id}:
+    get:
+      summary: Get group by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: include
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Comma-separated values: members, publications
+      responses:
+        '200':
+          description: Group retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDTO'
+              examples:
+                basic:
+                  summary: Basic view
+                  value:
+                    id: 1
+                    name: DevFest Team
+                    photo_url: https://example.com/photo.jpg
+                full:
+                  summary: Full view
+                  value:
+                    id: 1
+                    name: DevFest Team
+                    description: Group for DevFest project
+                    photo_url: https://example.com/photo.jpg
+                    link_repository: https://github.com/devfest
+                    start_date: 2025-10-01
+                    end_date: 2025-12-31
+                    admin:
+                      id: 1
+                      full_name: Mariana Almeida
+                      photo_url: https://example.com/photo.jpg
+                    members:
+                      - id: 2
+                        full_name: João Silva
+                        photo_url: https://example.com/photo2.jpg
+                    publications:
+                      - id: 1
+                        title: First post
+                        description: Initial project post
+
+
+components:
+  schemas:
+    UserCreateDTO:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+        institution:
+          type: string
+
+    UserLoginDTO:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        institution:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+      description: >
+        Represents user data. Fields like email are only present when retrieving own profile.
+
+    UserUpdateDTO:
+      type: object
+      properties:
+        full_name:
+          type: string
+        institution:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+
+    LoginResponseDTO:
+      type: object
+      properties:
+        token:
+          type: string
+        expires_in:
+          type: integer
+          description: Token expiration in seconds
+        user:
+          $ref: '#/components/schemas/UserDTO'
+
+    ErrorDTO:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    # DTO usado para criação de grupos
+    GroupCreateDTO:
+      type: object
+      required:
+        - name
+        - start_date
+        - end_date
+        - admin_id
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        link_repository:
+          type: string
+          format: uri
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        admin_id:
+          type: integer
+          description: User ID of the group admin
+
+    # DTO de resposta de grupo
+    GroupDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        link_repository:
+          type: string
+          format: uri
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        admin:
+          $ref: '#/components/schemas/UserDTO'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDTO'
+        publications:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              description:
+                type: string
