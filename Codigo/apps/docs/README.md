@@ -1,110 +1,119 @@
-# Code Rats API
+# Documentação da API Code Rats
 
-API da plataforma gamificada **Code Rats**, que permite o gerenciamento de usuários, grupos, checkins e interações sociais.
+Bem-vindo à documentação oficial da API Code Rats. Este documento serve como um guia completo para desenvolvedores que desejam integrar ou construir aplicações utilizando nossa plataforma social e gamificada para estudos de programação.
 
-* **Versão:** 1.0.0
-* **Documentação completa:** [SwaggerHub - Code Rats API](https://app.swaggerhub.com/apis-docs/coderats/code-rats-api/1.0.0)
+A API é projetada seguindo os princípios RESTful e uma abordagem orientada ao domínio (Domain-Driven Design), garantindo uma interface clara, previsível e consistente.
 
----
+## Acesso Rápido
 
-## Autenticação
+  - **Documentação Interativa (SwaggerHub):** [**Acesse a API no SwaggerHub**](https://app.swaggerhub.com/apis-docs/coderats/code-rats-api/1.2.0)
+  - **Coleção do Postman:** Para testes rápidos, importe nossa coleção pública diretamente no Postman.
 
-A API utiliza **JWT (Bearer Token)**.
-Inclua o token no header das requisições autenticadas:
+## Organização da API
 
-```http
-Authorization: Bearer <seu_token_jwt>
-```
+A estrutura da API é organizada em torno de recursos principais que refletem os conceitos centrais do nosso produto. Entender esses recursos é a chave para utilizar a API de forma eficaz.
 
----
+#### 1\. **Usuários (`/users`)**
 
-## Principais Recursos
+Este é o recurso central para tudo relacionado a contas de usuários.
 
-### 🔑 Authentication
+  - **Autenticação (`/auth`):** Endpoints para registrar (`/register`) e autenticar (`/login`) usuários.
+  - **Gerenciamento de Perfil (`/users/me`):** Um alias especial, `/me`, é usado para acessar e modificar os dados do usuário atualmente autenticado. Isso inclui seu perfil, os grupos que participa (`/users/me/groups`) e as badges que conquistou (`/users/me/badges`). Veja mais sobre essa convenção na seção "Convenções da API".
+  - **Perfis Públicos (`/users/{userId}`):** Permite visualizar o perfil público de outros usuários na plataforma.
 
-* **POST /auth/login** – Realizar login e obter token JWT.
-* **POST /users** – Criar nova conta de usuário.
+#### 2\. **Grupos (`/groups`)**
 
-### 👤 Users
+Grupos são as comunidades ou desafios onde a interação acontece.
 
-* **GET /users/me** – Consultar perfil autenticado.
-* **PATCH /users/me** – Atualizar dados do usuário.
-* **DELETE /users/me** – Excluir conta.
-* **GET /users/{id}/profile** – Obter perfil público de outro usuário.
-* **GET /users/{id}/groups** – Listar grupos de um usuário.
+  - Um usuário autenticado pode criar um novo grupo.
+  - É possível visualizar os detalhes de um grupo, incluindo seus membros e o feed de check-ins específico daquele grupo.
 
-### 👥 Groups
+#### 3\. **Check-ins (`/checkins`)**
 
-* **POST /groups** – Criar grupo de desafio.
-* **GET /groups** – Listar grupos.
-* **GET /groups/{id}** – Detalhar grupo específico.
-* **PATCH /groups/{id}** – Atualizar grupo (owner/admin).
-* **DELETE /groups/{id}** – Excluir grupo (owner).
-* **POST /groups/{id}/join** – Entrar em grupo com entry\_code.
-* **POST /groups/{id}/leave** – Sair de grupo.
+O check-in é o coração da plataforma, representando um registro de progresso de estudo feito por um usuário dentro de um grupo.
 
-### 📌 Checkins
+  - A criação de um check-in está sempre vinculada a um grupo (`/groups/{groupId}/checkins`).
+  - O feed principal (`/feed`) agrega os check-ins de todos os grupos que o usuário participa.
 
-* **POST /groups/{id}/checkins** – Criar checkin em grupo.
-* **GET /groups/{id}/checkins** – Listar checkins de grupo.
-* **DELETE /checkins/{id}** – Excluir checkin (autor/admin/owner).
-* **POST /checkins/{id}/like** – Curtir checkin.
-* **DELETE /checkins/{id}/like** – Remover curtida.
-* **POST /checkins/{id}/comments** – Adicionar comentário.
-* **GET /checkins/{id}/comments** – Listar comentários.
+#### 4\. **Interações Sociais (`likes` e `comments`)**
 
----
+As interações sociais são tratadas como sub-recursos de um check-in, garantindo que elas sempre existam dentro de um contexto.
 
-## Modelos Importantes
+  - **Curtidas (`/checkins/{checkinId}/like`):** Permite que um usuário curta ou descurta um check-in.
+  - **Comentários (`/checkins/{checkinId}/comments`):** Permite a criação, visualização e exclusão de comentários em um check-in.
 
-### User
+#### 5\. **Badges (`/badges`)**
 
-```json
-{
-  "id": "uuid",
-  "name": "Maria Silva",
-  "email": "maria@example.com",
-  "institution": "UTFPR",
-  "github_url": "https://github.com/mariasilva"
-}
-```
+Este recurso funciona como um catálogo de todas as conquistas disponíveis na plataforma, detalhando o que é necessário para desbloqueá-las.
 
-### Group
+## Como Usar a API (Fluxo Básico)
 
-```json
-{
-  "id": "uuid",
-  "name": "Grupo Elite",
-  "description": "Desafios semanais de programação",
-  "start_date": "2025-01-01T00:00:00Z",
-  "end_date": "2025-03-01T00:00:00Z",
-  "members_count": 12
-}
-```
+Para começar a usar a API, siga este fluxo de autenticação e uso:
 
-### Checkin
+1.  **Crie uma Conta:** Faça uma requisição `POST` para `/auth/register` com seu nome, e-mail e senha.
 
-```json
-{
-  "id": "uuid",
-  "title": "Resolução do desafio 1",
-  "description": "Implementei em Python",
-  "likes": 5,
-  "created_at": "2025-01-10T15:30:00Z"
-}
-```
+2.  **Faça Login:** Envie seu e-mail e senha para `POST /auth/login`. A resposta incluirá um **token JWT**.
 
----
+3.  **Autentique suas Requisições:** Para todos os endpoints protegidos, você deve incluir o token recebido no cabeçalho `Authorization` da sua requisição, no formato `Bearer`.
 
-## Erros Comuns
+    ```
+    Authorization: Bearer <seu-token-jwt>
+    ```
 
-Todas as respostas de erro seguem o formato:
+4.  **Explore e Interaja:**
 
-```json
-{
-  "statusCode": 400,
-  "message": "Mensagem de erro",
-  "errorCode": "BAD_REQUEST"
-}
-```
+      - Liste os grupos que você participa com `GET /users/me/groups`.
+      - Faça um check-in em um grupo com `POST /groups/{groupId}/checkins`.
+      - Visualize o progresso de outros no seu feed com `GET /feed`.
+      - Curta um check-in interessante com `POST /checkins/{checkinId}/like`.
 
+## Como Testar a Documentação
+
+Nossa especificação OpenAPI (`openapi.yaml`) não é apenas um documento estático; é um contrato interativo que pode ser usado para testar e simular a API.
+
+#### 1\. **Usando Ferramentas de UI (Swagger UI, Postman)**
+
+Você pode usar ferramentas populares para visualizar e interagir com a API de forma amigável.
+
+  - **Swagger UI / Editor:**
+
+    1.  Acesse nossa documentação pública e interativa no [**SwaggerHub**](https://app.swaggerhub.com/apis-docs/coderats/code-rats-api/1.2.0).
+    2.  A interface do SwaggerHub permite que você explore cada endpoint, veja os modelos de dados e **envie requisições de teste diretamente do seu navegador**.
+
+  - **Postman / Insomnia:**
+
+    1.  Importe o arquivo `openapi.yaml` diretamente na sua ferramenta. Uma coleção completa de requisições será criada automaticamente.
+
+    2.  Para testar os endpoints protegidos, configure a autenticação do tipo "Bearer Token" na coleção, inserindo o JWT obtido no login.
+
+    3.  **Alternativamente, clique no botão abaixo para importar nossa coleção pública diretamente no Postman:**
+
+        [](https://galactic-rocket-826652.postman.co/workspace/Caroneiros~0f84ab9e-7b6b-4f64-9ec1-0e2cd83b022b/collection/27475636-8840903c-8c83-4dc5-84a8-9f8f30f5bd75?action=share&creator=27475636)
+
+#### 2\. **Gerando um Servidor Mock**
+
+Os exemplos detalhados em cada endpoint permitem que as equipes de frontend trabalhem em paralelo com o backend, sem precisar esperar a API estar totalmente funcional.
+
+  - Ferramentas como o [Prism](https://stoplight.io/open-source/prism) podem usar o arquivo `openapi.yaml` para iniciar um servidor de mock localmente.
+  - Quando você fizer uma requisição para este servidor mock (ex: `GET /feed`), ele responderá com o dado de exemplo exato que está definido na documentação.
+
+## Convenções da API
+
+  - **A Convenção `/me`:** Para endpoints que operam no contexto do usuário autenticado, utilizamos o alias `/me` em vez de um ID de usuário explícito (ex: `GET /users/me/groups`). Esta abordagem oferece duas vantagens principais:
+
+    1.  **Simplicidade para o Cliente:** A aplicação cliente não precisa armazenar o ID do usuário e inseri-lo em múltiplas URLs. Ela pode simplesmente usar os endpoints `/me` de forma consistente.
+    2.  **Segurança:** A responsabilidade de identificar o usuário é inteiramente do backend, que extrai essa informação do token de autenticação. Isso previne que um cliente tente acidentalmente (ou maliciosamente) acessar os dados de outro usuário alterando um ID na URL.
+
+  - **Paginação:** Endpoints que retornam listas de itens utilizam os parâmetros de query `limit` (quantidade de itens por página) e `offset` (a partir de qual item buscar) para paginação.
+
+  - **Respostas de Erro:** Em caso de erro (`4xx` ou `5xx`), a API retornará um objeto JSON padronizado para facilitar o tratamento de falhas:
+
+    ```json
+    {
+      "statusCode": 404,
+      "message": "Recurso Não Encontrado",
+      "details": "O check-in com o ID especificado não foi encontrado."
+    }
+    ```
+
+  - **Códigos de Status HTTP:** Usamos os códigos HTTP de forma semântica para indicar o resultado de uma operação (ex: `201 Created` para criação de recursos, `204 No Content` para exclusão bem-sucedida, `403 Forbidden` para falta de permissão).

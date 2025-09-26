@@ -1,835 +1,774 @@
 openapi: 3.0.3
 info:
   title: Code Rats API
-  version: 1.0.0
-  description: API da plataforma gamificada Code Rats, permitindo gerenciamento de usuários, grupos, checkins e interações sociais.
-
+  description: |-
+    API social e gamificada para desenvolvedores acompanharem seu progresso de estudos.
+    Análoga ao conceito de "Gym Rats", mas para o mundo do código.
+  version: 1.2.0
 servers:
-  - url: https://api.coderats.com/v1
-    description: Servidor principal
+  - url: https://virtserver.swaggerhub.com/coderats/code-rats-api/1.2.0
+    description: Servidor de Mock
 
 tags:
-  - name: Authentication
-    description: Endpoints para login e cadastro de usuários
-  - name: Users
-    description: Endpoints relacionados a perfis e dados do usuário
-  - name: Groups
-    description: Endpoints para gerenciamento de grupos/desafios
-  - name: Checkins
-    description: Endpoints para criação, listagem e interação com checkins
+  - name: Autenticação
+    description: Endpoints para registro e login de usuários.
+  - name: Usuários
+    description: Operações relacionadas aos perfis dos usuários.
+  - name: Grupos
+    description: Gerenciamento de grupos de estudo e desafios.
+  - name: Check-ins
+    description: Operações para registrar e visualizar o progresso dos usuários.
+  - name: Badges
+    description: Visualização de badges e conquistas.
 
 paths:
+  # =============================================
+  # Autenticação
+  # =============================================
+  /auth/register:
+    post:
+      tags:
+        - Autenticação
+      summary: Registrar um novo usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: Usuário criado com sucesso. Retorna o objeto do usuário e o token JWT.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/PrivateUserProfile'
+                  token:
+                    type: string
+              example:
+                user:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  nome: "Ana Coder"
+                  email: "ana.coder@email.com"
+                  imagem: "https://example.com/path/to/image.png"
+                  user_github: "anacoder"
+                  pontos: 0
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /auth/login:
     post:
       tags:
-        - Authentication
-      summary: Login de usuário
-      description: Permite que um usuário autenticado obtenha um token JWT.
-      operationId: loginUser
+        - Autenticação
+      summary: Autenticar um usuário
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserLoginRequest'
+              type: object
+              required: [email, senha]
+              properties:
+                email: { type: string, format: email }
+                senha: { type: string, format: password }
       responses:
         '200':
-          description: Autenticação bem-sucedida
+          description: Login bem-sucedido.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/PrivateUserProfile'
+                  token:
+                    type: string
+              example:
+                user:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  nome: "Ana Coder"
+                  email: "ana.coder@email.com"
+                  imagem: "https://example.com/path/to/image.png"
+                  user_github: "anacoder"
+                  pontos: 1500
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-  /users:
-    post:
-      tags:
-        - Users
-      summary: Cadastro de usuário
-      description: Cria um novo usuário na plataforma.
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserCreateRequest'
-      responses:
-        '201':
-          description: Usuário criado com sucesso
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
+  # =============================================
+  # Usuários (/me)
+  # =============================================
   /users/me:
     get:
       tags:
-        - Users
-      summary: Obter perfil do usuário autenticado
-      description: Retorna os dados do usuário logado.
-      operationId: getCurrentUser
+        - Usuários
+      summary: Obter meu perfil
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       responses:
         '200':
-          description: Perfil retornado com sucesso
+          description: Perfil do usuário autenticado.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/PrivateUserProfile'
+              example:
+                id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                nome: "Ana Coder"
+                email: "ana.coder@email.com"
+                imagem: "https://example.com/path/to/image.png"
+                user_github: "anacoder"
+                pontos: 1500
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
     patch:
       tags:
-        - Users
-      summary: Atualizar perfil do usuário autenticado
-      description: Permite atualizar dados do usuário. Campos não enviados não são alterados.
-      operationId: updateCurrentUser
+        - Usuários
+      summary: Atualizar meu perfil
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
+              $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: Perfil atualizado com sucesso
+          description: Perfil atualizado com sucesso.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/PrivateUserProfile'
+              example:
+                id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                nome: "Ana Coder Silva"
+                email: "ana.coder@email.com"
+                imagem: "https://example.com/path/to/new_image.png"
+                user_github: "anacodersilva"
+                pontos: 1500
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    delete:
-      tags:
-        - Users
-      summary: Excluir conta do usuário autenticado
-      description: Permite que o usuário exclua sua própria conta. Esta ação é irreversível.
-      operationId: deleteCurrentUser
-      security:
-        - BearerAuth: []
-      responses:
-        '204':
-          description: Conta excluída com sucesso
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /users/{id}/profile:
+          
+  /users/me/groups:
     get:
       tags:
-        - Users
-      summary: Obter perfil público de outro usuário
-      description: Retorna informações públicas de um usuário específico.
-      operationId: getUserProfile
+        - Grupos
+      summary: Listar meus grupos
+      description: Retorna uma lista paginada dos grupos que eu participo.
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
       responses:
         '200':
-          description: Perfil retornado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserPublicResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /users/{id}/groups:
-    get:
-      tags:
-        - Users
-      summary: Listar grupos do usuário
-      description: Retorna todos os grupos em que o usuário participa.
-      operationId: getUserGroups
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Lista de grupos
+          description: Lista de grupos do usuário.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GroupResponse'
+                  $ref: '#/components/schemas/Group'
+              example:
+                - id: "group-uuid-abc"
+                  nome: "Desafio 30 Dias de Testes"
+                  descricao: "Grupo para focar em TDD e testes unitários."
+                  repositorio: "https://github.com/coderats/desafio-testes"
+                  data_inicio: "2025-09-01T00:00:00Z"
+                  data_fim: "2025-09-30T23:59:59Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /users/me/badges:
+    get:
+      tags:
+        - Badges
+      summary: Listar minhas badges
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de badges que eu conquistei.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Badge'
+              example:
+                - id: "badge-uuid-01"
+                  nome: "Rato Iniciante"
+                  imagem: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  pontos: 50
+                  descricao: "Realizou seu primeiro check-in!"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Usuários
+      summary: Obter perfil público de um usuário
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Perfil público do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserProfile'
+              example:
+                id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                nome: "Beto Debugger"
+                imagem: "https://example.com/path/to/beto_image.png"
+                user_github: "betodebugger"
+                pontos: 2300
         '404':
           $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
+  # =============================================
+  # Feed
+  # =============================================
+  /feed:
+    get:
+      tags:
+        - Check-ins
+      summary: Obter meu feed principal
+      description: Retorna uma lista paginada de check-ins de todos os grupos que eu participo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Lista de check-ins do feed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Checkin'
+              example:
+                - id: "checkin-uuid-123"
+                  titulo: "Dia 15: Refatorando a API de pagamentos"
+                  descricao: "Apliquei o padrão Strategy para os gateways de pagamento."
+                  foto: "https://example.com/screenshots/refactoring.png"
+                  avaliacao: 5
+                  pontos: 150
+                  createdAt: "2025-09-25T22:10:00Z"
+                  author:
+                    id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    nome: "Beto Debugger"
+                    imagem: "https://example.com/path/to/beto_image.png"
+                  likes:
+                    - id: "like-uuid-1"
+                      data_criacao: "2025-09-25T22:15:03Z"
+                      author:
+                        id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                        nome: "Ana Coder"
+                        imagem: "https://example.com/path/to/image.png"
+                  comments: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # =============================================
+  # Grupos
+  # =============================================
   /groups:
     post:
       tags:
-        - Groups
-      summary: Criar grupo
-      description: Cria um novo grupo de desafio. O usuário que cria o grupo se torna automaticamente o owner.
-      operationId: createGroup
+        - Grupos
+      summary: Criar um novo grupo
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GroupCreateRequest'
+              $ref: '#/components/schemas/GroupCreate'
       responses:
         '201':
-          description: Grupo criado com sucesso
+          description: Grupo criado com sucesso.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupResponse'
+                $ref: '#/components/schemas/Group'
+              example:
+                id: "group-uuid-def"
+                nome: "Estudando Elixir e Phoenix"
+                descricao: "Grupo focado na linguagem Elixir e no framework Phoenix."
+                repositorio: "https://github.com/coderats/elixir-phoenix"
+                data_inicio: "2025-10-01T00:00:00Z"
+                data_fim: null
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
+  /groups/{groupId}:
     get:
       tags:
-        - Groups
-      summary: Listar todos os grupos
-      description: Retorna todos os grupos públicos ou que o usuário participa, com suporte a paginação.
-      operationId: listGroups
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            example: 10
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            example: 0
-      responses:
-        '200':
-          description: Lista de grupos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GroupResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /groups/{id}:
-    get:
-      tags:
-        - Groups
+        - Grupos
       summary: Obter detalhes de um grupo
-      description: Retorna detalhes de um grupo específico. Apenas membros podem acessar grupos privados.
-      operationId: getGroupById
-      security:
-        - BearerAuth: []
       parameters:
-        - name: id
+        - name: groupId
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       responses:
         '200':
-          description: Grupo retornado
+          description: Detalhes do grupo.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: '#/components/schemas/Group'
+              example:
+                id: "group-uuid-abc"
+                nome: "Desafio 30 Dias de Testes"
+                descricao: "Grupo para focar em TDD e testes unitários."
+                repositorio: "https://github.com/coderats/desafio-testes"
+                data_inicio: "2025-09-01T00:00:00Z"
+                data_fim: "2025-09-30T23:59:59Z"
         '404':
           $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    patch:
+    put:
       tags:
-        - Groups
-      summary: Atualizar grupo
-      description: Permite atualizar informações do grupo. Apenas owner ou admin podem alterar.
-      operationId: updateGroup
+        - Grupos
+      summary: Atualizar um grupo
       security:
-        - BearerAuth: []
-      parameters: # <-- PARÂMETRO ADICIONADO AQUI
-        - name: id
+        - bearerAuth: []
+      parameters:
+        - name: groupId
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GroupUpdateRequest'
+              $ref: '#/components/schemas/GroupCreate'
       responses:
         '200':
-          description: Grupo atualizado
+          description: Grupo atualizado com sucesso.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: '#/components/schemas/Group'
+              example:
+                id: "group-uuid-abc"
+                nome: "Desafio 30 Dias de Testes (Avançado)"
+                descricao: "Foco em TDD, BDD e testes de integração."
+                repositorio: "https://github.com/coderats/desafio-testes-avancado"
+                data_inicio: "2025-09-01T00:00:00Z"
+                data_fim: "2025-09-30T23:59:59Z"
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
     delete:
       tags:
-        - Groups
-      summary: Excluir grupo
-      description: Apenas o owner do grupo pode deletá-lo. Remove também todos os checkins associados.
-      operationId: deleteGroup
+        - Grupos
+      summary: Excluir um grupo
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - name: id
+        - name: groupId
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
       responses:
         '204':
-          description: Grupo excluído com sucesso
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: Grupo excluído com sucesso.
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /groups/{id}/join:
+  # =============================================
+  # Check-ins
+  # =============================================
+  /groups/{groupId}/checkins:
     post:
       tags:
-        - Groups
-      summary: Entrar em grupo
-      description: Permite que um usuário entre em um grupo utilizando o entry_code.
-      operationId: joinGroup
+        - Check-ins
+      summary: Criar um novo check-in em um grupo
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - name: id
+        - name: groupId
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinCreate'
+      responses:
+        '201':
+          description: Check-in criado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkin'
+              example:
+                id: "checkin-uuid-789"
+                titulo: "Finalizei o módulo de GenServer em Elixir"
+                descricao: "Conceito poderoso para concorrência."
+                foto: null
+                avaliacao: 5
+                pontos: 150
+                createdAt: "2025-09-26T11:00:00Z"
+                author:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  nome: "Ana Coder"
+                  imagem: "https://example.com/path/to/image.png"
+                likes: []
+                comments: []
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/like:
+    post:
+      tags:
+        - Check-ins
+      summary: Curtir um check-in
+      description: Adiciona a curtida do usuário autenticado a um check-in.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Check-in curtido com sucesso. Retorna o objeto da curtida criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Like'
+              example:
+                id: "like-uuid-2"
+                data_criacao: "2025-09-26T11:02:15Z"
+                author:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  nome: "Ana Coder"
+                  imagem: "https://example.com/path/to/image.png"
+        '409':
+          description: Conflito. O usuário já curtiu este check-in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 409
+                message: "Usuário já curtiu este check-in."
+    delete:
+      tags:
+        - Check-ins
+      summary: Descurtir um check-in
+      description: Remove a curtida do usuário autenticado de um check-in.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Curtida removida com sucesso.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/likes:
+    get:
+      tags:
+        - Check-ins
+      summary: Listar as curtidas de um check-in
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Lista paginada de curtidas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Like'
+              example:
+                - id: "like-uuid-1"
+                  data_criacao: "2025-09-25T22:15:03Z"
+                  author:
+                    id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    nome: "Ana Coder"
+                    imagem: "https://example.com/path/to/image.png"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/comments:
+    post:
+      tags:
+        - Check-ins
+      summary: Adicionar um comentário a um check-in
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [entry_code]
+              required: [conteudo]
               properties:
-                entry_code:
+                conteudo:
                   type: string
-                  example: "elite2025"
-      responses:
-        '200':
-          description: Usuário adicionado ao grupo
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /groups/{id}/leave:
-    post:
-      tags:
-        - Groups
-      summary: Sair de grupo
-      description: Permite que o usuário saia de um grupo do qual é membro.
-      operationId: leaveGroup
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Usuário saiu do grupo
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /groups/{id}/checkins:
-    post:
-      tags:
-        - Checkins
-      summary: Criar checkin em grupo
-      description: Permite criar uma publicação de progresso dentro do grupo. Apenas membros podem criar.
-      operationId: createCheckin
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CheckinCreateRequest'
+                  example: "Excelente progresso! Continue assim."
       responses:
         '201':
-          description: Checkin criado
+          description: Comentário adicionado.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckinResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: '#/components/schemas/Comment'
+              example:
+                id: "comment-uuid-xyz"
+                conteudo: "Excelente progresso! Continue assim."
+                data_criacao: "2025-09-26T11:05:00Z"
+                author:
+                  id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                  nome: "Beto Debugger"
+                  imagem: "https://example.com/path/to/beto_image.png"
         '404':
           $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-    get:
+  /checkins/{checkinId}/comments/{commentId}:
+    delete:
       tags:
-        - Checkins
-      summary: Listar checkins de grupo
-      description: Retorna todos os checkins de um grupo. Apenas membros podem acessar.
-      operationId: listGroupCheckins
+        - Check-ins
+      summary: Excluir um comentário de um check-in
       security:
-        - BearerAuth: []
+        - bearerAuth: []
       parameters:
-        - name: id
+        - name: checkinId
           in: path
           required: true
-          schema:
-            type: string
-            format: uuid
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            example: 10
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            example: 0
+          schema: { type: string, format: uuid }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Comentário excluído.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  # =============================================
+  # Badges
+  # =============================================
+  /badges:
+    get:
+      tags:
+        - Badges
+      summary: Listar todas as badges disponíveis
       responses:
         '200':
-          description: Lista de checkins
+          description: Lista de todas as badges.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CheckinResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /checkins/{id}:
-    delete:
-      tags:
-        - Checkins
-      summary: Excluir checkin
-      description: Permite remover um checkin. Apenas autor, owner ou admin podem excluir.
-      operationId: deleteCheckin
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Checkin excluído
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /checkins/{id}/like:
-    post:
-      tags:
-        - Checkins
-      summary: Curtir checkin
-      description: Adiciona um like ao checkin pelo usuário autenticado.
-      operationId: likeCheckin
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Like adicionado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CheckinResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    delete:
-      tags:
-        - Checkins
-      summary: Remover like
-      description: Remove o like do usuário autenticado de um checkin.
-      operationId: unlikeCheckin
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Like removido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CheckinResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /checkins/{id}/comments:
-    post:
-      tags:
-        - Checkins
-      summary: Adicionar comentário
-      description: Permite ao usuário adicionar um comentário a um checkin.
-      operationId: addCheckinComment
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [text]
-              properties:
-                text:
-                  type: string
-                  example: "Adorei o seu progresso! Continue assim 🚀"
-      responses:
-        '201':
-          description: Comentário criado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommentResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    get:
-      tags:
-        - Checkins
-      summary: Listar comentários
-      description: Retorna todos os comentários de um checkin.
-      operationId: listCheckinComments
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Lista de comentários
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CommentResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
+                  $ref: '#/components/schemas/Badge'
+              example:
+                - id: "badge-uuid-01"
+                  nome: "Rato Iniciante"
+                  imagem: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  pontos: 50
+                  descricao: "Realizou seu primeiro check-in!"
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
   schemas:
-    # --- Auth Schemas ---
-    UserLoginRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-          example: "maria@example.com"
-        password:
-          type: string
-          format: password
-          example: "secret123"
-    AuthResponse:
-      type: object
-      properties:
-        token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
-    # --- User Schemas ---
-    UserCreateRequest:
-      type: object
-      required: [name, email, password, github_url]
-      properties:
-        name: { type: string, example: "Maria Silva" }
-        email: { type: string, format: email, example: "maria@example.com" }
-        password: { type: string, format: password, example: "secret123" }
-        institution: { type: string, nullable: true }
-        github_url: { type: string, format: uri, example: "https://github.com/mariasilva" }
-    UserUpdateRequest:
-      type: object
-      properties:
-        name: { type: string }
-        email: { type: string, format: email }
-        password: { type: string, format: password }
-        institution: { type: string, nullable: true }
-        github_url: { type: string, format: uri }
-    UserResponse:
+    UserBase:
       type: object
       properties:
         id: { type: string, format: uuid }
-        name: { type: string }
-        email: { type: string, format: email }
-        institution: { type: string, nullable: true }
-        github_url: { type: string, format: uri }
-    UserPublicResponse:
+        nome: { type: string }
+        imagem: { type: string, format: uri, nullable: true }
+        user_github: { type: string, nullable: true }
+        pontos: { type: integer }
+    PublicUserProfile:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+    PrivateUserProfile:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          properties:
+            email: { type: string, format: email }
+    UserSummary:
       type: object
       properties:
         id: { type: string, format: uuid }
-        name: { type: string }
-        github_url: { type: string, format: uri }
-
-    # --- Group Schemas ---
-    GroupCreateRequest:
+        nome: { type: string }
+        imagem: { type: string, format: uri, nullable: true }
+    UserRegister:
       type: object
-      required: [name, description, start_date, end_date, entry_code]
+      required: [nome, email, senha]
       properties:
-        name: { type: string }
-        description: { type: string }
-        image_url: { type: string, format: uri, nullable: true }
-        start_date: { type: string, format: date-time }
-        end_date: { type: string, format: date-time }
-        entry_code: { type: string }
-    GroupUpdateRequest:
+        nome: { type: string, example: "João da Silva" }
+        email: { type: string, format: email, example: "joao.silva@email.com" }
+        senha: { type: string, format: password, example: "s3nh@F0rt3" }
+        user_github: { type: string, example: "joaodasilva" }
+    UserUpdate:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        image_url: { type: string, format: uri, nullable: true }
-        start_date: { type: string, format: date-time }
-        end_date: { type: string, format: date-time }
-    GroupResponse:
+        nome: { type: string }
+        imagem: { type: string, format: uri }
+        user_github: { type: string }
+    Group:
       type: object
       properties:
         id: { type: string, format: uuid }
-        name: { type: string }
-        description: { type: string }
-        image_url: { type: string, format: uri, nullable: true }
-        start_date: { type: string, format: date-time }
-        end_date: { type: string, format: date-time }
-        owner: { $ref: '#/components/schemas/UserPublicResponse' }
-        members_count: { type: integer }
-
-    # --- Checkin/Comment Schemas ---
-    CheckinCreateRequest:
+        nome: { type: string }
+        descricao: { type: string }
+        repositorio: { type: string, format: uri, nullable: true }
+        data_inicio: { type: string, format: date-time }
+        data_fim: { type: string, format: date-time, nullable: true }
+    GroupCreate:
       type: object
-      required: [title]
+      required: [nome, data_inicio]
       properties:
-        title: { type: string }
-        description: { type: string, nullable: true }
-        link: { type: string, format: uri, nullable: true }
-        image_url: { type: string, format: uri, nullable: true }
-        comment: { type: string, nullable: true }
-    CheckinResponse:
+        nome: { type: string, example: "Desafio 30 Dias de Testes" }
+        descricao: { type: string, example: "Grupo para focar em TDD e testes unitários." }
+        repositorio: { type: string, format: uri, example: "https://github.com/coderats/desafio-testes" }
+        data_inicio: { type: string, format: date-time }
+        data_fim: { type: string, format: date-time }
+    Checkin:
       type: object
       properties:
         id: { type: string, format: uuid }
-        title: { type: string }
-        description: { type: string, nullable: true }
-        link: { type: string, format: uri, nullable: true }
-        image_url: { type: string, format: uri, nullable: true }
-        comment: { type: string, nullable: true }
-        likes: { type: integer }
-        author: { $ref: '#/components/schemas/UserPublicResponse' }
-        group: { $ref: '#/components/schemas/GroupResponse' }
-        created_at: { type: string, format: date-time }
-    CommentResponse:
+        titulo: { type: string }
+        descricao: { type: string, nullable: true }
+        foto: { type: string, format: uri, nullable: true }
+        avaliacao: { type: integer, minimum: 1, maximum: 5 }
+        pontos: { type: integer }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: '#/components/schemas/UserSummary' }
+        likes:
+          type: array
+          description: "Pode ser uma lista parcial dos likes mais recentes."
+          items:
+            $ref: '#/components/schemas/Like'
+        comments:
+          type: array
+          description: "Pode ser uma lista parcial dos comentários mais recentes."
+          items:
+            $ref: '#/components/schemas/Comment'
+    CheckinCreate:
+      type: object
+      required: [titulo]
+      properties:
+        titulo: { type: string, example: "Dia 05: Testes Unitários com Jest" }
+        descricao: { type: string, example: "Foquei em mocks e spies." }
+        foto: { type: string, format: uri }
+        avaliacao: { type: integer, minimum: 1, maximum: 5 }
+    Badge:
       type: object
       properties:
         id: { type: string, format: uuid }
-        text: { type: string }
-        author: { $ref: '#/components/schemas/UserPublicResponse' }
-        created_at: { type: string, format: date-time }
-
-    # --- Error Schema ---
-    ErrorResponse:
+        nome: { type: string }
+        imagem: { type: string, format: uri }
+        pontos: { type: integer }
+        descricao: { type: string }
+    Comment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conteudo: { type: string }
+        data_criacao: { type: string, format: date-time }
+        author: { $ref: '#/components/schemas/UserSummary' }
+    Like:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        data_criacao: { type: string, format: date-time }
+        author: { $ref: '#/components/schemas/UserSummary' }
+    Error:
       type: object
       properties:
         statusCode: { type: integer }
         message: { type: string }
-        errorCode: { type: string, nullable: true }
-
+        details: { type: string, nullable: true }
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Número máximo de itens a serem retornados.
+      schema: { type: integer, default: 20 }
+    Offset:
+      name: offset
+      in: query
+      description: Número de itens a serem pulados para paginação.
+      schema: { type: integer, default: 0 }
   responses:
     BadRequest:
-      description: Requisição inválida
+      description: Requisição inválida.
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 400
+            message: "Erro de Validação"
+            details: "O campo 'email' deve ser um email válido."
     Unauthorized:
-      description: Não autenticado
+      description: Não autorizado.
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 401
+            message: "Token de autenticação não fornecido ou inválido."
     Forbidden:
-      description: Acesso negado
+      description: Acesso negado.
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 403
+            message: "Acesso Negado"
+            details: "Você não tem permissão para excluir este comentário."
     NotFound:
-      description: Recurso não encontrado
+      description: Recurso não encontrado.
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    InternalServerError:
-      description: Erro interno do servidor
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 404
+            message: "Recurso Não Encontrado"
+            details: "O grupo com o ID 'group-uuid-nao-existe' não foi encontrado."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Insira o token JWT com o prefixo 'Bearer ' (Ex: 'Bearer eyJhbG...')"
+security:
+  - bearerAuth: []
