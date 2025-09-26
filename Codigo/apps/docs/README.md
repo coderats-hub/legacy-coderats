@@ -88,7 +88,7 @@ Você pode usar ferramentas populares para visualizar e interagir com a API de f
 
     3.  **Alternativamente, clique no botão abaixo para importar nossa coleção pública diretamente no Postman:**
 
-        [](https://galactic-rocket-826652.postman.co/workspace/Caroneiros~0f84ab9e-7b6b-4f64-9ec1-0e2cd83b022b/collection/27475636-8840903c-8c83-4dc5-84a8-9f8f30f5bd75?action=share&creator=27475636)
+        [](https://www.postman.com/galactic-rocket-826652/workspace/code-rats/collection/27475636-2cbe0ce5-6d2b-42d8-9fd8-e388027b7bf3?action=share&creator=27475636)
 
 #### 2\. **Gerando um Servidor Mock**
 
