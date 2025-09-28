@@ -51,11 +51,10 @@ paths:
               example:
                 user:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                  nome: "Ana Coder"
+                  name: "Ana Coder"
                   email: "ana.coder@email.com"
-                  imagem: "https://example.com/path/to/image.png"
-                  user_github: "anacoder"
-                  pontos: 0
+                  image: "https://example.com/path/to/image.png"
+                  github_user: "anacoder"
                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -70,10 +69,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, senha]
+              required: [email, password]
               properties:
                 email: { type: string, format: email }
-                senha: { type: string, format: password }
+                password: { type: string, format: password }
       responses:
         '200':
           description: Login bem-sucedido.
@@ -89,11 +88,10 @@ paths:
               example:
                 user:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                  nome: "Ana Coder"
+                  name: "Ana Coder"
                   email: "ana.coder@email.com"
-                  imagem: "https://example.com/path/to/image.png"
-                  user_github: "anacoder"
-                  pontos: 1500
+                  image: "https://example.com/path/to/image.png"
+                  github_user: "anacoder"
                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -117,11 +115,10 @@ paths:
                 $ref: '#/components/schemas/PrivateUserProfile'
               example:
                 id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                nome: "Ana Coder"
+                name: "Ana Coder"
                 email: "ana.coder@email.com"
-                imagem: "https://example.com/path/to/image.png"
-                user_github: "anacoder"
-                pontos: 1500
+                image: "https://example.com/path/to/image.png"
+                github_user: "anacoder"
         '401':
           $ref: '#/components/responses/Unauthorized'
     patch:
@@ -144,11 +141,10 @@ paths:
                 $ref: '#/components/schemas/PrivateUserProfile'
               example:
                 id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                nome: "Ana Coder Silva"
+                name: "Ana Coder Silva"
                 email: "ana.coder@email.com"
-                imagem: "https://example.com/path/to/new_image.png"
-                user_github: "anacodersilva"
-                pontos: 1500
+                image: "https://example.com/path/to/new_image.png"
+                github_user: "anacodersilva"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -158,8 +154,8 @@ paths:
     get:
       tags:
         - Grupos
-      summary: Listar meus grupos
-      description: Retorna uma lista paginada dos grupos que eu participo.
+      summary: Listar meus grupos com detalhes
+      description: Retorna uma lista paginada dos grupos que eu participo, incluindo uma prévia dos participantes e dos check-ins recentes.
       security:
         - bearerAuth: []
       parameters:
@@ -167,20 +163,37 @@ paths:
         - $ref: '#/components/parameters/Offset'
       responses:
         '200':
-          description: Lista de grupos do usuário.
+          description: Lista de grupos do usuário com detalhes.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Group'
+                  $ref: '#/components/schemas/GroupWithDetails'
               example:
                 - id: "group-uuid-abc"
-                  nome: "Desafio 30 Dias de Testes"
-                  descricao: "Grupo para focar em TDD e testes unitários."
-                  repositorio: "https://github.com/coderats/desafio-testes"
-                  data_inicio: "2025-09-01T00:00:00Z"
-                  data_fim: "2025-09-30T23:59:59Z"
+                  name: "Desafio 30 Dias de Testes"
+                  description: "Grupo para focar em TDD e testes unitários."
+                  repository: "https://github.com/coderats/desafio-testes"
+                  method: "streak_images"
+                  status: true
+                  start_date: "2025-09-01T00:00:00Z"
+                  end_date: "2025-09-30T23:59:59Z"
+                  participants:
+                    - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                      name: "Ana Coder"
+                      image: "https://example.com/path/to/ana_image.png"
+                    - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                      name: "Beto Debugger"
+                      image: "https://example.com/path/to/beto_image.png"
+                  recent_checkins:
+                    - id: "checkin-uuid-123"
+                      title: "Dia 15: Refatorando a API de pagamentos"
+                      createdAt: "2025-09-25T22:10:00Z"
+                      author:
+                        id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                        name: "Beto Debugger"
+                        image: "https://example.com/path/to/beto_image.png"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -202,10 +215,10 @@ paths:
                   $ref: '#/components/schemas/Badge'
               example:
                 - id: "badge-uuid-01"
-                  nome: "Rato Iniciante"
-                  imagem: "https://cdn.coderats.com/badges/rato-iniciante.svg"
-                  pontos: 50
-                  descricao: "Realizou seu primeiro check-in!"
+                  name: "Rato Iniciante"
+                  image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  points: 50
+                  description: "Realizou seu primeiro check-in!"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -213,33 +226,47 @@ paths:
     get:
       tags:
         - Usuários
-      summary: Obter perfil público de um usuário
+      summary: Obter perfil público de um usuário e grupos em comum
+      description: Retorna os detalhes públicos de um usuário específico, além de uma lista dos grupos que vocês dois participam.
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
           required: true
+          description: O ID do usuário a ser consultado.
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Perfil público do usuário.
+          description: Perfil público do usuário com a lista de grupos em comum.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicUserProfile'
+                $ref: '#/components/schemas/PublicUserProfileWithGroups'
               example:
-                id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
-                nome: "Beto Debugger"
-                imagem: "https://example.com/path/to/beto_image.png"
-                user_github: "betodebugger"
-                pontos: 2300
+                profile:
+                  id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                  name: "Beto Debugger"
+                  image: "https://example.com/path/to/beto_image.png"
+                  github_user: "betodebugger"
+                  points: 2300
+                common_groups:
+                  - id: "group-uuid-abc"
+                    name: "Desafio 30 Dias de Testes"
+                  - id: "group-uuid-xyz"
+                    name: "Estudantes de Arquitetura de Software"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
 
   # =============================================
   # Feed
   # =============================================
+  # Atualize a rota /feed em 'paths'
+
   /feed:
     get:
       tags:
@@ -262,24 +289,33 @@ paths:
                   $ref: '#/components/schemas/Checkin'
               example:
                 - id: "checkin-uuid-123"
-                  titulo: "Dia 15: Refatorando a API de pagamentos"
-                  descricao: "Apliquei o padrão Strategy para os gateways de pagamento."
-                  foto: "https://example.com/screenshots/refactoring.png"
-                  avaliacao: 5
-                  pontos: 150
+                  title: "Dia 15: Refatorando a API de pagamentos"
+                  description: "Apliquei o padrão Strategy para os gateways de pagamento. O código ficou bem mais limpo e fácil de manter, separando cada lógica de pagamento em sua própria classe. O próximo passo é adicionar testes de integração."
+                  picture: "https://example.com/screenshots/refactoring.png"
+                  summary_ai: "Excelente aplicação do padrão Strategy! Separar as responsabilidades torna o código mais escalável e manutenível, o que é uma prática de um desenvolvedor sênior. Adicionar testes de integração é o caminho certo para garantir a robustez da solução. Continue assim!"
+                  points: 150
                   createdAt: "2025-09-25T22:10:00Z"
                   author:
                     id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
-                    nome: "Beto Debugger"
-                    imagem: "https://example.com/path/to/beto_image.png"
-                  likes:
-                    - id: "like-uuid-1"
-                      data_criacao: "2025-09-25T22:15:03Z"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                  likes_count: 25
+                  liked_by_me: true
+                  comments:
+                    - id: "comment-uuid-xyz"
+                      content: "Belo trabalho! O padrão Strategy é perfeito para isso. Você pensou em usar o padrão Factory para instanciar os gateways?"
+                      creation_date: "2025-09-26T09:30:00Z"
                       author:
                         id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                        nome: "Ana Coder"
-                        imagem: "https://example.com/path/to/image.png"
-                  comments: []
+                        name: "Ana Coder"
+                        image: "https://example.com/path/to/ana_image.png"
+                    - id: "comment-uuid-abc"
+                      content: "Muito bom! Isso vai facilitar muito a adição de novos métodos de pagamento no futuro."
+                      creation_date: "2025-09-26T10:15:00Z"
+                      author:
+                        id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+                        name: "Carla Scripter"
+                        image: "https://example.com/path/to/carla_image.png"
         '401':
           $ref: '#/components/responses/Unauthorized'
   # =============================================
@@ -307,18 +343,23 @@ paths:
                 $ref: '#/components/schemas/Group'
               example:
                 id: "group-uuid-def"
-                nome: "Estudando Elixir e Phoenix"
-                descricao: "Grupo focado na linguagem Elixir e no framework Phoenix."
-                repositorio: "https://github.com/coderats/elixir-phoenix"
-                data_inicio: "2025-10-01T00:00:00Z"
-                data_fim: null
+                name: "Estudando Elixir e Phoenix"
+                description: "Grupo focado na linguagem Elixir e no framework Phoenix."
+                repository: "https://github.com/coderats/elixir-phoenix"
+                method: "streak_images"
+                status: true
+                start_date: "2025-10-01T00:00:00Z"
+                end_date: null
         '400':
           $ref: '#/components/responses/BadRequest'
   /groups/{groupId}:
     get:
       tags:
         - Grupos
-      summary: Obter detalhes de um grupo
+      summary: Detalhes de um grupo
+      description: Retorna todas as informações de um grupo específico, incluindo a lista de seus participantes e os check-ins mais recentes.
+      security:
+        - bearerAuth: []
       parameters:
         - name: groupId
           in: path
@@ -326,24 +367,56 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         '200':
-          description: Detalhes do grupo.
+          description: Detalhes do grupo com participantes e check-ins.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/GroupWithDetails'
               example:
                 id: "group-uuid-abc"
-                nome: "Desafio 30 Dias de Testes"
-                descricao: "Grupo para focar em TDD e testes unitários."
-                repositorio: "https://github.com/coderats/desafio-testes"
-                data_inicio: "2025-09-01T00:00:00Z"
-                data_fim: "2025-09-30T23:59:59Z"
+                name: "Desafio 30 Dias de Testes"
+                description: "Grupo para focar em TDD e testes unitários."
+                method: "streak_images"
+                status: true
+                repository: "https://github.com/coderats/desafio-testes"
+                start_date: "2025-09-01T00:00:00Z"
+                end_date: "2025-09-30T23:59:59Z"
+                participants:
+                  - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    name: "Ana Coder"
+                    image: "https://example.com/path/to/ana_image.png"
+                  - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                  - id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+                    name: "Carla Scripter"
+                    image: "https://example.com/path/to/carla_image.png"
+                recent_checkins:
+                  - id: "checkin-uuid-123"
+                    title: "Dia 15: Refatorando a API de pagamentos"
+                    createdAt: "2025-09-25T22:10:00Z"
+                    author:
+                      id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                      name: "Beto Debugger"
+                      image: "https://example.com/path/to/beto_image.png"
+                  - id: "checkin-uuid-456"
+                    title: "Dia 14: Configurando ambiente com Docker"
+                    createdAt: "2025-09-24T20:15:00Z"
+                    author:
+                      id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                      name: "Ana Coder"
+                      image: "https://example.com/path/to/ana_image.png"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-    put:
+    patch:
       tags:
         - Grupos
       summary: Atualizar um grupo
+      description: |-
+        Permite a Atualizar do name, descrição e image de um grupo.
+        Adicionalmente, permite remover um ou mais participantes através de uma lista de IDs. O usuário deve ser o administrador do grupo para realizar esta ação.
       security:
         - bearerAuth: []
       parameters:
@@ -356,23 +429,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GroupCreate'
+              $ref: '#/components/schemas/GroupUpdate'
       responses:
         '200':
           description: Grupo atualizado com sucesso.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/GroupWithDetails' # Retorna o objeto completo para o cliente ver o resultado
               example:
                 id: "group-uuid-abc"
-                nome: "Desafio 30 Dias de Testes (Avançado)"
-                descricao: "Foco em TDD, BDD e testes de integração."
-                repositorio: "https://github.com/coderats/desafio-testes-avancado"
-                data_inicio: "2025-09-01T00:00:00Z"
-                data_fim: "2025-09-30T23:59:59Z"
+                name: "Desafio 30 Dias de Testes (Avançado)"
+                description: "Foco em TDD, BDD e testes de integração."
+                image: "https://cdn.coderats.com/groups/new_cover.png"
+                repository: "https://github.com/coderats/desafio-testes"
+                method: "streak_images"
+                status: true
+                start_date: "2025-09-01T00:00:00Z"
+                end_date: "2025-09-30T23:59:59Z"
+                participants: # Exibe a lista de participantes atualizada (sem o usuário removido)
+                  - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    name: "Ana Coder"
+                    image: "https://example.com/path/to/ana_image.png"
+                  - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                recent_checkins: [] # O backend retornaria os check-ins recentes aqui
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Grupos
@@ -419,16 +507,16 @@ paths:
                 $ref: '#/components/schemas/Checkin'
               example:
                 id: "checkin-uuid-789"
-                titulo: "Finalizei o módulo de GenServer em Elixir"
-                descricao: "Conceito poderoso para concorrência."
-                foto: null
-                avaliacao: 5
-                pontos: 150
+                title: "Finalizei o módulo de GenServer em Elixir"
+                description: "Conceito poderoso para concorrência."
+                picture: null
+                summary_ai: "Hoje consegui implementar o fluxo completo de login, geração de token JWT e validação nas rotas protegidas."
+                points: 150
                 createdAt: "2025-09-26T11:00:00Z"
                 author:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                  nome: "Ana Coder"
-                  imagem: "https://example.com/path/to/image.png"
+                  name: "Ana Coder"
+                  image: "https://example.com/path/to/image.png"
                 likes: []
                 comments: []
         '404':
@@ -456,11 +544,11 @@ paths:
                 $ref: '#/components/schemas/Like'
               example:
                 id: "like-uuid-2"
-                data_criacao: "2025-09-26T11:02:15Z"
+                creation_date: "2025-09-26T11:02:15Z"
                 author:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                  nome: "Ana Coder"
-                  imagem: "https://example.com/path/to/image.png"
+                  name: "Ana Coder"
+                  image: "https://example.com/path/to/image.png"
         '409':
           description: Conflito. O usuário já curtiu este check-in.
           content:
@@ -511,11 +599,11 @@ paths:
                   $ref: '#/components/schemas/Like'
               example:
                 - id: "like-uuid-1"
-                  data_criacao: "2025-09-25T22:15:03Z"
+                  creation_date: "2025-09-25T22:15:03Z"
                   author:
                     id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                    nome: "Ana Coder"
-                    imagem: "https://example.com/path/to/image.png"
+                    name: "Ana Coder"
+                    image: "https://example.com/path/to/image.png"
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -537,9 +625,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [conteudo]
+              required: [content]
               properties:
-                conteudo:
+                content:
                   type: string
                   example: "Excelente progresso! Continue assim."
       responses:
@@ -551,12 +639,12 @@ paths:
                 $ref: '#/components/schemas/Comment'
               example:
                 id: "comment-uuid-xyz"
-                conteudo: "Excelente progresso! Continue assim."
-                data_criacao: "2025-09-26T11:05:00Z"
+                content: "Excelente progresso! Continue assim."
+                creation_date: "2025-09-26T11:05:00Z"
                 author:
                   id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
-                  nome: "Beto Debugger"
-                  imagem: "https://example.com/path/to/beto_image.png"
+                  name: "Beto Debugger"
+                  image: "https://example.com/path/to/beto_image.png"
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -600,20 +688,19 @@ paths:
                   $ref: '#/components/schemas/Badge'
               example:
                 - id: "badge-uuid-01"
-                  nome: "Rato Iniciante"
-                  imagem: "https://cdn.coderats.com/badges/rato-iniciante.svg"
-                  pontos: 50
-                  descricao: "Realizou seu primeiro check-in!"
+                  name: "Rato Iniciante"
+                  image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  points: 50
+                  description: "Realizou seu primeiro check-in!"
 components:
   schemas:
     UserBase:
       type: object
       properties:
         id: { type: string, format: uuid }
-        nome: { type: string }
-        imagem: { type: string, format: uri, nullable: true }
-        user_github: { type: string, nullable: true }
-        pontos: { type: integer }
+        name: { type: string }
+        image: { type: string, format: uri, nullable: true }
+        github_user: { type: string, nullable: true }
     PublicUserProfile:
       allOf:
         - $ref: '#/components/schemas/UserBase'
@@ -627,56 +714,92 @@ components:
       type: object
       properties:
         id: { type: string, format: uuid }
-        nome: { type: string }
-        imagem: { type: string, format: uri, nullable: true }
+        name: { type: string }
+        image: { type: string, format: uri, nullable: true }
     UserRegister:
       type: object
-      required: [nome, email, senha]
+      required: [name, email, password]
       properties:
-        nome: { type: string, example: "João da Silva" }
+        name: { type: string, example: "João da Silva" }
         email: { type: string, format: email, example: "joao.silva@email.com" }
-        senha: { type: string, format: password, example: "s3nh@F0rt3" }
-        user_github: { type: string, example: "joaodasilva" }
+        password: { type: string, format: password, example: "s3nh@F0rt3" }
+        github_user: { type: string, example: "joaodasilva" }
     UserUpdate:
       type: object
       properties:
-        nome: { type: string }
-        imagem: { type: string, format: uri }
-        user_github: { type: string }
+        name: { type: string }
+        image: { type: string, format: uri }
+        github_user: { type: string }
     Group:
       type: object
       properties:
         id: { type: string, format: uuid }
-        nome: { type: string }
-        descricao: { type: string }
-        repositorio: { type: string, format: uri, nullable: true }
-        data_inicio: { type: string, format: date-time }
-        data_fim: { type: string, format: date-time, nullable: true }
+        name: { type: string }
+        image: {type: string }
+        code: {type: string }
+        method: {type: string}
+        status: {type: boolean}
+        description: { type: string }
+        repository: { type: string, format: uri, nullable: true }
+        start_date: { type: string, format: date-time }
+        end_date: { type: string, format: date-time, nullable: true }
     GroupCreate:
       type: object
-      required: [nome, data_inicio]
+      required: [name, start_date, end_date]
       properties:
-        nome: { type: string, example: "Desafio 30 Dias de Testes" }
-        descricao: { type: string, example: "Grupo para focar em TDD e testes unitários." }
-        repositorio: { type: string, format: uri, example: "https://github.com/coderats/desafio-testes" }
-        data_inicio: { type: string, format: date-time }
-        data_fim: { type: string, format: date-time }
+        name: { type: string, example: "Desafio 30 Dias de Testes" }
+        image: {type: string, example: "https://cdn.coderats.com/group/rato-iniciante.svg" }
+        description: { type: string, example: "Grupo para focar em TDD e testes unitários." }
+        method: {type: string, example: "streak_images"}
+        status: {type: boolean, example: true}
+        repository: { type: string, format: uri, example: "https://github.com/coderats/desafio-testes" }
+        start_date: { type: string, format: date-time }
+        end_date: { type: string, format: date-time }
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: O novo nome do grupo.
+          example: "Desafio 30 Dias de Testes (Avançado)"
+        description:
+          type: string
+          description: A nova descrição do grupo.
+          example: "Foco em TDD, BDD e testes de integração."
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: A nova URL para a image de capa do grupo.
+        status:
+          type: boolean
+          description: Atualiza o status do grupo
+          example: false
+        participants_remove:
+          type: array
+          description: Lista com os IDs dos participantes a serem removidos do grupo.
+          items:
+            type: string
+            format: uuid
+          example:
+            - "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
     Checkin:
       type: object
       properties:
         id: { type: string, format: uuid }
-        titulo: { type: string }
-        descricao: { type: string, nullable: true }
-        foto: { type: string, format: uri, nullable: true }
-        avaliacao: { type: integer, minimum: 1, maximum: 5 }
-        pontos: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        picture: { type: string, format: uri, nullable: true }
+        summary_ai: { type: string, nullable: true }
+        points: { type: integer }
         createdAt: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
-        likes:
-          type: array
-          description: "Pode ser uma lista parcial dos likes mais recentes."
-          items:
-            $ref: '#/components/schemas/Like'
+        likes_count:
+          type: integer
+          description: "O número total de curtidas no check-in."
+        liked_by_me:
+          type: boolean
+          description: "Indica se o usuário autenticado curtiu este check-in."
         comments:
           type: array
           description: "Pode ser uma lista parcial dos comentários mais recentes."
@@ -684,32 +807,32 @@ components:
             $ref: '#/components/schemas/Comment'
     CheckinCreate:
       type: object
-      required: [titulo]
+      required: [title]
       properties:
-        titulo: { type: string, example: "Dia 05: Testes Unitários com Jest" }
-        descricao: { type: string, example: "Foquei em mocks e spies." }
-        foto: { type: string, format: uri }
-        avaliacao: { type: integer, minimum: 1, maximum: 5 }
+        title: { type: string, example: "Dia 05: Testes Unitários com Jest" }
+        description: { type: string, example: "Foquei em mocks e spies." }
+        picture: { type: string, format: uri }
+        summary_ai: { type: string }
     Badge:
       type: object
       properties:
         id: { type: string, format: uuid }
-        nome: { type: string }
-        imagem: { type: string, format: uri }
-        pontos: { type: integer }
-        descricao: { type: string }
+        name: { type: string }
+        image: { type: string, format: uri }
+        points: { type: integer }
+        description: { type: string }
     Comment:
       type: object
       properties:
         id: { type: string, format: uuid }
-        conteudo: { type: string }
-        data_criacao: { type: string, format: date-time }
+        content: { type: string }
+        creation_date: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
     Like:
       type: object
       properties:
         id: { type: string, format: uuid }
-        data_criacao: { type: string, format: date-time }
+        creation_date: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
     Error:
       type: object
@@ -717,6 +840,63 @@ components:
         statusCode: { type: integer }
         message: { type: string }
         details: { type: string, nullable: true }
+    GroupSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "group-uuid-abc"
+        name:
+          type: string
+          example: "Desafio 30 Dias de Testes"
+        status:
+          type: boolean
+          example: true
+    PublicUserProfileWithGroups:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/PublicUserProfile'
+        common_groups:
+          type: array
+          description: Lista de grupos que este usuário e você (usuário autenticado) têm em comum.
+          items:
+            $ref: '#/components/schemas/GroupSummary'
+
+    CheckinSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "checkin-uuid-abc"
+        title:
+          type: string
+          example: "Dia 05: Testes Unitários com Jest"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-26T11:00:00Z"
+        author:
+          $ref: '#/components/schemas/UserSummary'
+
+    GroupWithDetails:
+      allOf:
+        - $ref: '#/components/schemas/Group'
+        - type: object
+          properties:
+            participants:
+              type: array
+              description: Uma lista de membros do grupo.
+              items:
+                $ref: '#/components/schemas/UserSummary'
+            recent_checkins:
+              type: array
+              description: Os check-ins mais recentes realizados neste grupo.
+              items:
+                $ref: '#/components/schemas/CheckinSummary'
+                
   parameters:
     Limit:
       name: limit
