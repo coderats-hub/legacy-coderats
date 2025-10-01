@@ -39,6 +39,8 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+    stdin_open: true
+    command: sh
 
 volumes:
   postgres-data:
