@@ -50,5 +50,3 @@ RUN flutter pub get || echo "Nenhum pubspec.yaml encontrado, pulando flutter pub
 COPY . .
 
 EXPOSE 8080
-
-CMD ["sh"]
