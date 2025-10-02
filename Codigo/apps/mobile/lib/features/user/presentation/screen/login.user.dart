@@ -35,24 +35,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo do ratinho codando
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 32),
-                    child: Image.asset(
-                      'lib/features/user/presentation/screens/assets/images/ratinho com nome.png',
-                      width: 500, 
-                      height: 300, 
-                      fit: BoxFit.contain,
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Image.asset(
+                        'lib/features/user/presentation/screen/assets/ratinhos codando.png',
+                        width: 300,
+                        height: 300,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 64),
+                    const SizedBox(height: 10),
                   
                 
                   Container(
                     width: double.infinity,
                     height: 56,
                     margin: const EdgeInsets.only(bottom: 32),
-                    child: OutlinedButton.icon(
+                    child: OutlinedButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -61,20 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      icon: Image.asset(
-                        'lib/features/user/presentation/screens/assets/icons/github.png',
-                        width: 64, 
-                        height: 64, 
-                        color: const Color(0xFFD9D9D9),
-                      ),
-                      label: const Text(
-                        'Entrar com GitHub',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFFD9D9D9),
-                          fontFamily: 'Inter',
-                        ),
-                      ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
                           color: Color(0xFF444444),
@@ -84,6 +69,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         backgroundColor: const Color(0xFF333333),
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            child: Image.asset(
+                              'lib/features/user/presentation/screen/assets/github.png',
+                              width: 32,
+                              height: 32,
+                              color: const Color(0xFFD9D9D9),
+                            ),
+                          ),
+                          const Text(
+                            'Entrar com GitHub',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFFD9D9D9),
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
