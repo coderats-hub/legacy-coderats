@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'features/checkin/presentation/screens/checkin.screen.dart';
 import 'features/user/presentation/screen/login.user.dart';
 import 'features/user/presentation/screen/cadastro.user.dart';
+import 'features/user/presentation/screen/getstarted.user.dart';
 
 void main() {
   // runZonedGuarded continua sendo útil para capturar erros

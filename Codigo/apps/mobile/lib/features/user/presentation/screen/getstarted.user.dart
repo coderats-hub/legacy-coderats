@@ -1,0 +1,254 @@
+import 'package:flutter/material.dart';
+
+/// Tela de onboarding inicial do app "coderats".
+/// Mantém a identidade visual do CadastroScreen:
+/// - Fundo #222222, superfícies #333333, borda #444444
+/// - Texto principal #D9D9D9, texto secundário #AAAAAA
+/// - Verde primário #25A18E para ações principais
+/// - Tipografia: Inter (declarar no pubspec.yaml)
+class OnboardingStartScreen extends StatelessWidget {
+  const OnboardingStartScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _AppColors.background,
+      body: SafeArea(
+        child: Center(
+          // Scroll para telas pequenas / teclado
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ---------- Cabeçalho ----------
+                Text(
+                  'Vamos começar?',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    color: _AppColors.textPrimary,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Nós estamos muito felizes de vê-lo aqui!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    color: _AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+
+                // ---------- Ilustração ----------
+                const SizedBox(height: 28),
+                Semantics(
+                  label: 'Ilustração de um ratinho programando em um notebook',
+                  child: Image.asset(
+                    // Mantém o mesmo padrão de pastas do cadastro
+                    'lib/features/user/presentation/screen/assets/rato_marrom_codando.png',
+                    width: 260,
+                    height: 260,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+
+                const SizedBox(height: 36),
+
+                // ---------- Cartão de ações ----------
+                _ActionsCard(
+                  onCreateGroup: () {
+                    // TODO: Navegar para fluxo de criação de grupo
+                    // Navigator.of(context).pushNamed('/groups/create');
+                    _showSnack(context, 'Ação: Criar um grupo');
+                  },
+                  onJoinWithCode: () {
+                    // TODO: Navegar para fluxo de entrar via código
+                    // Navigator.of(context).pushNamed('/groups/join');
+                    _showSnack(context, 'Ação: Entrar via código');
+                  },
+                ),
+
+                // ---------- Pular por enquanto ----------
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Implementar navegação para a home/dashboard
+                    // Navigator.of(context).pushReplacementNamed('/home');
+                    _showSnack(context, 'Ação: Pular por enquanto');
+                  },
+                  child: const Text(
+                    'Pular por enquanto',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      // A imagem sugere um destaque alaranjado no link
+                      color: _AppColors.accentSkip,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static void _showSnack(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: _AppColors.primary, // mesmo verde usado no app
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Inter'),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+/// Cartão com duas ações (criar grupo / entrar via código), visual idêntico ao mock:
+/// - Container #333333 com cantos arredondados
+/// - Itens com ícone à esquerda, título, subtítulo e chevron à direita
+/// - Divider central #444444
+class _ActionsCard extends StatelessWidget {
+  final VoidCallback onCreateGroup;
+  final VoidCallback onJoinWithCode;
+
+  const _ActionsCard({
+    required this.onCreateGroup,
+    required this.onJoinWithCode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _AppColors.border, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          _ActionRow(
+            icon: Icons.add_circle_outline,
+            title: 'Criar um grupo',
+            subtitle: 'Iniciar algo novo e convidar outros amigos para se juntar.',
+            onTap: onCreateGroup,
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Divider(color: _AppColors.border, height: 1),
+          ),
+          _ActionRow(
+            icon: Icons.groups_outlined,
+            title: 'Entrar via código',
+            subtitle:
+                'Se juntar a um grupo privado que você foi convidado.',
+            onTap: onJoinWithCode,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Linha de ação reutilizável para manter o código limpo.
+/// Observações de acessibilidade:
+/// - Toda a linha é "clicável" via InkWell, com Semantics label.
+/// - Tamanhos e espaçamentos replicam o estilo do app.
+class _ActionRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ActionRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+        child: Row(
+          children: [
+            // Ícone à esquerda
+            Icon(icon, size: 28, color: _AppColors.textPrimary),
+            const SizedBox(width: 12),
+
+            // Título e subtítulo (ocupam o espaço restante)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: _AppColors.textPrimary,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 13,
+                      color: _AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Chevron à direita
+            const Icon(Icons.chevron_right, color: _AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Paleta/constantes locais (mantém a identidade do app).
+/// Sugestão: mover para um tema global/shared caso ainda não exista.
+class _AppColors {
+  static const background = Color(0xFF222222);
+  static const surface = Color(0xFF333333);
+  static const border = Color(0xFF444444);
+
+  static const primary = Color(0xFF25A18E); // verde do app
+  static const textPrimary = Color(0xFFD9D9D9);
+  static const textSecondary = Color(0xFFAAAAAA);
+
+  // A tela de referência mostra o link de pular em tom alaranjado
+  static const accentSkip = Color(0xFFFF7A45);
+}
