@@ -1,144 +1,231 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
 import 'package:flutter_calendar_carousel/classes/event.dart';
 
 class PublicProfileScreen extends StatelessWidget {
+  PublicProfileScreen({super.key});
+
   final DateTime _currentDate = DateTime.now();
   final EventList<Event> _markedDateMap = EventList<Event>(events: {});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF222222),
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: Text('Perfil: Alice'),
+        backgroundColor: const Color(0xFF7B1FA2),
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
+        title: const Text('Perfil: Alice'),
+        centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage('assets/profile_placeholder.png'),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Alice',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.link),
-                    label: Text('Adicionar GitHub'),
-                  ),
-                ],
-              ),
+            _ProfileHeader(
+              name: "Alice",
+              actionLabel: "Ver GitHub",
+              actionIcon: Icons.link,
+              onAction: () {},
             ),
-            SizedBox(height: 16),
-            _buildCalendar(),
-            SizedBox(height: 16),
-            BadgesWidget(),
-            SizedBox(height: 16),
-            ActionButtonsWidget(),
+            const SizedBox(height: 12),
+            _CalendarCard(currentDate: _currentDate, markedDateMap: _markedDateMap),
+            const SizedBox(height: 16),
+            _BadgesRow(showSeeAll: true),
+            const SizedBox(height: 16),
+            _GroupsInCommon(),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildCalendar() {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.0),
-      child: CalendarCarousel<Event>(
-        onDayPressed: (DateTime date, List<Event> events) {
-          // Handle day press logic here
-        },
-        weekendTextStyle: TextStyle(
-          color: Colors.red,
-        ),
-        thisMonthDayBorderColor: Colors.grey,
-        customDayBuilder: (
-          bool isSelectable,
-          int index,
-          bool isSelectedDay,
-          bool isToday,
-          bool isPrevMonthDay,
-          TextStyle textStyle,
-          bool isNextMonthDay,
-          bool isThisMonthDay,
-          DateTime day,
-        ) {
-          if (day.day == 15) {
-            return Center(
-              child: Icon(Icons.local_airport),
-            );
-          } else {
-            return null;
-          }
-        },
-        weekFormat: false,
-        markedDatesMap: _markedDateMap,
-        height: 420.0,
-        selectedDateTime: _currentDate,
-        daysHaveCircularBorder: false,
-      ),
-    );
-  }
 }
 
-class BadgesWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        BadgeItem('assets/badge1.png', '2x'),
-        BadgeItem('assets/badge2.png', '1x'),
-      ],
-    );
-  }
-}
+class _ProfileHeader extends StatelessWidget {
+  final String name;
+  final String actionLabel;
+  final IconData actionIcon;
+  final VoidCallback onAction;
 
-class BadgeItem extends StatelessWidget {
-  final String imagePath;
-  final String count;
-
-  BadgeItem(this.imagePath, this.count);
+  const _ProfileHeader({
+    required this.name,
+    required this.actionLabel,
+    required this.actionIcon,
+    required this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Image.asset(imagePath, width: 40, height: 40),
-        Text(count),
+        Container(
+          width: 96,
+          height: 96,
+          decoration: const BoxDecoration(
+            color: Color(0xFF7B1FA2),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(child: Icon(Icons.person, color: Colors.white, size: 48)),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          name,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+        const SizedBox(height: 6),
+        _ChipButton(
+          label: actionLabel,
+          icon: actionIcon,
+          onPressed: onAction,
+          color: const Color(0xFF2E7D32),
+        ),
       ],
     );
   }
 }
 
-class ActionButtonsWidget extends StatelessWidget {
+class _ChipButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color color;
+  const _ChipButton({required this.label, required this.icon, required this.onPressed, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: Colors.white),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalendarCard extends StatelessWidget {
+  final DateTime currentDate;
+  final EventList<Event> markedDateMap;
+  const _CalendarCard({required this.currentDate, required this.markedDateMap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: CalendarCarousel<Event>(
+        thisMonthDayBorderColor: Colors.transparent,
+        daysHaveCircularBorder: true,
+        weekendTextStyle: const TextStyle(color: Colors.white70),
+        weekdayTextStyle: const TextStyle(color: Colors.white54),
+        daysTextStyle: const TextStyle(color: Colors.white),
+        selectedDayTextStyle: const TextStyle(color: Colors.white),
+        selectedDayButtonColor: const Color(0xFF2E7D32),
+        todayButtonColor: Colors.transparent,
+        todayBorderColor: const Color(0xFF2E7D32),
+        selectedDateTime: currentDate,
+        showOnlyCurrentMonthDate: true,
+        headerTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+        iconColor: Colors.white70,
+        weekFormat: false,
+        height: 360,
+        isScrollable: false,
+        headerMargin: const EdgeInsets.only(bottom: 8),
+        markedDatesMap: markedDateMap,
+        onDayPressed: (date, events) {},
+      ),
+    );
+  }
+}
+
+class _BadgesRow extends StatelessWidget {
+  final bool showSeeAll;
+  const _BadgesRow({this.showSeeAll = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Badges', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            if (showSeeAll)
+              TextButton(
+                onPressed: () {},
+                child: const Text('Ver todos os badges'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _BadgePlaceholder(label: '2x'),
+            const SizedBox(width: 12),
+            _BadgePlaceholder(label: '1x', warning: true),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _BadgePlaceholder extends StatelessWidget {
+  final String label;
+  final bool warning;
+  const _BadgePlaceholder({required this.label, this.warning = false});
+
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ElevatedButton.icon(
-          onPressed: () {},
-          icon: Icon(Icons.group_add),
-          label: Text('Criar um grupo'),
+        Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(
+            color: warning ? Colors.red : Colors.white10,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.emoji_events, color: Colors.white),
         ),
-        ElevatedButton.icon(
-          onPressed: () {},
-          icon: Icon(Icons.code),
-          label: Text('Entrar via código'),
-        ),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(color: Colors.white)),
+      ],
+    );
+  }
+}
+
+class _GroupsInCommon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 8),
+        Text('Grupos em Comum', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        SizedBox(height: 8),
+        Text('— em breve —', style: TextStyle(color: Colors.white54)),
       ],
     );
   }
