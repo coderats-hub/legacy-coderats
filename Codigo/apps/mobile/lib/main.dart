@@ -2,6 +2,8 @@ import 'dart:async'; // Importe para usar runZonedGuarded
 import 'package:flutter/material.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart'; // Removido
 import 'features/checkin/presentation/screens/checkin.screen.dart';
+import 'features/profile/presentation/screens/private_profile.dart';
+import 'features/profile/presentation/screens/public_profile.dart';
 
 void main() {
   // runZonedGuarded continua sendo útil para capturar erros
@@ -23,9 +25,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Check-in App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.purple,
       ),
-      home: const CheckinScreen(),
+      home:  PublicProfileScreen(),
     );
   }
 }
