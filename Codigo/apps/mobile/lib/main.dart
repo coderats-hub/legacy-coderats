@@ -21,11 +21,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Check-in App',
+      title: 'app',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const CheckinScreen(),
+      home: const LoginScreen(),
     );
   }
 }
