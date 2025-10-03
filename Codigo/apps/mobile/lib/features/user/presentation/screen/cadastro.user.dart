@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/app_button.dart';
-import 'cadastro.user.dart';
+import 'login.user.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class CadastroScreen extends StatefulWidget {
+  const CadastroScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<CadastroScreen> createState() => _CadastroScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _CadastroScreenState extends State<CadastroScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
@@ -36,18 +39,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo do ratinho codando
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: Image.asset(
-                        'lib/features/user/presentation/screen/assets/ratinhos codando.png',
-                        width: 300,
-                        height: 300,
-                        fit: BoxFit.contain,
-                      ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Image.asset(
+                      'lib/features/user/presentation/screen/assets/ratinhos codando.png',
+                      width: 180,
+                      height: 120,
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 10),
-                  
-                
+                  ),
+                  const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
                     height: 56,
@@ -56,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Login com GitHub em desenvolvimento'),
+                            content: Text('Cadastro com GitHub em desenvolvimento'),
                             backgroundColor: Color(0xFF9A24DD),
                           ),
                         );
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const Text(
-                            'Entrar com GitHub',
+                            'Cadastrar com GitHub',
                             style: TextStyle(
                               fontSize: 16,
                               color: Color(0xFFD9D9D9),
@@ -103,9 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Label E-mail
+                        // Nome Completo
                         const Text(
-                          'E-mail',
+                          'Nome Completo *',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color(0xFFD9D9D9),
@@ -114,17 +115,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        
-                        // Campo de email
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _nameController,
                           style: const TextStyle(
                             color: Color(0xFFD9D9D9),
                             fontFamily: 'Inter',
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Insira seu e-mail',
+                            hintText: 'Insira seu nome',
                             hintStyle: const TextStyle(
                               color: Color(0xFF666666),
                               fontSize: 16,
@@ -140,7 +138,59 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFF9A24DD), width: 2),
+                              borderSide: const BorderSide(color: Color(0xFF25A18E), width: 2),
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFF333333),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor, digite seu nome';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        // E-mail
+                        const Text(
+                          'E-mail *',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFD9D9D9),
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          style: const TextStyle(
+                            color: Color(0xFFD9D9D9),
+                            fontFamily: 'Inter',
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Insira seu melhor e-mail',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF666666),
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF444444)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF444444)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF25A18E), width: 2),
                             ),
                             filled: true,
                             fillColor: const Color(0xFF333333),
@@ -159,12 +209,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        
                         const SizedBox(height: 20),
-                        
-                        // Label Senha
+                        // Senha
                         const Text(
-                          'Senha',
+                          'Senha *',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color(0xFFD9D9D9),
@@ -173,8 +221,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        
-                        // Campo de senha
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
@@ -212,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFF9A24DD), width: 2),
+                              borderSide: const BorderSide(color: Color(0xFF25A18E), width: 2),
                             ),
                             filled: true,
                             fillColor: const Color(0xFF333333),
@@ -231,27 +277,93 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        
+                        const SizedBox(height: 20),
+                        // Confirmar Senha
+                        const Text(
+                          'Confirmar Senha *',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFD9D9D9),
+                            fontWeight: FontWeight.w400,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: !_isConfirmPasswordVisible,
+                          style: const TextStyle(
+                            color: Color(0xFFD9D9D9),
+                            fontFamily: 'Inter',
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Confirme sua senha',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF666666),
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isConfirmPasswordVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: const Color(0xFF666666),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF444444)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF444444)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF25A18E), width: 2),
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFF333333),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor, confirme sua senha';
+                            }
+                            if (value != _passwordController.text) {
+                              return 'As senhas não coincidem';
+                            }
+                            return null;
+                          },
+                        ),
                         const SizedBox(height: 32),
-                        
-                        // Botão Entrar
+                        // Botão Cadastrar
                         Center(
                           child: SizedBox(
-                            width: 200, // Largura reduzida
+                            width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Login realizado com sucesso!'),
-                                      backgroundColor: Color(0xFF9A24DD),
+                                      content: Text('Cadastro realizado com sucesso!'),
+                                      backgroundColor: Color(0xFF25A18E),
                                     ),
                                   );
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFB24DEB), // Cor roxa clara
+                                backgroundColor: const Color(0xFF25A18E), // Cor verde
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -259,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 elevation: 0,
                               ),
                               child: const Text(
-                                'Entrar',
+                                'Cadastrar',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
@@ -269,14 +381,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 24),
-                        
-                        // Texto "Não possui conta ainda?"
+                        // Texto "Já possui conta? Entrar!"
                         Center(
                           child: RichText(
                             text: TextSpan(
-                              text: 'Não possui conta ainda? ',
+                              text: 'Já possui conta? ',
                               style: const TextStyle(
                                 color: Color(0xFFD9D9D9),
                                 fontSize: 14,
@@ -286,19 +396,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                 WidgetSpan(
                                   child: GestureDetector(
                                     onTap: () {
-                                      Navigator.of(context).push(
+                                      Navigator.of(context).pushAndRemoveUntil(
                                         MaterialPageRoute(
-                                          builder: (context) => CadastroScreen(),
+                                          builder: (context) => LoginScreen(),
                                         ),
+                                        (route) => false,
                                       );
                                     },
                                     child: const Text(
-                                      'Cadastrar!',
+                                      'Entrar!',
                                       style: TextStyle(
-                                        color: Color(0xFF9A24DD), // Cor roxa escura
+                                        color: Color(0xFF25A18E), // Cor verde
                                         fontSize: 14,
                                         decoration: TextDecoration.underline,
-                                        decorationColor: Color(0xFF9A24DD),
+                                        decorationColor: Color(0xFF25A18E),
                                         fontFamily: 'Inter',
                                       ),
                                     ),

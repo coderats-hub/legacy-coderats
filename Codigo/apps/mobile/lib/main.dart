@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/user/presentation/screen/login.user.dart';
+import 'features/user/presentation/screen/cadastro.user.dart';
 import 'shared/theme/app.theme.dart';
 
 void main() {
