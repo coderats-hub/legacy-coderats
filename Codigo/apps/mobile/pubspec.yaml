@@ -63,6 +63,7 @@ flutter:
   assets:
     - lib/features/user/presentation/screen/assets/ratinhos codando.png
     - lib/features/user/presentation/screen/assets/github.png
+    - lib/features/user/presentation/screen/assets/rato_marrom_codando.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
