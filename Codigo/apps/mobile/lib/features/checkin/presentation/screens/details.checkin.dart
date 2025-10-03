@@ -70,7 +70,6 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
                 showRefreshButton: false,
               ),
               const SizedBox(height: 4),
-              
               // Conteúdo principal
               Expanded(
                 child: _buildBody(),

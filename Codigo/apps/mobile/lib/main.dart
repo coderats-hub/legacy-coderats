@@ -1,6 +1,7 @@
 import 'package:app/features/group/presentation/screens/list.group.dart';
 import 'package:app/features/profile/presentation/screens/private.profile.dart';
 import 'package:app/features/user/presentation/screens/started.dart';
+import 'package:app/features/user/presentation/screens/login.user.dart';
 import 'package:flutter/material.dart';
 import 'shared/theme/app.theme.dart';
 
@@ -14,7 +15,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Code Rats',
       theme: AppTheme.dark(),
-      home: const OnboardingStartScreen(),
+      home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
       routes: {
         '/groups':  (_) => const GroupsPage(),

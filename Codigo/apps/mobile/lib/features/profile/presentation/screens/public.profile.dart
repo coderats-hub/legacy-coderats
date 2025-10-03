@@ -18,7 +18,9 @@ class PublicProfileScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
         title: const Text('Perfil: Alice'),
         centerTitle: false,
