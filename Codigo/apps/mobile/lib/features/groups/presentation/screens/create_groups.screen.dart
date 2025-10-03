@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../shared/components/textfield.dart';
 import '../../../../shared/components/buttonPrimary.dart';
+import 'scoring_mode_groups.screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -90,9 +91,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         return;
       }
       
-      // TODO: Implementar lógica de criação do grupo
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Grupo criado com sucesso!')),
+      // Navegar para a tela de método avaliativo
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ScoringModeGroupsScreen(),
+        ),
       );
     }
   }

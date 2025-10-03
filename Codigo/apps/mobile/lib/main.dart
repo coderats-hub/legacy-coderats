@@ -3,6 +3,7 @@ import 'shared/theme/app.theme.dart';
 import 'shared/components/buttonPrimary.dart';
 import 'shared/components/textfield.dart';
 import 'features/groups/presentation/screens/create_groups.screen.dart';
+import 'features/groups/presentation/screens/scoring_mode_groups.screen.dart';
 
 void main() {
   runApp(const DemoApp());
@@ -182,6 +183,20 @@ class _DemoHomePageState extends State<DemoHomePage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const CreateGroupScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            
+            AppButtonPrimary(
+              type: AppButtonPrimaryType.secondary,
+              text: 'Método Avaliativo',
+              icon: Icons.assessment,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ScoringModeGroupsScreen(),
                   ),
                 );
               },
