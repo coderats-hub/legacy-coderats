@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'shared/theme/app.theme.dart';
 import 'shared/components/buttonPrimary.dart';
 import 'shared/components/textfield.dart';
+import 'features/groups/presentation/screens/create_groups.screen.dart';
 
 void main() {
   runApp(const DemoApp());
@@ -167,6 +168,25 @@ class _DemoHomePageState extends State<DemoHomePage> {
               ],
             ),
 
+            const SizedBox(height: 32),
+            
+            // ===== Navegação =====
+            Text('Navegação', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            
+            AppButtonPrimary(
+              type: AppButtonPrimaryType.primary,
+              text: 'Criar Grupo',
+              icon: Icons.group_add,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const CreateGroupScreen(),
+                  ),
+                );
+              },
+            ),
+            
             const SizedBox(height: 32),
             // Exemplo de uso das cores do tema fora dos componentes
             Container(
