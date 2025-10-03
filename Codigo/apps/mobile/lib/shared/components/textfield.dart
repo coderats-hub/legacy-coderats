@@ -10,6 +10,7 @@ class AppTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final int maxLines;
   final Function(String)? onChanged;
+  final String? Function(String?)? validator;
 
   const AppTextField({
     super.key,
@@ -22,6 +23,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
     this.onChanged,
+    this.validator,
   });
 
   @override
@@ -47,12 +49,13 @@ class AppTextField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
+        TextFormField(
           controller: controller,
           enabled: enabled,
           onChanged: onChanged,
           keyboardType: keyboardType,
           maxLines: maxLines,
+          validator: validator,
           decoration: InputDecoration(
             hintText: hintText,
             prefixIcon: icon != null ? Icon(icon, color: colors.onSurfaceVariant) : null,
@@ -70,6 +73,14 @@ class AppTextField extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: colors.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.error, width: 1.5),
             ),
           ),
         ),
