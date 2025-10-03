@@ -1,6 +1,8 @@
 import 'package:app/features/group/presentation/screens/groups.screen.dart';
 import 'package:flutter/material.dart';
-import 'shared/theme/app.theme.dart';   // seu tema escuro (já criado)
+import 'features/user/presentation/screen/login.user.dart';
+import 'features/user/presentation/screen/cadastro.user.dart';
+import 'shared/theme/app.theme.dart';
 
 void main() => runApp(const App());
 
@@ -10,10 +12,11 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Groups Demo',
+      title: 'Code Rats',
+      theme: AppTheme.dark(),
+      home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),          
-      home: const GroupsPage(),
     );
   }
 }
+
