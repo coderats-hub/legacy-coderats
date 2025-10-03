@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
+import 'commit_checkin_screen.dart';
+import '../widgets/shared_widgets.dart';
 
 // A tela foi convertida para StatefulWidget para gerenciar o próprio estado
 class CheckinScreen extends StatefulWidget {
@@ -61,15 +63,19 @@ class _CheckinScreenState extends State<CheckinScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     
     return Theme(
-      data: _buildDarkTheme(),
+      data: SharedTheme.buildDarkTheme(),
       child: Scaffold(
         backgroundColor: const Color(0xFF121212),
         body: SafeArea(
           child: Column(
             children: [
               const SizedBox(height: 16),
-              // Header customizado
-              _buildHeader(context),
+              // Header compartilhado
+              SharedHeader(
+                title: 'Check-ins: Code Rats',
+                showRefreshButton: true,
+                onRefresh: _loadCheckins,
+              ),
               const SizedBox(height: 4),
               
               // Conteúdo principal
@@ -79,13 +85,18 @@ class _CheckinScreenState extends State<CheckinScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: _BottomNav(),
+        bottomNavigationBar: const SharedBottomNav(),
         floatingActionButton: SizedBox(
           width: 64,
           height: 64,
           child: FloatingActionButton(
             onPressed: () {
-              // TODO: Adicionar nova atividade
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CommitCheckinScreen(),
+                ),
+              );
             },
             backgroundColor: const Color(0xFF7DCDC1),
             elevation: 0,
@@ -100,24 +111,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
-  // Header estilizado
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          _BackButton(color: Colors.white.withOpacity(0.92)),
-          const SizedBox(width: 8),
-          Text(
-            'Check-ins: Code Rats',
-            style: _buildDarkTheme().textTheme.titleLarge,
-          ),
-          const Spacer(),
-          _RefreshButton(onPressed: _loadCheckins),
-        ],
-      ),
-    );
-  }
+
 
   // Método auxiliar para decidir o que mostrar no corpo da tela
   Widget _buildBody() {
@@ -155,16 +149,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
             const SizedBox(height: 16),
             Text(
               'Erro ao carregar check-ins',
-              style: _buildDarkTheme().textTheme.titleMedium,
+              style: SharedTheme.buildDarkTheme().textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
               'Erro: $_error',
-              style: _buildDarkTheme().textTheme.bodyMedium,
+              style: SharedTheme.buildDarkTheme().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _StyledButton(
+            SharedStyledButton(
               text: 'Tentar novamente',
               onPressed: _loadCheckins,
             ),
@@ -189,16 +183,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
             const SizedBox(height: 16),
             Text(
               'Nenhum check-in encontrado',
-              style: _buildDarkTheme().textTheme.titleMedium,
+              style: SharedTheme.buildDarkTheme().textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
               'Você ainda não possui check-ins registrados.',
-              style: _buildDarkTheme().textTheme.bodyMedium,
+              style: SharedTheme.buildDarkTheme().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            _StyledButton(
+            SharedStyledButton(
               text: 'Atualizar',
               onPressed: _loadCheckins,
             ),
@@ -249,84 +243,9 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
-  ThemeData _buildDarkTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF121212),
-      primaryColor: const Color(0xFF2BB6A5),
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF2BB6A5),
-        secondary: Color(0xFFDA7B3A),
-        surface: Color(0xFF1E1E1E),
-        outline: Color(0xFF2A2A2A),
-      ),
-      textTheme: GoogleFonts.interTextTheme(
-        const TextTheme(
-          titleLarge: TextStyle(
-            fontSize: 20, 
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16, 
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-          bodyMedium: TextStyle(
-            fontSize: 14, 
-            color: Color(0xFFBDBDBD),
-            fontWeight: FontWeight.w400,
-          ),
-          bodySmall: TextStyle(
-            fontSize: 12, 
-            color: Color(0xFF9E9E9E),
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ======== WIDGETS CUSTOMIZADOS ========
-
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.color});
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () => Navigator.of(context).maybePop(),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: color),
-      ),
-    );
-  }
-}
-
-class _RefreshButton extends StatelessWidget {
-  const _RefreshButton({required this.onPressed});
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(
-          Icons.refresh,
-          size: 20,
-          color: Colors.white.withOpacity(0.92),
-        ),
-      ),
-    );
-  }
-}
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
@@ -428,39 +347,7 @@ class _SectionLabel extends StatelessWidget {
   }
 } */
 
-class _StyledButton extends StatelessWidget {
-  const _StyledButton({
-    required this.text,
-    required this.onPressed,
-  });
-  
-  final String text;
-  final VoidCallback onPressed;
 
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2BB6A5),
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        elevation: 0,
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
 
 class _PostCard extends StatelessWidget {
   const _PostCard({
@@ -690,45 +577,5 @@ class _PostCard extends StatelessWidget {
   }
 }
 
-class _BottomNav extends StatefulWidget {
-  @override
-  State<_BottomNav> createState() => _BottomNavState();
-}
 
-class _BottomNavState extends State<_BottomNav> {
-  int current = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: Color(0xFF1A1A1A)),
-      height: 70,
-      child: BottomNavigationBar(
-        currentIndex: current,
-        onTap: (i) => setState(() => current = i),
-        backgroundColor: const Color(0xFF1A1A1A),
-        selectedItemColor: Colors.white,
-        unselectedItemColor: const Color(0xFF9E9E9E),
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-        iconSize: 26,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group_outlined),
-            label: 'Grupos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
-        ],
-      ),
-    );
-  }
-}
 
