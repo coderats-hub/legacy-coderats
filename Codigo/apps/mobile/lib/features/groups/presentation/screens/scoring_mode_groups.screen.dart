@@ -53,7 +53,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                 children: [
                   // Opção 1: Maior streak de fotos
                   _buildEvaluationOption(
-                    icon: Icons.photo_library_outlined,
+                    iconPath: 'assets/icons/image.png',
                     title: 'Maior streak de fotos',
                     description: 'Usuário com maior frequência usando fotografias',
                     method: EvaluationMethod.photoStreak,
@@ -64,7 +64,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 2: Maior streak de commits
                   _buildEvaluationOption(
-                    icon: Icons.code,
+                    iconPath: 'assets/icons/github.png',
                     title: 'Maior streak de commits',
                     description: 'Usuário com maior frequência usando commits',
                     method: EvaluationMethod.commitStreak,
@@ -75,7 +75,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 3: Maior número de commits
                   _buildEvaluationOption(
-                    icon: Icons.integration_instructions,
+                    iconPath: 'assets/icons/maior.png',
                     title: 'Maior número de commits',
                     description: 'Usuário com maior números de commits acumulados',
                     method: EvaluationMethod.commitCount,
@@ -86,7 +86,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 4: Maior número de linhas de código
                   _buildEvaluationOption(
-                    icon: Icons.code_off,
+                    iconPath: 'assets/icons/maior2.png',
                     title: 'Maior número de linhas de código',
                     description: 'Usuário com maior acumulo de linhas de código',
                     method: EvaluationMethod.codeLines,
@@ -114,7 +114,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
   }
 
   Widget _buildEvaluationOption({
-    required IconData icon,
+    required String iconPath,
     required String title,
     required String description,
     required EvaluationMethod method,
@@ -131,28 +131,20 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
       },
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colors.surfaceVariant,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? colors.primary : colors.outline,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
         child: Row(
           children: [
             // Ícone
-            Container(
+            SizedBox(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                color: isSelected ? colors.primary.withOpacity(0.2) : colors.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? colors.primary : colors.onSurfaceVariant,
-                size: 24,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Image.asset(
+                  iconPath,
+                  width: 32,
+                  height: 32,
+                  color: Colors.white,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -165,7 +157,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   Text(
                     title,
                     style: textTheme.titleMedium?.copyWith(
-                      color: colors.onSurface,
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -173,7 +165,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   Text(
                     description,
                     style: textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
+                      color: Colors.white,
                       height: 1.3,
                     ),
                   ),
@@ -188,15 +180,15 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? colors.primary : colors.outline,
+                  color: Colors.white,
                   width: 2,
                 ),
-                color: isSelected ? colors.primary : Colors.transparent,
+                color: isSelected ? Colors.white : Colors.transparent,
               ),
               child: isSelected
                   ? Icon(
                       Icons.check,
-                      color: colors.onPrimary,
+                      color: Colors.black,
                       size: 16,
                     )
                   : null,
