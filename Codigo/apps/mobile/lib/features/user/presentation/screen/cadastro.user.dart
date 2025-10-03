@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/app_button.dart';
 import 'login.user.dart';
+import 'getstarted.user.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -354,11 +355,15 @@ class _CadastroScreenState extends State<CadastroScreen> {
                             child: ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Cadastro realizado com sucesso!'),
-                                      backgroundColor: Color(0xFF25A18E),
+                                  // ScaffoldMessenger.of(context).showSnackBar(
+                                  //   const SnackBar(
+                                  //     content: Text('Cadastro realizado com sucesso!'),
+                                  //     backgroundColor: Color(0xFF25A18E),
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                      builder: (context) => const OnboardingStartScreen(),
                                     ),
+                                    (route) => false,
                                   );
                                 }
                               },
