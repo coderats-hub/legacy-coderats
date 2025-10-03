@@ -216,7 +216,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               
               // Botão Continuar
               AppButtonPrimary(
-                type: AppButtonPrimaryType.primary,
+                type: AppButtonPrimaryType.secondary,
                 text: 'Continuar',
                 onPressed: _continue,
               ),
