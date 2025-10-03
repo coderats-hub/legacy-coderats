@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../shared/components/textfield.dart';
 import '../../../../shared/components/buttonPrimary.dart';
-import 'scoring_mode_groups.screen.dart';
+import 'scoring.group.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});

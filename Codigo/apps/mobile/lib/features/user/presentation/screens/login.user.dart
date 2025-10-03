@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/app_button.dart';
-import 'cadastro.user.dart';
+import 'register.user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: Image.asset(
-                        'lib/features/user/presentation/screen/assets/ratinhos codando.png',
+                        '/images/logo.png',
                         width: 300,
                         height: 300,
                         fit: BoxFit.contain,
@@ -78,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Container(
                             margin: const EdgeInsets.only(right: 8),
                             child: Image.asset(
-                              'lib/features/user/presentation/screen/assets/github.png',
+                              '/icons/github.png',
                               width: 32,
                               height: 32,
                               color: const Color(0xFFD9D9D9),
@@ -288,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onTap: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (context) => CadastroScreen(),
+                                          builder: (context) => RegisterScreen(),
                                         ),
                                       );
                                     },

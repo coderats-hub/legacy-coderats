@@ -62,10 +62,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - lib/features/user/presentation/screen/assets/ratinhos codando.png
-    - lib/features/user/presentation/screen/assets/github.png
-    - lib/features/user/presentation/screen/assets/rato_marrom_codando.png
-    - assets/icons/
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

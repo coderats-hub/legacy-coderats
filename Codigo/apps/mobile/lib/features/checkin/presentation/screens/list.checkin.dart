@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
-import 'commit_checkin_screen.dart';
+import 'details.checkin.dart';
 import '../widgets/shared_widgets.dart';
 
 // A tela foi convertida para StatefulWidget para gerenciar o próprio estado

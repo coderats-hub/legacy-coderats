@@ -13,15 +13,13 @@ class PrivateProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7B1FA2),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: const Text('Perfil: Alice'),
+        title: const Text('Alice'),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -51,6 +49,23 @@ class PrivateProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 1, // esta é a página de Grupos
+          onTap: (i) {
+            const routeByIndex = ['/home', '/groups', '/profile'];
+            final current = ModalRoute.of(context)?.settings.name;
+            final target = routeByIndex[i];
+
+            if (current != target) {
+              Navigator.of(context).pushReplacementNamed(target);
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
+            BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          ],
+        ),
     );
   }
 }
