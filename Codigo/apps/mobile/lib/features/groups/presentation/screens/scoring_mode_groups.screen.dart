@@ -28,15 +28,18 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
       appBar: AppBar(
         backgroundColor: colors.background,
         elevation: 0,
+        titleSpacing: 8,
+        centerTitle: false,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colors.onBackground),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Método Avaliativo',
-          style: textTheme.titleLarge?.copyWith(
-            color: colors.onBackground,
-            fontWeight: FontWeight.bold,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
           ),
         ),
       ),
