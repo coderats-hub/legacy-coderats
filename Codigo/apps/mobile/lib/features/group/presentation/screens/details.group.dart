@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:app/features/group/presentation/widgets/banner.hero.dart';
+import 'package:app/features/group/presentation/widgets/banner.group.dart';
 import 'package:flutter/material.dart';
 
 class GroupDetailPage extends StatefulWidget {

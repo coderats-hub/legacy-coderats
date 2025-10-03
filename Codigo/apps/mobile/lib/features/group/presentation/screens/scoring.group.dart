@@ -1,3 +1,4 @@
+import 'package:app/features/group/presentation/screens/list.group.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/components/buttonPrimary.dart';
 
@@ -53,7 +54,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                 children: [
                   // Opção 1: Maior streak de fotos
                   _buildEvaluationOption(
-                    iconPath: 'assets/icons/image.png',
+                    iconPath: '/icons/image.png',
                     title: 'Maior streak de fotos',
                     description: 'Usuário com maior frequência usando fotografias',
                     method: EvaluationMethod.photoStreak,
@@ -64,7 +65,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 2: Maior streak de commits
                   _buildEvaluationOption(
-                    iconPath: 'assets/icons/github.png',
+                    iconPath: '/icons/github.png',
                     title: 'Maior streak de commits',
                     description: 'Usuário com maior frequência usando commits',
                     method: EvaluationMethod.commitStreak,
@@ -75,7 +76,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 3: Maior número de commits
                   _buildEvaluationOption(
-                    iconPath: 'assets/icons/maior.png',
+                    iconPath: '/icons/code.png',
                     title: 'Maior número de commits',
                     description: 'Usuário com maior números de commits acumulados',
                     method: EvaluationMethod.commitCount,
@@ -86,7 +87,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 4: Maior número de linhas de código
                   _buildEvaluationOption(
-                    iconPath: 'assets/icons/maior2.png',
+                    iconPath: '/icons/list.png',
                     title: 'Maior número de linhas de código',
                     description: 'Usuário com maior acumulo de linhas de código',
                     method: EvaluationMethod.codeLines,
@@ -211,8 +212,11 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
         ),
       );
       
-      // Navegar de volta para a tela inicial ou para uma tela de sucesso
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GroupsPage(),
+        ),
+      );
     }
   }
 

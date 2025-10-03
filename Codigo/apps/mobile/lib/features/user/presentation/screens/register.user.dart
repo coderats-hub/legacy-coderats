@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/app_button.dart';
 import 'login.user.dart';
-import 'getstarted.user.dart';
+import 'started.dart';
 
-class CadastroScreen extends StatefulWidget {
-  const CadastroScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<CadastroScreen> createState() => _CadastroScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _CadastroScreenState extends State<CadastroScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -43,7 +42,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Image.asset(
-                      'lib/features/user/presentation/screen/assets/ratinhos codando.png',
+                      '/images/logo.png',
                       width: 180,
                       height: 120,
                       fit: BoxFit.contain,
@@ -80,7 +79,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                           Container(
                             margin: const EdgeInsets.only(right: 8),
                             child: Image.asset(
-                              'lib/features/user/presentation/screen/assets/github.png',
+                              '/icons/github.png',
                               width: 32,
                               height: 32,
                               color: const Color(0xFFD9D9D9),

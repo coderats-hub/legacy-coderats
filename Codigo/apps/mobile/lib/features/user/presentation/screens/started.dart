@@ -1,3 +1,5 @@
+import 'package:app/features/group/presentation/screens/create.group.dart';
+import 'package:app/features/group/presentation/screens/list.group.dart';
 import 'package:flutter/material.dart';
 
 /// Tela de onboarding inicial do app "coderats".
@@ -51,8 +53,7 @@ class OnboardingStartScreen extends StatelessWidget {
                 Semantics(
                   label: 'Ilustração de um ratinho programando em um notebook',
                   child: Image.asset(
-                    // Mantém o mesmo padrão de pastas do cadastro
-                    'lib/features/user/presentation/screen/assets/rato_marrom_codando.png',
+                    '/images/firstMouse.png',
                     width: 260,
                     height: 260,
                     fit: BoxFit.contain,
@@ -64,24 +65,28 @@ class OnboardingStartScreen extends StatelessWidget {
                 // ---------- Cartão de ações ----------
                 _ActionsCard(
                   onCreateGroup: () {
-                    // TODO: Navegar para fluxo de criação de grupo
-                    // Navigator.of(context).pushNamed('/groups/create');
-                    _showSnack(context, 'Ação: Criar um grupo');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => CreateGroupScreen(),
+                      ),
+                    );
                   },
                   onJoinWithCode: () {
                     // TODO: Navegar para fluxo de entrar via código
-                    // Navigator.of(context).pushNamed('/groups/join');
+                    // Navigator.of(context).pu shNamed('/groups/join');
                     _showSnack(context, 'Ação: Entrar via código');
                   },
                 ),
 
-                // ---------- Pular por enquanto ----------
+                // ---------- Pular por enquanto ---------- 
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
-                    // TODO: Implementar navegação para a home/dashboard
-                    // Navigator.of(context).pushReplacementNamed('/home');
-                    _showSnack(context, 'Ação: Pular por enquanto');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GroupsPage(),
+                      ),
+                    );
                   },
                   child: const Text(
                     'Pular por enquanto',

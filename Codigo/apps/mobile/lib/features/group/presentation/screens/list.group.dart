@@ -1,5 +1,5 @@
-import 'package:app/features/group/presentation/screens/grupoDetails.screen.dart';
-import 'package:app/features/group/presentation/widgets/group.card.dart';
+import 'package:app/features/group/presentation/screens/details.group.dart';
+import 'package:app/features/group/presentation/widgets/card.group.dart';
 import 'package:flutter/material.dart';
 
 class GroupsPage extends StatelessWidget {
@@ -54,14 +54,22 @@ class GroupsPage extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
-        onTap: (i) {}, // navegação real depois
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
-          BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
-        ],
-      ),
+          currentIndex: 1, // esta é a página de Grupos
+          onTap: (i) {
+            const routeByIndex = ['/home', '/groups', '/profile'];
+            final current = ModalRoute.of(context)?.settings.name;
+            final target = routeByIndex[i];
+
+            if (current != target) {
+              Navigator.of(context).pushReplacementNamed(target);
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
+            BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          ],
+        ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         child: const Icon(Icons.add),
