@@ -1,4 +1,4 @@
-version: '3.9'
+
 
 services:
   backend:
@@ -30,6 +30,7 @@ services:
   mobile:
     build: ./apps/mobile
     container_name: coderats-mobile
+    network_mode: "host"
     user: flutteruser
     ports:
       - "8081:8080"  
