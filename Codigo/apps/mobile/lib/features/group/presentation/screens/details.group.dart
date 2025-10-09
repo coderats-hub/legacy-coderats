@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
+import 'package:app/features/profile/presentation/screens/public.profile.dart';
+import 'package:app/features/checkin/presentation/screens/details.checkin.dart';
 import 'package:flutter/material.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -203,7 +205,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => CommitCheckinScreen(),
+            ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -347,15 +355,27 @@ class _RankingTile extends StatelessWidget {
           const CircleAvatar(radius: 18, backgroundColor: Colors.white24),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: tt.bodyLarge),
-                Text(points,
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    )),
-              ],
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PublicProfileScreen(),
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: tt.bodyLarge?.copyWith(
+                    color: Color(0xFF9A24DD), // Roxo padrão
+                    decoration: TextDecoration.none,
+                  )),
+                  Text(points,
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      )),
+                ],
+              ),
             ),
           ),
           Padding(

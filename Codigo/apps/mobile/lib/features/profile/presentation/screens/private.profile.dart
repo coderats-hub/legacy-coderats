@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
 import 'package:flutter_calendar_carousel/classes/event.dart';
+import 'package:app/features/group/presentation/screens/create.group.dart';
+import 'package:app/features/group/presentation/screens/list.group.dart';
 
 class PrivateProfileScreen extends StatelessWidget {
   PrivateProfileScreen({super.key});
@@ -17,7 +19,14 @@ class PrivateProfileScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const GroupsPage(),
+              ),
+              (route) => false,
+            );
+          },
         ),
         title: const Text('Alice'),
         centerTitle: false,
@@ -153,7 +162,13 @@ class _PrivateActions extends StatelessWidget {
           child: _ActionCard(
             label: "Criar um grupo",
             icon: Icons.group_add,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CreateGroupScreen(),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: 12),

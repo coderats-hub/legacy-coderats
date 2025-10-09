@@ -1,5 +1,6 @@
 import 'package:app/features/group/presentation/screens/details.group.dart';
 import 'package:app/features/group/presentation/widgets/card.group.dart';
+import 'create.group.dart';
 import 'package:flutter/material.dart';
 
 class GroupsPage extends StatelessWidget {
@@ -71,7 +72,13 @@ class GroupsPage extends StatelessWidget {
           ],
         ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CreateGroupScreen(),
+            ),
+          );
+        },
         child: const Icon(Icons.add),
       ),
     );
