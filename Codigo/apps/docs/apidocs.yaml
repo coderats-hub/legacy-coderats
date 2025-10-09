@@ -144,7 +144,6 @@ paths:
                 name: "Ana Coder Silva"
                 email: "ana.coder@email.com"
                 image: "https://example.com/path/to/new_image.png"
-                github_user: "anacodersilva"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -217,7 +216,6 @@ paths:
                 - id: "badge-uuid-01"
                   name: "Rato Iniciante"
                   image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
-                  points: 50
                   description: "Realizou seu primeiro check-in!"
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -291,7 +289,7 @@ paths:
                 - id: "checkin-uuid-123"
                   title: "Dia 15: Refatorando a API de pagamentos"
                   description: "Apliquei o padrão Strategy para os gateways de pagamento. O código ficou bem mais limpo e fácil de manter, separando cada lógica de pagamento em sua própria classe. O próximo passo é adicionar testes de integração."
-                  picture: "https://example.com/screenshots/refactoring.png"
+                  image: "https://example.com/screenshots/refactoring.png"
                   summary_ai: "Excelente aplicação do padrão Strategy! Separar as responsabilidades torna o código mais escalável e manutenível, o que é uma prática de um desenvolvedor sênior. Adicionar testes de integração é o caminho certo para garantir a robustez da solução. Continue assim!"
                   points: 150
                   createdAt: "2025-09-25T22:10:00Z"
@@ -304,14 +302,12 @@ paths:
                   comments:
                     - id: "comment-uuid-xyz"
                       content: "Belo trabalho! O padrão Strategy é perfeito para isso. Você pensou em usar o padrão Factory para instanciar os gateways?"
-                      creation_date: "2025-09-26T09:30:00Z"
                       author:
                         id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                         name: "Ana Coder"
                         image: "https://example.com/path/to/ana_image.png"
                     - id: "comment-uuid-abc"
                       content: "Muito bom! Isso vai facilitar muito a adição de novos métodos de pagamento no futuro."
-                      creation_date: "2025-09-26T10:15:00Z"
                       author:
                         id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
                         name: "Carla Scripter"
@@ -345,6 +341,7 @@ paths:
                 id: "group-uuid-def"
                 name: "Estudando Elixir e Phoenix"
                 description: "Grupo focado na linguagem Elixir e no framework Phoenix."
+                code: "123"
                 repository: "https://github.com/coderats/elixir-phoenix"
                 method: "streak_images"
                 status: true
@@ -376,6 +373,7 @@ paths:
                 id: "group-uuid-abc"
                 name: "Desafio 30 Dias de Testes"
                 description: "Grupo para focar em TDD e testes unitários."
+                code: "123"
                 method: "streak_images"
                 status: true
                 repository: "https://github.com/coderats/desafio-testes"
@@ -441,6 +439,7 @@ paths:
                 id: "group-uuid-abc"
                 name: "Desafio 30 Dias de Testes (Avançado)"
                 description: "Foco em TDD, BDD e testes de integração."
+                code: "123"
                 image: "https://cdn.coderats.com/groups/new_cover.png"
                 repository: "https://github.com/coderats/desafio-testes"
                 method: "streak_images"
@@ -509,7 +508,7 @@ paths:
                 id: "checkin-uuid-789"
                 title: "Finalizei o módulo de GenServer em Elixir"
                 description: "Conceito poderoso para concorrência."
-                picture: null
+                image: null
                 summary_ai: "Hoje consegui implementar o fluxo completo de login, geração de token JWT e validação nas rotas protegidas."
                 points: 150
                 createdAt: "2025-09-26T11:00:00Z"
@@ -544,7 +543,6 @@ paths:
                 $ref: '#/components/schemas/Like'
               example:
                 id: "like-uuid-2"
-                creation_date: "2025-09-26T11:02:15Z"
                 author:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                   name: "Ana Coder"
@@ -599,7 +597,6 @@ paths:
                   $ref: '#/components/schemas/Like'
               example:
                 - id: "like-uuid-1"
-                  creation_date: "2025-09-25T22:15:03Z"
                   author:
                     id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                     name: "Ana Coder"
@@ -640,7 +637,6 @@ paths:
               example:
                 id: "comment-uuid-xyz"
                 content: "Excelente progresso! Continue assim."
-                creation_date: "2025-09-26T11:05:00Z"
                 author:
                   id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
                   name: "Beto Debugger"
@@ -690,7 +686,6 @@ paths:
                 - id: "badge-uuid-01"
                   name: "Rato Iniciante"
                   image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
-                  points: 50
                   description: "Realizou seu primeiro check-in!"
 components:
   schemas:
@@ -755,6 +750,7 @@ components:
         repository: { type: string, format: uri, example: "https://github.com/coderats/desafio-testes" }
         start_date: { type: string, format: date-time }
         end_date: { type: string, format: date-time }
+        code: { type: string, example: "123" }
     GroupUpdate:
       type: object
       properties:
@@ -771,10 +767,6 @@ components:
           format: uri
           nullable: true
           description: A nova URL para a image de capa do grupo.
-        status:
-          type: boolean
-          description: Atualiza o status do grupo
-          example: false
         participants_remove:
           type: array
           description: Lista com os IDs dos participantes a serem removidos do grupo.
@@ -789,11 +781,16 @@ components:
         id: { type: string, format: uuid }
         title: { type: string }
         description: { type: string, nullable: true }
-        picture: { type: string, format: uri, nullable: true }
+        image: { type: string, format: uri, nullable: true }
         summary_ai: { type: string, nullable: true }
         points: { type: integer }
         createdAt: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
+        commits: 
+          type: array
+          description: "Indica os commits relacionados com o check-in."
+          items: 
+            $ref: "#/components/schemas/Commits"
         likes_count:
           type: integer
           description: "O número total de curtidas no check-in."
@@ -811,8 +808,13 @@ components:
       properties:
         title: { type: string, example: "Dia 05: Testes Unitários com Jest" }
         description: { type: string, example: "Foquei em mocks e spies." }
-        picture: { type: string, format: uri }
+        image: { type: string, format: uri }
         summary_ai: { type: string }
+        commits: 
+          type: array
+          description: "Indica os commits relacionados com o check-in."
+          items: 
+            $ref: "#/components/schemas/Commits"
     Badge:
       type: object
       properties:
@@ -826,14 +828,19 @@ components:
       properties:
         id: { type: string, format: uuid }
         content: { type: string }
-        creation_date: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
     Like:
       type: object
       properties:
         id: { type: string, format: uuid }
-        creation_date: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
+    Commits: 
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        link: { type: string }
+        titulo: { type: string }
+        hash: { type: string }
     Error:
       type: object
       properties:
@@ -853,6 +860,9 @@ components:
         status:
           type: boolean
           example: true
+        image:
+          type: string
+          example: "https://example.com/path/to/image.png"
     PublicUserProfileWithGroups:
       type: object
       properties:
@@ -880,6 +890,11 @@ components:
           example: "2025-09-26T11:00:00Z"
         author:
           $ref: '#/components/schemas/UserSummary'
+        commits: 
+          type: array
+          description: "Indica os commits relacionados com o check-in."
+          items: 
+            $ref: "#/components/schemas/Commits"
 
     GroupWithDetails:
       allOf:
