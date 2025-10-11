@@ -72,9 +72,7 @@ class OnboardingStartScreen extends StatelessWidget {
                     );
                   },
                   onJoinWithCode: () {
-                    // TODO: Navegar para fluxo de entrar via código
-                    // Navigator.of(context).pu shNamed('/groups/join');
-                    _showSnack(context, 'Ação: Entrar via código');
+                    Navigator.of(context).pushNamed('/join-group');
                   },
                 ),
 

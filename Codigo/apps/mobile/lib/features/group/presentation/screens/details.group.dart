@@ -175,7 +175,9 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               alignment: Alignment.centerLeft,
               child: _RankingChip(
                 label: 'Todo Ranking',
-                onTap: () => null,
+                onTap: () {
+                  Navigator.of(context).pushNamed('/group-ranking');
+                },
               ),
             ),
           ),
