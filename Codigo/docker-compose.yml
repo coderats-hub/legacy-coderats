@@ -10,22 +10,26 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/coderats_db
       SPRING_DATASOURCE_USERNAME: coderats_user
       SPRING_DATASOURCE_PASSWORD: coderats_pass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     tty: true
 
   postgres:
-    image: postgres:16
+    image: postgres:16.3-alpine
     container_name: coderats-postgres
     environment:
       POSTGRES_DB: coderats_db
       POSTGRES_USER: coderats_user
       POSTGRES_PASSWORD: coderats_pass
-    ports:
-      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck: 
+      test: ["CMD-SHELL", "pg_isready -U coderats_user -d coderats_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mobile:
     build: ./apps/mobile
