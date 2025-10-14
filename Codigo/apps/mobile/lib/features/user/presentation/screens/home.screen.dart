@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:app/shared/theme/app_theme.dart';
 
 class TelaInicio extends StatelessWidget {
   const TelaInicio({super.key});
@@ -7,11 +7,11 @@ class TelaInicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  backgroundColor: const Color(0xFF222222),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -21,15 +21,15 @@ class TelaInicio extends StatelessWidget {
                   height: 240,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: AppSpacing.xxl),
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFD283FF), // cor primária do tema
+                      backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
                       ),
                       elevation: 0,
                     ),
@@ -38,24 +38,19 @@ class TelaInicio extends StatelessWidget {
                     },
                     child: const Text(
                       'Entrar',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
+                      style: AppTextStyles.button,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD283FF), width: 2),
+                      side: const BorderSide(color: AppColors.primary, width: 2),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
                       ),
                     ),
                     onPressed: () {
@@ -63,12 +58,7 @@ class TelaInicio extends StatelessWidget {
                     },
                     child: const Text(
                       'Cadastrar',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFD283FF),
-                        letterSpacing: 0.5,
-                      ),
+                      style: AppTextStyles.button,
                     ),
                   ),
                 ),

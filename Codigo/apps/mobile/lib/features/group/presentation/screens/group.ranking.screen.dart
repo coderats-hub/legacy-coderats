@@ -10,75 +10,66 @@ class GroupRankingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final rankingList = rankings ?? sampleRanking;
     return Scaffold(
-      backgroundColor: const Color(0xFF222222),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF222222),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Ranking do Grupo',
-          style: TextStyle(
-            color: Color(0xFFD9D9D9),
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            fontFamily: 'Inter',
-          ),
+          style: AppTextStyles.title,
         ),
         centerTitle: false,
         titleSpacing: 0,
       ),
       body: SafeArea(
         child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
           itemCount: rankingList.length,
-          separatorBuilder: (context, i) => const SizedBox(height: 12),
+          separatorBuilder: (context, i) => const SizedBox(height: AppSpacing.md),
           itemBuilder: (context, i) {
             final user = rankingList[i];
             return Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF333333),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF444444), width: 1),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppCorners.md),
+                border: Border.all(color: AppColors.border, width: 1),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: const Color(0xFF9A24DD),
+                    backgroundColor: AppColors.accent,
                     child: Text(
                       user.position.toString(),
-                      style: const TextStyle(
+                      style: AppTextStyles.button.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
-                        fontFamily: 'Inter',
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           user.name,
-                          style: const TextStyle(
-                            color: Color(0xFFD9D9D9),
+                          style: AppTextStyles.title.copyWith(
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
-                            fontFamily: 'Inter',
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           '${user.points} pontos',
-                          style: const TextStyle(
-                            color: Color(0xFFAAAAAA),
-                            fontWeight: FontWeight.w400,
+                          style: AppTextStyles.subtitle.copyWith(
+                            color: AppColors.textSecondary,
                             fontSize: 13,
-                            fontFamily: 'Inter',
                           ),
                         ),
                       ],

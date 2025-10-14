@@ -13,6 +13,7 @@ class AppColors {
   static const textSecondary = Color(0xFFAAAAAA);
   static const textDisabled = Color(0xFF666666);
   static const skip = Color(0xFFFF7A45); // Laranja para links
+  static const error = Color(0xFFE53935); // Vermelho para erros
 }
 
 /// Tipografia padrão do app
@@ -26,7 +27,6 @@ class AppTextStyles {
   );
   static const subtitle = TextStyle(
     fontFamily: 'Inter',
-    fontWeight: FontWeight.w400,
     fontSize: 14,
     color: AppColors.textSecondary,
     height: 1.4,
@@ -40,14 +40,12 @@ class AppTextStyles {
   );
   static const inputLabel = TextStyle(
     fontFamily: 'Inter',
-    fontWeight: FontWeight.w400,
     fontSize: 16,
     color: AppColors.textPrimary,
   );
   static const inputHint = TextStyle(
     fontFamily: 'Inter',
-    fontWeight: FontWeight.w400,
-    fontSize: 15,
+    fontSize: 16,
     color: AppColors.textDisabled,
   );
 }
@@ -59,6 +57,8 @@ class AppSpacing {
   static const double md = 16;
   static const double lg = 24;
   static const double xl = 32;
+  static const double xxl = 40;
+  static const double xxxl = 56;
 }
 
 /// Bordas padrão
@@ -66,4 +66,5 @@ class AppCorners {
   static const double sm = 8;
   static const double md = 12;
   static const double lg = 16;
+  static const double xl = 24;
 }

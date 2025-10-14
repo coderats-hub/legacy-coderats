@@ -22,36 +22,18 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF222222),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF222222),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pushReplacementNamed('/started');
-          },
-        ),
-        title: const Text(
-          'Entrar em um grupo',
-          style: TextStyle(
-            color: Color(0xFFD9D9D9),
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            fontFamily: 'Inter',
-          ),
-        ),
-        centerTitle: false,
-        titleSpacing: 0,
+      backgroundColor: AppColors.background,
+      appBar: const AppHeader(
+        title: 'Entrar em um grupo',
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 Center(
                   child: Image.asset(
                     'images/4Mouse.png',
@@ -60,50 +42,38 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                     fit: BoxFit.contain,
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: AppSpacing.xl),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: const Text(
+                  child: Text(
                     'Código',
-                    style: TextStyle(
-                      color: Color(0xFFD9D9D9),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Inter',
-                    ),
+                    style: AppTextStyles.inputLabel,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Form(
                   key: _formKey,
                   child: TextFormField(
                     controller: _codeController,
-                    style: const TextStyle(
-                      color: Color(0xFFD9D9D9),
-                      fontFamily: 'Inter',
-                    ),
+                    style: AppTextStyles.inputLabel,
                     decoration: InputDecoration(
                       hintText: 'Insira o código do grupo',
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFAAAAAA),
-                        fontFamily: 'Inter',
-                        fontSize: 15,
-                      ),
+                      hintStyle: AppTextStyles.inputHint,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
+                        borderSide: const BorderSide(color: AppColors.border),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
+                        borderSide: const BorderSide(color: AppColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9A24DD), width: 2),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
+                        borderSide: const BorderSide(color: AppColors.accent, width: 2),
                       ),
                       filled: true,
-                      fillColor: const Color(0xFF333333),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      fillColor: AppColors.surface,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -113,15 +83,15 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: AppSpacing.xl),
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9A24DD),
+                      backgroundColor: AppColors.accent,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppCorners.md),
                       ),
                       elevation: 0,
                     ),
@@ -130,15 +100,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                         Navigator.pushNamed(context, '/group-details');
                       }
                     },
-                    child: const Text(
+                    child: Text(
                       'Juntar-se',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
-                        fontFamily: 'Inter',
-                        letterSpacing: 0.2,
-                      ),
+                      style: AppTextStyles.button,
                     ),
                   ),
                 ),

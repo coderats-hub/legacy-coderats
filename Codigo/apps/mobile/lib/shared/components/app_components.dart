@@ -1,9 +1,31 @@
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+/// Botão flutuante padrão do app
+class AppFAB extends StatelessWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String? tooltip;
+  const AppFAB({super.key, required this.onPressed, this.icon = Icons.add, this.tooltip});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: onPressed,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      tooltip: tooltip,
+      child: Icon(icon),
+    );
+  }
+}
+
 
 /// Header dinâmico com botão voltar e título customizável
-class AppHeader extends StatelessWidget {
+class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
   final String title;
   final VoidCallback? onBack;
   final List<Widget>? actions;
@@ -14,10 +36,17 @@ class AppHeader extends StatelessWidget {
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
-        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-      ),
+      leading: onBack == null
+          ? (Navigator.of(context).canPop()
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                )
+              : null)
+          : IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+              onPressed: onBack,
+            ),
       title: Text(title, style: AppTextStyles.title),
       actions: actions,
       centerTitle: false,
@@ -49,20 +78,25 @@ class AppNavbar extends StatelessWidget {
 }
 
 /// Campo de input dinâmico
-class AppTextField extends StatelessWidget {
+
+class SharedTextField extends StatelessWidget {
+  final String? label;
   final String placeholder;
   final TextEditingController? controller;
   final bool isPassword;
+  final bool? obscureText;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final int? maxLines;
   final bool enabled;
 
-  const AppTextField({
+  const SharedTextField({
     super.key,
+    this.label,
     required this.placeholder,
     this.controller,
     this.isPassword = false,
+    this.obscureText,
     this.keyboardType,
     this.validator,
     this.maxLines = 1,
@@ -71,33 +105,45 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword,
-      keyboardType: keyboardType,
-      validator: validator,
-      maxLines: maxLines,
-      enabled: enabled,
-      style: AppTextStyles.inputLabel,
-      decoration: InputDecoration(
-        hintText: placeholder,
-        hintStyle: AppTextStyles.inputHint.copyWith(fontSize: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppCorners.sm),
-          borderSide: const BorderSide(color: AppColors.border),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null) ...[
+          Text(
+            label!,
+            style: AppTextStyles.inputLabel,
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText ?? isPassword,
+          keyboardType: keyboardType,
+          validator: validator,
+          maxLines: maxLines,
+          enabled: enabled,
+          style: AppTextStyles.inputLabel,
+          decoration: InputDecoration(
+            hintText: placeholder,
+            hintStyle: AppTextStyles.inputHint.copyWith(fontSize: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.sm),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.sm),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.sm),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.surface,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppCorners.sm),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppCorners.sm),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
+      ],
     );
   }
 }
@@ -124,6 +170,6 @@ class AppButton extends StatelessWidget {
       ),
       child: Text(text, style: AppTextStyles.button),
     );
-    return expanded ? SizedBox(width: double.infinity, height: 56, child: button) : button;
+  return expanded ? SizedBox(width: double.infinity, height: 44, child: button) : button;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:app/features/profile/presentation/screens/private.profile.dart';
 import 'package:app/features/group/presentation/screens/details.group.dart';
 import 'package:app/features/group/presentation/widgets/card.group.dart';
 import 'create.group.dart';
@@ -11,7 +12,12 @@ class GroupsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Grupos')),
+      appBar: AppBar(
+        title: const Text('Grupos', style: AppTextStyles.title),
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
       body: ListView(
         children: [
           GroupCard(
@@ -53,27 +59,26 @@ class GroupsPage extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: AppSpacing.xl),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 1, // esta é a página de Grupos
-          onTap: (i) {
-            const routeByIndex = ['/home', '/groups', '/profile'];
-            final current = ModalRoute.of(context)?.settings.name;
-            final target = routeByIndex[i];
-
-            if (current != target) {
-              Navigator.of(context).pushReplacementNamed(target);
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
-            BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
-          ],
-        ),
-      floatingActionButton: FloatingActionButton(
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 1,
+        onTap: (i) {
+          if (i == 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tela de Início não implementada')),
+            );
+          } else if (i == 1) {
+            // já está na tela de grupos
+          } else if (i == 2) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
+            );
+          }
+        },
+      ),
+      floatingActionButton: AppFAB(
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -81,7 +86,8 @@ class GroupsPage extends StatelessWidget {
             ),
           );
         },
-        child: const Icon(Icons.add),
+        icon: Icons.add,
+        tooltip: 'Criar grupo',
       ),
     );
   }
@@ -92,9 +98,6 @@ class _ExpandedGroupDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     final rankingMock = <Map<String, String>>[
       {'name': 'Alice', 'points': '49.5 pontos', 'pos': '1st'},
       {'name': 'Felipe', 'points': '45.5 pontos', 'pos': '2st'},
@@ -105,47 +108,48 @@ class _ExpandedGroupDemo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: const [
               _AvatarStat(label: 'Leader', subtitle: '42.8 pontos'),
-              SizedBox(width: 16),
+              SizedBox(width: AppSpacing.md),
               _AvatarStat(label: 'Você', subtitle: '22.3 pontos'),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-          child: Text('Ranking', style: tt.titleMedium),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 6),
+          child: Text('Ranking', style: AppTextStyles.title),
         ),
         ...rankingMock.map((e) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
               decoration: BoxDecoration(
-                color: cs.surfaceVariant.withOpacity(.3),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.surface.withOpacity(.3),
+                borderRadius: BorderRadius.circular(AppCorners.md),
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(radius: 18, backgroundColor: Colors.white24),
-                  const SizedBox(width: 10),
+                  const CircleAvatar(radius: 18, backgroundColor: AppColors.accent),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(e['name']!, style: tt.bodyLarge),
+                        Text(e['name']!, style: AppTextStyles.title.copyWith(fontSize: 16)),
                         Text(e['points']!,
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
+                            style: AppTextStyles.subtitle.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
                             )),
                       ],
                     ),
                   ),
-                  Text(e['pos']!, style: tt.titleMedium),
+                  Text(e['pos']!, style: AppTextStyles.title.copyWith(fontSize: 16)),
                 ],
               ),
             )),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
       ],
     );
   }
@@ -158,18 +162,15 @@ class _AvatarStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return Row(
       children: [
-        const CircleAvatar(radius: 14, backgroundColor: Colors.white24),
-        const SizedBox(width: 8),
+        const CircleAvatar(radius: 14, backgroundColor: AppColors.accent),
+        const SizedBox(width: AppSpacing.sm),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: tt.labelLarge),
-            Text(subtitle, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(label, style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
+            Text(subtitle, style: AppTextStyles.inputHint),
           ],
         ),
       ],
