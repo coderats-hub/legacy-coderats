@@ -24,7 +24,7 @@ class GroupRankingScreen extends StatelessWidget {
             fontSize: 20,
             fontFamily: 'Inter',
           ),
-        ),flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
+        ),
         centerTitle: false,
         titleSpacing: 0,
       ),
