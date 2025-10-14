@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 
 class GroupRankingScreen extends StatelessWidget {
   final List<UserRanking>? rankings;

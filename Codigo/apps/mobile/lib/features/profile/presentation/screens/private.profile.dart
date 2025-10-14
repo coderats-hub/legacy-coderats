@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
 import 'package:flutter_calendar_carousel/classes/event.dart';
 import 'package:app/features/group/presentation/screens/create.group.dart';

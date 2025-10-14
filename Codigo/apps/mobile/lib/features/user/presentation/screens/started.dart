@@ -1,6 +1,8 @@
 import 'package:app/features/group/presentation/screens/create.group.dart';
 import 'package:app/features/group/presentation/screens/list.group.dart';
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 
 /// Tela de onboarding inicial do app "coderats".
 /// Mantém a identidade visual do CadastroScreen:
