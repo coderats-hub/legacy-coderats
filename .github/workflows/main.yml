@@ -51,7 +51,7 @@ jobs:
           docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
           docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
 
-  # ------------------------------------------------------------
+   # ------------------------------------------------------------
   # 2. Mobile — Build APK (depende do backend)
   # ------------------------------------------------------------
   mobile:
@@ -66,12 +66,10 @@ jobs:
         with:
           flutter-version: "3.24.3"
 
-      # 🧹 Limpando cache e build antigos para evitar win32 quebrado
-      - name: Clean Flutter build and pub cache
+      - name: Clean Flutter build and cache
         working-directory: Codigo/apps/mobile
         run: |
           flutter clean
-          flutter pub cache clean
           flutter pub cache repair
 
       - name: Get dependencies
@@ -82,7 +80,6 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build apk --release
 
-      # 🔤 Corrige nomes de branch com "/" (para nomear o artefato corretamente)
       - name: Sanitize branch name
         id: sanitize
         run: |
@@ -110,13 +107,9 @@ jobs:
         with:
           flutter-version: "3.24.3"
 
-      # Garante dependências atualizadas (sem cache antigo)
-      - name: Clean Flutter cache
+      - name: Get dependencies
         working-directory: Codigo/apps/mobile
-        run: |
-          flutter clean
-          flutter pub cache clean
-          flutter pub get
+        run: flutter pub get
 
       - name: Build Flutter Web
         working-directory: Codigo/apps/mobile
