@@ -78,7 +78,7 @@ jobs:
 
       - name: Build APK
         working-directory: Codigo/apps/mobile
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Sanitize branch name
         id: sanitize
