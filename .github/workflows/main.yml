@@ -64,6 +64,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.24.3"
+          
+      - name: Clean Flutter build and cache
+        run: |
+          flutter clean
+          flutter pub cache repair
+
+      - name: Get dependencies
+        run: flutter pub upgrade
+        working-directory: Codigo/apps/mobile
 
       - name: Get dependencies
         run: flutter pub get
