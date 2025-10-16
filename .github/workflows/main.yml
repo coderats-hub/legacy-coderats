@@ -51,7 +51,7 @@ jobs:
           docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
           docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
 
-  # ------------------------------------------------------------
+   # ------------------------------------------------------------
   # 2. Mobile — Build APK (depende do backend)
   # ------------------------------------------------------------
   mobile:
@@ -65,7 +65,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.24.3"
-          
+
       - name: Clean Flutter build and cache
         working-directory: Codigo/apps/mobile
         run: |
@@ -80,12 +80,18 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build apk --release
 
-    
+      - name: Sanitize branch name
+        id: sanitize
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coderats-apk-${{ github.ref_name.replace('/', '-') }}
+          name: coderats-apk-${{ steps.sanitize.outputs.branch_name }}
           path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+
   # ------------------------------------------------------------
   # 3. Web — Build (com Flutter) e Deploy no S3
   # ------------------------------------------------------------
