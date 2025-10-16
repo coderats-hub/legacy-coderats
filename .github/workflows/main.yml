@@ -1,0 +1,135 @@
+name: Coderats CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - development
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPO_API: 960596859173.dkr.ecr.us-east-2.amazonaws.com/coderats-project/coderats-api
+  ECR_REPO_MOBILE: 960596859173.dkr.ecr.us-east-2.amazonaws.com/coderats-project/docker-android
+  S3_BUCKET_WEB_PROD: coderats-web-prod
+  S3_BUCKET_WEB_STAGING: coderats-web-staging
+
+jobs:
+  # ------------------------------------------------------------
+  # 1. Backend — Build & Push Docker Image
+  # ------------------------------------------------------------
+  backend:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Define tag (prod/staging)
+        id: meta
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "tag=prod" >> $GITHUB_OUTPUT
+          else
+            echo "tag=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push backend image
+        run: |
+          docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
+          docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
+
+  # ------------------------------------------------------------
+  # 2. Mobile — Build APK (depende do backend)
+  # ------------------------------------------------------------
+  mobile:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
+
+      - name: Get dependencies
+        run: flutter pub get
+        working-directory: Codigo/apps/mobile
+
+      - name: Build APK
+        run: flutter build apk --release
+        working-directory: Codigo/apps/mobile
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coderats-apk-${{ github.ref_name }}
+          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+
+  # ------------------------------------------------------------
+  # 3. Web — Build and Deploy to S3 (depende do backend)
+  # ------------------------------------------------------------
+  web:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: Codigo/apps/web
+
+      - name: Build web
+        run: npm run build
+        working-directory: Codigo/apps/web
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            aws s3 sync Codigo/apps/web/dist s3://$S3_BUCKET_WEB_PROD --delete
+          else
+            aws s3 sync Codigo/apps/web/dist s3://$S3_BUCKET_WEB_STAGING --delete
+
+  # ------------------------------------------------------------
+  # 4. Deploy Backend to EC2 (ASG)
+  # ------------------------------------------------------------
+  deploy-backend:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Trigger ASG refresh
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            ASG_NAME="coderats-asg-prod"
+          else
+            ASG_NAME="coderats-asg-staging"
+          fi
+          aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME" \
+            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
