@@ -47,6 +47,7 @@ jobs:
 
       - name: Build and push backend image
         run: |
+          echo "📦 Buildando e enviando imagem do backend..."
           docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
           docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
 
@@ -66,21 +67,18 @@ jobs:
           flutter-version: "3.24.3"
           
       - name: Clean Flutter build and cache
+        working-directory: Codigo/apps/mobile
         run: |
           flutter clean
           flutter pub cache repair
 
       - name: Get dependencies
-        run: flutter pub upgrade
         working-directory: Codigo/apps/mobile
-
-      - name: Get dependencies
         run: flutter pub get
-        working-directory: Codigo/apps/mobile
 
       - name: Build APK
-        run: flutter build apk --release
         working-directory: Codigo/apps/mobile
+        run: flutter build apk --release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -89,7 +87,7 @@ jobs:
           path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
 
   # ------------------------------------------------------------
-  # 3. Web — Build and Deploy to S3 (depende do backend)
+  # 3. Web — Build (com Flutter) e Deploy no S3
   # ------------------------------------------------------------
   web:
     runs-on: ubuntu-latest
@@ -98,13 +96,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: Codigo/apps/mobile
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
 
-      - name: Build web
-        run: npm run build
+      - name: Get dependencies
         working-directory: Codigo/apps/mobile
+        run: flutter pub get
+
+      - name: Build Flutter Web
+        working-directory: Codigo/apps/mobile
+        run: flutter build web --release
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -113,12 +116,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy to S3
+      - name: Deploy Web to S3
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            aws s3 sync Codigo/apps/web/dist s3://$S3_BUCKET_WEB_PROD --delete
+            echo "🚀 Publicando versão WEB em PRODUÇÃO (S3_BUCKET_WEB_PROD)"
+            aws s3 sync Codigo/apps/mobile/build/web s3://$S3_BUCKET_WEB_PROD --delete
           else
-            aws s3 sync Codigo/apps/web/dist s3://$S3_BUCKET_WEB_STAGING --delete
+            echo "🚧 Publicando versão WEB em STAGING (S3_BUCKET_WEB_STAGING)"
+            aws s3 sync Codigo/apps/mobile/build/web s3://$S3_BUCKET_WEB_STAGING --delete
 
   # ------------------------------------------------------------
   # 4. Deploy Backend to EC2 (ASG)
@@ -126,6 +131,7 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     needs: backend
+    if: github.ref_name == 'main' || github.ref_name == 'development'
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -147,4 +153,3 @@ jobs:
           aws autoscaling start-instance-refresh \
             --auto-scaling-group-name "$ASG_NAME" \
             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
-
