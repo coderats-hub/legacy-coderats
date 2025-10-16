@@ -121,16 +121,21 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region:            ${{ env.AWS_REGION }}
 
       - name: Trigger ASG refresh
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            ASG_NAME="coderats-asg-prod"
+            ASG_NAME="${{ vars.ASG_NAME_PROD }}"
+            echo "🚀 Atualizando ambiente de PRODUÇÃO: $ASG_NAME"
           else
-            ASG_NAME="coderats-asg-staging"
+            ASG_NAME="${{ vars.ASG_NAME_DEV }}"
+            echo "🚧 Atualizando ambiente de STAGING: $ASG_NAME"
           fi
-          aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG_NAME" \
+
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "$ASG_NAME" \
             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
+
