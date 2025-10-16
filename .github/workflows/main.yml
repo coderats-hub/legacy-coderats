@@ -80,12 +80,12 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build apk --release
 
+    
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coderats-apk-${{ github.ref_name }}
+          name: coderats-apk-${{ github.ref_name.replace('/', '-') }}
           path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
-
   # ------------------------------------------------------------
   # 3. Web — Build (com Flutter) e Deploy no S3
   # ------------------------------------------------------------
