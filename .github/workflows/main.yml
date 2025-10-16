@@ -91,11 +91,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: Codigo/apps/web
+        working-directory: Codigo/apps/mobile
 
       - name: Build web
         run: npm run build
-        working-directory: Codigo/apps/web
+        working-directory: Codigo/apps/mobile
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
