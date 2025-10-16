@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - development
+      - 'feature/**'
 
 env:
   AWS_REGION: us-east-2
