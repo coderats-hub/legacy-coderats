@@ -1,13 +1,11 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
-import 'package:flutter_calendar_carousel/classes/event.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class PublicProfileScreen extends StatelessWidget {
   PublicProfileScreen({super.key});
 
   final DateTime _currentDate = DateTime.now();
-  final EventList<Event> _markedDateMap = EventList<Event>(events: {});
+  final Map<DateTime, List<dynamic>> _markedDateMap = {};
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +123,7 @@ class _ChipButton extends StatelessWidget {
 
 class _CalendarCard extends StatelessWidget {
   final DateTime currentDate;
-  final EventList<Event> markedDateMap;
+  final Map<DateTime, List<dynamic>> markedDateMap;
   const _CalendarCard({required this.currentDate, required this.markedDateMap});
 
   @override
@@ -136,26 +134,41 @@ class _CalendarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(12),
-      child: CalendarCarousel<Event>(
-        thisMonthDayBorderColor: Colors.transparent,
-        daysHaveCircularBorder: true,
-        weekendTextStyle: const TextStyle(color: Colors.white70),
-        weekdayTextStyle: const TextStyle(color: Colors.white54),
-        daysTextStyle: const TextStyle(color: Colors.white),
-        selectedDayTextStyle: const TextStyle(color: Colors.white),
-        selectedDayButtonColor: const Color(0xFF2E7D32),
-        todayButtonColor: Colors.transparent,
-        todayBorderColor: const Color(0xFF2E7D32),
-        selectedDateTime: currentDate,
-        showOnlyCurrentMonthDate: true,
-        headerTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-        iconColor: Colors.white70,
-        weekFormat: false,
-        height: 360,
-        isScrollable: false,
-        headerMargin: const EdgeInsets.only(bottom: 8),
-        markedDatesMap: markedDateMap,
-        onDayPressed: (date, events) {},
+      child: TableCalendar<dynamic>(
+        calendarStyle: CalendarStyle(
+          todayDecoration: BoxDecoration(
+            color: const Color(0xFF2E7D32),
+            shape: BoxShape.circle,
+          ),
+          selectedDecoration: BoxDecoration(
+            color: const Color(0xFF2E7D32),
+            shape: BoxShape.circle,
+          ),
+          defaultDecoration: BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          weekendDecoration: BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+        ),
+        headerStyle: HeaderStyle(
+          titleTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+          formatButtonVisible: false,
+          leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white),
+          rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white),
+        ),
+        firstDay: DateTime.utc(2020, 01, 01),
+        lastDay: DateTime.utc(2030, 12, 31),
+        focusedDay: currentDate,
+        selectedDayPredicate: (day) => isSameDay(currentDate, day),
+        onDaySelected: (selectedDay, focusedDay) {
+          // Handle day selection
+        },
+        eventLoader: (date) {
+          return markedDateMap[date] ?? [];
+        },
       ),
     );
   }
