@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_calendar_carousel: 2.0.0
+  flutter_calendar_carousel: ^2.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -63,8 +63,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icons/
-    - assets/images/
+    - assets/icons
+    - assets/images
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

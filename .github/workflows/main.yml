@@ -66,12 +66,11 @@ jobs:
         with:
           flutter-version: "3.24.3"
 
-      - name: Clean Flutter build and cache (hard reset)
+      - name: Clean Flutter build and cache
         working-directory: Codigo/apps/mobile
         run: |
-          rm -rf .dart_tool build .flutter-plugins .flutter-plugins-dependencies pubspec.lock
           flutter clean
-          flutter pub get
+          flutter pub cache repair
 
       - name: Get dependencies
         working-directory: Codigo/apps/mobile
@@ -79,7 +78,7 @@ jobs:
 
       - name: Build APK
         working-directory: Codigo/apps/mobile
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release
 
       - name: Sanitize branch name
         id: sanitize

@@ -82,10 +82,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_calendar_carousel
-      sha256: "022ada4259fc4017563cb0160b1750a6eb53bbe6a399e2550dc5c2b082ff90ca"
+      sha256: "5fbcfdf8d90246b7137121e0114979c0eb6a2c4bc9c10f2419cd466768226597"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.0"
+    version: "2.0.0"
   flutter_lints:
     dependency: "direct dev"
     description:
