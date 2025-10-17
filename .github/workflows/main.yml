@@ -130,6 +130,7 @@ jobs:
           else
             echo "🚧 Publicando versão WEB em STAGING (S3_BUCKET_WEB_STAGING)"
             aws s3 sync Codigo/apps/mobile/build/web s3://$S3_BUCKET_WEB_STAGING --delete
+          fi
 
   # ------------------------------------------------------------
   # 4. Deploy Backend to EC2 (ASG)
