@@ -54,7 +54,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                 children: [
                   // Opção 1: Maior streak de fotos
                   _buildEvaluationOption(
-                    iconPath: '/icons/image.png',
+                    iconPath: 'assets/icons/image.png',
                     title: 'Maior streak de fotos',
                     description: 'Usuário com maior frequência usando fotografias',
                     method: EvaluationMethod.photoStreak,
@@ -65,7 +65,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 2: Maior streak de commits
                   _buildEvaluationOption(
-                    iconPath: '/icons/github.png',
+                    iconPath: 'assets/icons/github.png',
                     title: 'Maior streak de commits',
                     description: 'Usuário com maior frequência usando commits',
                     method: EvaluationMethod.commitStreak,
@@ -76,7 +76,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 3: Maior número de commits
                   _buildEvaluationOption(
-                    iconPath: '/icons/code.png',
+                    iconPath: 'assets/icons/code.png',
                     title: 'Maior número de commits',
                     description: 'Usuário com maior números de commits acumulados',
                     method: EvaluationMethod.commitCount,
@@ -87,7 +87,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                   
                   // Opção 4: Maior número de linhas de código
                   _buildEvaluationOption(
-                    iconPath: '/icons/list.png',
+                    iconPath: 'assets/icons/list.png',
                     title: 'Maior número de linhas de código',
                     description: 'Usuário com maior acumulo de linhas de código',
                     method: EvaluationMethod.codeLines,
