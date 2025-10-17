@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:app/features/profile/presentation/widgets/profile_shared_widgets.dart';
 
 class PublicProfileScreen extends StatefulWidget {
   const PublicProfileScreen({super.key});
@@ -38,14 +39,14 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ProfileHeader(
+            const ProfileHeader(
               name: "Alice",
               actionLabel: "Ver GitHub",
               actionIcon: Icons.link,
-              onAction: () {},
+              onAction: null,
             ),
             const SizedBox(height: 12),
-            _CalendarCard(
+            CalendarCard(
               selectedDay: _selectedDay,
               focusedDay: _focusedDay,
               onDaySelected: (selected, focused) {
@@ -57,9 +58,9 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
               eventLoader: _getEventsForDay,
             ),
             const SizedBox(height: 16),
-            const _BadgesRow(showSeeAll: true),
+            const BadgesRow(showSeeAll: true),
             const SizedBox(height: 16),
-            const _GroupsInCommon(),
+            const GroupsInCommon(),
           ],
         ),
       ),
