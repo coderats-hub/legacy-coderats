@@ -1,35 +1,44 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
-import 'package:flutter_calendar_carousel/classes/event.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:app/features/group/presentation/screens/create.group.dart';
 import 'package:app/features/group/presentation/screens/list.group.dart';
 
-class PrivateProfileScreen extends StatelessWidget {
-  PrivateProfileScreen({super.key});
+class PrivateProfileScreen extends StatefulWidget {
+  const PrivateProfileScreen({super.key});
 
-  final DateTime _currentDate = DateTime.now();
-  final EventList<Event> _markedDateMap = EventList<Event>(events: {});
+  @override
+  State<PrivateProfileScreen> createState() => _PrivateProfileScreenState();
+}
+
+class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
+  final Map<DateTime, List<String>> _events = {
+    DateTime.utc(2025, 10, 10): ['Reunião do grupo'],
+    DateTime.utc(2025, 10, 15): ['Entrega do projeto'],
+  };
+
+  List<String> _getEventsForDay(DateTime day) {
+    return _events[DateTime.utc(day.year, day.month, day.day)] ?? [];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => const GroupsPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const GroupsPage()),
               (route) => false,
             );
           },
         ),
         title: const Text('Alice'),
-        centerTitle: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -46,35 +55,39 @@ class PrivateProfileScreen extends StatelessWidget {
             _PrivateActions(),
             const SizedBox(height: 12),
             _CalendarCard(
-              currentDate: _currentDate,
-              markedDateMap: _markedDateMap,
+              selectedDay: _selectedDay,
+              focusedDay: _focusedDay,
+              onDaySelected: (selected, focused) {
+                setState(() {
+                  _selectedDay = selected;
+                  _focusedDay = focused;
+                });
+              },
+              eventLoader: _getEventsForDay,
             ),
             const SizedBox(height: 16),
-            _BadgesRow(
-              showSeeAll: false,
-            ),
+            const _BadgesRow(showSeeAll: false),
             const SizedBox(height: 16),
-            _GroupsInCommon(),
+            const _GroupsInCommon(),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 1, // esta é a página de Grupos
-          onTap: (i) {
-            const routeByIndex = ['/home', '/groups', '/profile'];
-            final current = ModalRoute.of(context)?.settings.name;
-            final target = routeByIndex[i];
-
-            if (current != target) {
-              Navigator.of(context).pushReplacementNamed(target);
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
-            BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
-          ],
-        ),
+        currentIndex: 1,
+        onTap: (i) {
+          const routeByIndex = ['/home', '/groups', '/profile'];
+          final current = ModalRoute.of(context)?.settings.name;
+          final target = routeByIndex[i];
+          if (current != target) {
+            Navigator.of(context).pushReplacementNamed(target);
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Início'),
+          BottomNavigationBarItem(icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+        ],
+      ),
     );
   }
 }
@@ -106,10 +119,7 @@ class _ProfileHeader extends StatelessWidget {
           child: const Center(child: Icon(Icons.person, color: Colors.white, size: 48)),
         ),
         const SizedBox(height: 8),
-        Text(
-          name,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
-        ),
+        Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
         const SizedBox(height: 6),
         _ChipButton(
           label: actionLabel,
@@ -154,6 +164,8 @@ class _ChipButton extends StatelessWidget {
 }
 
 class _PrivateActions extends StatelessWidget {
+  const _PrivateActions();
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -163,21 +175,13 @@ class _PrivateActions extends StatelessWidget {
             label: "Criar um grupo",
             icon: Icons.group_add,
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const CreateGroupScreen(),
-                ),
-              );
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateGroupScreen()));
             },
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _ActionCard(
-            label: "Entrar via código",
-            icon: Icons.code,
-            onTap: () {},
-          ),
+          child: _ActionCard(label: "Entrar via código", icon: Icons.code, onTap: () {}),
         ),
       ],
     );
@@ -215,9 +219,17 @@ class _ActionCard extends StatelessWidget {
 }
 
 class _CalendarCard extends StatelessWidget {
-  final DateTime currentDate;
-  final EventList<Event> markedDateMap;
-  const _CalendarCard({required this.currentDate, required this.markedDateMap});
+  final DateTime? selectedDay;
+  final DateTime focusedDay;
+  final void Function(DateTime, DateTime) onDaySelected;
+  final List<String> Function(DateTime) eventLoader;
+
+  const _CalendarCard({
+    required this.selectedDay,
+    required this.focusedDay,
+    required this.onDaySelected,
+    required this.eventLoader,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -227,26 +239,28 @@ class _CalendarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(12),
-      child: CalendarCarousel<Event>(
-        thisMonthDayBorderColor: Colors.transparent,
-        daysHaveCircularBorder: true,
-        weekendTextStyle: const TextStyle(color: Colors.white70),
-        weekdayTextStyle: const TextStyle(color: Colors.white54),
-        daysTextStyle: const TextStyle(color: Colors.white),
-        selectedDayTextStyle: const TextStyle(color: Colors.white),
-        selectedDayButtonColor: const Color(0xFF2E7D32),
-        todayButtonColor: Colors.transparent,
-        todayBorderColor: const Color(0xFF2E7D32),
-        selectedDateTime: currentDate,
-        showOnlyCurrentMonthDate: true,
-        headerTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-        iconColor: Colors.white70,
-        weekFormat: false,
-        height: 360,
-        isScrollable: false,
-        headerMargin: const EdgeInsets.only(bottom: 8),
-        markedDatesMap: markedDateMap,
-        onDayPressed: (date, events) {},
+      child: TableCalendar(
+        firstDay: DateTime.utc(2020, 1, 1),
+        lastDay: DateTime.utc(2030, 12, 31),
+        focusedDay: focusedDay,
+        selectedDayPredicate: (day) => isSameDay(day, selectedDay),
+        onDaySelected: onDaySelected,
+        eventLoader: eventLoader,
+        headerStyle: const HeaderStyle(
+          titleCentered: true,
+          formatButtonVisible: false,
+          titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+          leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white70),
+          rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white70),
+        ),
+        calendarStyle: const CalendarStyle(
+          outsideDaysVisible: false,
+          todayDecoration: BoxDecoration(shape: BoxShape.circle, border: Border.fromBorderSide(BorderSide(color: Color(0xFF2E7D32)))),
+          selectedDecoration: BoxDecoration(color: Color(0xFF2E7D32), shape: BoxShape.circle),
+          weekendTextStyle: TextStyle(color: Colors.white70),
+          defaultTextStyle: TextStyle(color: Colors.white),
+          outsideTextStyle: TextStyle(color: Colors.white30),
+        ),
       ),
     );
   }
@@ -274,9 +288,9 @@ class _BadgesRow extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          children: [
+          children: const [
             _BadgePlaceholder(label: '2x'),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             _BadgePlaceholder(label: '1x', warning: true),
           ],
         ),
@@ -295,7 +309,8 @@ class _BadgePlaceholder extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 44, height: 44,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: warning ? Colors.red : Colors.white10,
             shape: BoxShape.circle,
@@ -310,9 +325,11 @@ class _BadgePlaceholder extends StatelessWidget {
 }
 
 class _GroupsInCommon extends StatelessWidget {
+  const _GroupsInCommon();
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Grupos em Comum', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
