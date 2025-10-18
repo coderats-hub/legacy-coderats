@@ -1,5 +1,5 @@
-import 'package:app/features/group/presentation/screens/create.group.dart';
-import 'package:app/features/group/presentation/screens/list.group.dart';
+import 'package:app/features/group/presentation/screens/group.create.screen.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -57,7 +57,7 @@ class OnboardingStartScreen extends StatelessWidget {
                   onCreateGroup: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => CreateGroupScreen(),
+                        builder: (context) => const CreateGroupScreen(),
                       ),
                     );
                   },
@@ -72,7 +72,7 @@ class OnboardingStartScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => GroupsPage(),
+                        builder: (context) => const GroupsPage(),
                       ),
                     );
                   },

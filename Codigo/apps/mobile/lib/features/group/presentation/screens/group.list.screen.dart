@@ -1,7 +1,8 @@
-import 'package:app/features/profile/presentation/screens/private.profile.dart';
-import 'package:app/features/group/presentation/screens/details.group.dart';
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/widgets/card.group.dart';
-import 'create.group.dart';
+import 'package:app/features/group/presentation/widgets/banner.group.dart' as banner;
+import 'group.create.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -28,7 +29,10 @@ class GroupsPage extends StatelessWidget {
             onBannerTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(groupName: 'Code Rats'),
+                  builder: (_) => const GroupDetailPage(
+                    groupName: 'Code Rats',
+                    bannerStyle: banner.BannerStyle.tertiary,
+                  ),
                 ),
               );
             },
@@ -41,7 +45,10 @@ class GroupsPage extends StatelessWidget {
             onBannerTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(groupName: 'Ratitos 123'),
+                  builder: (_) => const GroupDetailPage(
+                    groupName: 'Ratitos 123',
+                    bannerStyle: banner.BannerStyle.secondary,
+                  ),
                 ),
               );
             },
@@ -54,7 +61,10 @@ class GroupsPage extends StatelessWidget {
             onBannerTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(groupName: 'Com Imagem'),
+                  builder: (_) => const GroupDetailPage(
+                    groupName: 'Com Imagem',
+                    bannerStyle: banner.BannerStyle.primary,
+                  ),
                 ),
               );
             },

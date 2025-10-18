@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
-import 'package:app/features/profile/presentation/screens/public.profile.dart';
-import 'package:app/features/profile/presentation/screens/private.profile.dart';
-import 'package:app/features/checkin/presentation/screens/details.checkin.dart';
-import 'package:app/features/checkin/presentation/screens/list.checkin.dart';
+import 'package:app/features/profile/presentation/screens/public.profile.screen.dart';
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
+import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -195,7 +195,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => CheckinScreen(),
+                        builder: (context) => const CheckinScreen(),
                       ),
                     );
                   },
@@ -232,7 +232,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => CommitCheckinScreen(),
+              builder: (context) => const CommitCheckinScreen(),
             ),
           );
         },

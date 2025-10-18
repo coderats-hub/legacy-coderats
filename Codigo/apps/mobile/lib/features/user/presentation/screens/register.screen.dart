@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'login.user.dart';
+import 'login.screen.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'started.dart';
+import 'onboarding.screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -61,7 +61,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Cadastro com GitHub em desenvolvimento'),
+                            content: Text(
+                              'Cadastro com GitHub em desenvolvimento',
+                              style: TextStyle(color: Colors.white),
+                            ),
                             backgroundColor: AppColors.accent,
                           ),
                         );
@@ -249,7 +252,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     onTap: () {
                                       Navigator.of(context).pushAndRemoveUntil(
                                         MaterialPageRoute(
-                                          builder: (context) => LoginScreen(),
+                                          builder: (context) => const LoginScreen(),
                                         ),
                                         (route) => false,
                                       );
@@ -257,9 +260,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     child: Text(
                                       'Entrar!',
                                       style: AppTextStyles.inputHint.copyWith(
-                                        color: AppColors.accent,
+                                        color: AppColors.primary,
                                         decoration: TextDecoration.underline,
-                                        decorationColor: AppColors.accent,
+                                        decorationColor: AppColors.primary,
                                       ),
                                     ),
                                   ),

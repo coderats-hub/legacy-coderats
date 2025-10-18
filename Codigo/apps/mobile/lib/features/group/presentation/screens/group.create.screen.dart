@@ -3,7 +3,7 @@ import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
-import 'scoring.group.dart';
+import 'group.scoring.screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});

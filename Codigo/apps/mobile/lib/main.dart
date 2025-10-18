@@ -1,12 +1,15 @@
-import 'package:app/features/group/presentation/screens/group.ranking.dart';
-import 'package:app/features/user/presentation/screens/started.dart';
-import 'package:app/features/group/presentation/screens/details.group.dart';
-import 'package:app/features/group/presentation/screens/join.group.dart';
-import 'package:app/features/group/presentation/screens/list.group.dart';
-import 'package:app/features/profile/presentation/screens/private.profile.dart';
-import 'package:app/features/user/presentation/screens/tela.inicio.dart';
-import 'package:app/features/user/presentation/screens/login.user.dart';
-import 'package:app/features/user/presentation/screens/register.user.dart';
+import 'package:app/features/group/presentation/screens/group.ranking.screen.dart';
+import 'package:app/features/group/presentation/screens/group.details.screen.dart';
+import 'package:app/features/group/presentation/screens/group.join.screen.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
+
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+
+import 'package:app/features/user/presentation/screens/home.screen.dart';
+import 'package:app/features/user/presentation/screens/login.screen.dart';
+import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
+import 'package:app/features/user/presentation/screens/register.screen.dart';
+
 import 'package:flutter/material.dart';
 import 'shared/theme/app.theme.dart';
 

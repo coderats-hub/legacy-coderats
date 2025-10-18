@@ -136,7 +136,7 @@ class SharedTextField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppCorners.sm),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: const BorderSide(color: AppColors.border),
             ),
             filled: true,
             fillColor: AppColors.surface,

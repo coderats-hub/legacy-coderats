@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
-import 'register.user.dart';
+import 'register.screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,8 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Login com GitHub em desenvolvimento'),
-                            backgroundColor: Color(0xFF9A24DD),
+                            content: Text(
+                              'Login com GitHub em desenvolvimento',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: AppColors.accent,
                           ),
                         );
                       },
@@ -198,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onTap: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (context) => RegisterScreen(),
+                                          builder: (context) => const RegisterScreen(),
                                         ),
                                       );
                                     },

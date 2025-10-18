@@ -4,7 +4,7 @@ import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
-import 'details.checkin.dart';
+import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
 
 // A tela foi convertida para StatefulWidget para gerenciar o próprio estado

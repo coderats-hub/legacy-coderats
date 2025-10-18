@@ -4,8 +4,8 @@ import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
 import 'package:flutter_calendar_carousel/classes/event.dart';
-import 'package:app/features/group/presentation/screens/create.group.dart';
-import 'package:app/features/group/presentation/screens/list.group.dart';
+import 'package:app/features/group/presentation/screens/group.create.screen.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 
 class PrivateProfileScreen extends StatelessWidget {
   PrivateProfileScreen({super.key});
@@ -117,7 +117,7 @@ class _ProfileHeader extends StatelessWidget {
           name,
           style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.sm),
         _ChipButton(
           label: actionLabel,
           icon: actionIcon,
@@ -163,32 +163,35 @@ class _ChipButton extends StatelessWidget {
 class _PrivateActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionCard(
-            label: "Criar um grupo",
-            icon: Icons.group_add,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const CreateGroupScreen(),
-                ),
-              );
-            },
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ActionCard(
+              label: "Criar um grupo",
+              icon: Icons.add_circle_outline,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const CreateGroupScreen(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _ActionCard(
-            label: "Entrar via código",
-            icon: Icons.code,
-            onTap: () {
-              Navigator.of(context).pushNamed('/join-group');
-            },
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: _ActionCard(
+              label: "Entrar via código",
+              icon: Icons.group_add_outlined,
+              onTap: () {
+                Navigator.of(context).pushNamed('/join-group');
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -208,13 +211,24 @@ class _ActionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppCorners.lg),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white70, size: 18),
+              Icon(icon, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.xs),
-              Text(label, style: AppTextStyles.button.copyWith(color: Colors.white70, fontWeight: FontWeight.w600)),
+              Flexible(
+                child: Text(
+                  label, 
+                  style: AppTextStyles.button.copyWith(
+                    color: Colors.white, 
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),
