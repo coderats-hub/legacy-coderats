@@ -7,12 +7,6 @@ on:
       - development
       - 'feature/**'
 
-env:
-  AWS_REGION: us-east-2
-  ECR_REPO_API: 960596859173.dkr.ecr.us-east-2.amazonaws.com/coderats-project/coderats-api
-  ECR_REPO_MOBILE: 960596859173.dkr.ecr.us-east-2.amazonaws.com/coderats-project/docker-android
-  S3_BUCKET_WEB_PROD: coderats-web-prod
-  S3_BUCKET_WEB_STAGING: coderats-web-staging
 
 jobs:
   # ------------------------------------------------------------
@@ -31,10 +25,14 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Export backend env vars
+        run: |
+          echo "ECR_REPO_API=${{ vars.ECR_REPO_API }}" >> $GITHUB_ENV
 
       - name: Define tag (prod/staging)
         id: meta
@@ -120,17 +118,30 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy Web to S3
+        if: github.ref_name == 'main'
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "🚀 Publicando versão WEB em PRODUÇÃO (S3_BUCKET_WEB_PROD)"
-            aws s3 sync Codigo/apps/mobile/build/web s3://$S3_BUCKET_WEB_PROD --delete
+            aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_PROD }} --delete
           else
             echo "🚧 Publicando versão WEB em STAGING (S3_BUCKET_WEB_STAGING)"
-            aws s3 sync Codigo/apps/mobile/build/web s3://$S3_BUCKET_WEB_STAGING --delete
+            aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_STAGING }} --delete
           fi
+
+      - name: Deploy Web to S3 (development)
+        if: github.ref_name == 'development'
+        run: |
+          echo "Deploying WEB to DEVELOP (S3_BUCKET_WEB_DEVELOP)"
+          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_DEVELOP }} --delete
+
+      - name: Deploy Web to S3 (feature to staging)
+        if: startsWith(github.ref, 'refs/heads/feature/')
+        run: |
+          echo "Deploying WEB to STAGING (S3_BUCKET_WEB_STAGING)"
+          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_STAGING }} --delete
 
   # ------------------------------------------------------------
   # 4. Deploy Backend to EC2 (ASG)
@@ -145,7 +156,7 @@ jobs:
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ env.AWS_REGION }}
+          aws-region:            ${{ vars.AWS_REGION }}
 
       - name: Trigger ASG refresh
         run: |
