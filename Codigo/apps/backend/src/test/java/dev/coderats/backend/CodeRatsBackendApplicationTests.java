@@ -1,10 +1,10 @@
-package com.coderats.backend;
+package dev.coderats.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BackendApplicationTests {
+class CodeRatsBackendApplicationTests {
 
 	@Test
 	void contextLoads() {
