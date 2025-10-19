@@ -1,4 +1,4 @@
-package dev.coderats.backend.groups.app;
+package dev.coderats.backend.groups.app.port;
 
 import java.util.Optional;
 

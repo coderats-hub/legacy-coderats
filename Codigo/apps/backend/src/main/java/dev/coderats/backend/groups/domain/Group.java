@@ -9,7 +9,7 @@ import dev.coderats.backend.shared.domain.Clock;
 
 // Relação básica de um grupo
 // Funciona como um model padrão
-// Contém atributos e métodos relacionados a um grupo como GroupId, GroupMethod, GroupStatus, etc.
+// Contém atributos e métodos relacionados a um grupo como GroupId, Gro
 public class Group {
 
     private final GroupId id;
@@ -67,7 +67,7 @@ public class Group {
                 image,
                 code,
                 method,
-                status,
+                GroupStatus.ACTIVE,
                 description,
                 repository,
                 startDate,

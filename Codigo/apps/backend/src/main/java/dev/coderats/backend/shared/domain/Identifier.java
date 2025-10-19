@@ -9,11 +9,20 @@ public abstract class Identifier implements Serializable {
     private final String value;
 
     protected Identifier(String value) {
-        this.value = Objects.requireNonNull(value);
+        try {
+            UUID.fromString(value);
+            this.value = Objects.requireNonNull(value);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid UUID format for Identifier: " + value, e);
+        }
     }
 
     public String value() {
         return value;
+    }
+
+    public UUID asUuid() {
+        return UUID.fromString(this.value);
     }
 
     @Override
