@@ -7,6 +7,9 @@ import java.util.Optional;
 
 import dev.coderats.backend.shared.domain.Clock;
 
+// Relação básica de um grupo
+// Funciona como um model padrão
+// Contém atributos e métodos relacionados a um grupo como GroupId, GroupMethod, GroupStatus, etc.
 public class Group {
 
     private final GroupId id;

@@ -6,6 +6,8 @@ import java.util.Objects;
 import dev.coderats.backend.shared.domain.Clock;
 import dev.coderats.backend.users.domain.UserId;
 
+// Relação básica de associação entre usuário e grupo
+// Funciona como um model padrão
 public class Membership {
 
     private final GroupId groupId;
