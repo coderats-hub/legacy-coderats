@@ -57,7 +57,7 @@ docker-compose --version
 git --version
 ```
 
-## Início Rápido
+## Início Rápido - Mobile
 
 ### 1. Navegue até o Diretório do App Mobile
 
@@ -130,9 +130,9 @@ docker run -it --rm -p 8081:8080 flutter-mobile-app
 
 **Acesse seu app em:** http://localhost:8081
 
-## Fluxo de Desenvolvimento
+### Fluxo de Desenvolvimento
 
-### Dentro do Container
+#### Dentro do Container
 
 Uma vez que seu container estiver rodando, você terá acesso a um shell onde pode executar comandos Flutter:
 
@@ -150,14 +150,14 @@ flutter pub get
 flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
 ```
 
-### Desenvolvimento ao Vivo
+#### Desenvolvimento ao Vivo
 
 1. **Faça alterações no código** no seu diretório local `apps/mobile`
 2. **Arquivos são sincronizados automaticamente** para o container via volume mounting
 3. **Hot reload** funciona quando executando `flutter run`
 4. **Veja as mudanças instantaneamente** no seu navegador
 
-### Comandos Flutter Disponíveis
+#### Comandos Flutter Disponíveis
 
 ```bash
 # Desenvolvimento
@@ -182,19 +182,174 @@ flutter build web
 flutter build linux
 ```
 
+## Início Rápido - Backend
+
+Para iniciar crie um arquivo chamado .env na raiz (mesmo nível do docker-compose.yml). Com as seguintes chaves de acesso:
+
+```yml
+# --- APP ---
+# --- APP ---
+SPRING_PROFILES_ACTIVE=dev
+APP_PORT=8080
+
+# --- DATABASE ---
+POSTGRES_DB=coderats_db
+POSTGRES_USER=coderats_user
+POSTGRES_PASSWORD=coderats_pass
+DB_PORT=5432
+
+# --- PGADMIN ---
+PGADMIN_DEFAULT_EMAIL=admin@local.dev
+PGADMIN_DEFAULT_PASSWORD=admin
+PGADMIN_PORT=5050
+
+```
+
+### Subindo o ambiente completo
+
+Na raiz do projeto:
+
+```bash
+docker compose up -d --build
+```
+
+Isso fará com que:
+
+1. O PostgreSQL 16 seja inicializado com as variáveis de ambiente acima;
+2. O pgAdmin fique disponível na porta **5050**;
+3. O backend (Spring Boot) seja compilado e inicializado (executando as migrations do Flyway);
+4. O mobile container fique disponível para desenvolvimento.
+
+Verifique os contêineres ativos:
+
+```bash
+docker ps
+```
+
+Você deve ver algo como:
+
+```
+CONTAINER ID   IMAGE              STATUS          PORTS
+xxxxxx         postgres:16        Up (healthy)    5432/tcp
+xxxxxx         dpage/pgadmin4     Up              0.0.0.0:5050->80/tcp
+xxxxxx         codigo-backend     Up              0.0.0.0:8080->8080/tcp
+xxxxxx         codigo-mobile      Up              0.0.0.0:8081->8080/tcp
+```
+
+---
+
+### Acessando os serviços
+
+| Serviço     | URL                                            | Login                                      |
+| :---------- | :--------------------------------------------- | :----------------------------------------- |
+| **Backend** | [http://localhost:8080](http://localhost:8080) | —                                          |
+| **pgAdmin** | [http://localhost:5050](http://localhost:5050) | E-mail: `admin@local.dev` / Senha: `admin` |
+
+---
+
+### Conectando o pgAdmin ao banco
+
+1. Acesse **[http://localhost:5050](http://localhost:5050)**
+2. Clique em **Add New Server**
+3. Aba **General**:
+
+   * *Name:* `local-db`
+4. Aba **Connection**:
+
+   * *Host name/address:* `db`
+   * *Port:* `5432`
+   * *Username:* `coderats_user`
+   * *Password:* `coderats_pass`
+5. Clique em **Save**
+
+Você poderá visualizar:
+
+* As tabelas criadas pelas migrations (`users`, etc.)
+* A tabela de controle do Flyway (`flyway_schema_history`)
+
+---
+
+### Verificando as migrations
+
+#### Opção 1 – Via pgAdmin
+
+Abra a tabela **flyway_schema_history** → *View/Edit Data → All Rows*
+Cada migration aplicada aparece listada com:
+
+* `version` (ex.: `1`)
+* `description` (ex.: `init`)
+* `success = true`
+
+#### Opção 2 – Via terminal
+
+```bash
+docker exec -it coderats_db psql -U coderats_user -d coderats_db -c \
+"SELECT version, description, installed_on, success FROM flyway_schema_history ORDER BY installed_rank;"
+```
+
+---
+
+### Estrutura de migrations
+
+Os arquivos SQL ficam em:
+
+```
+apps/backend/src/main/resources/db/migration/
+ ├── V1__init.sql
+ └── V2__add_status_to_users.sql
+```
+
+#### Exemplo de migration inicial
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(160) UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+Ao reiniciar o backend, o Flyway aplicará automaticamente novas versões (`V2__...`, `V3__...` etc.).
+
+#### Boas práticas com Migrations (Flyway)
+
+* **Sempre use versionamento incremental**
+  Nomeie os arquivos como `V1__init.sql`, `V2__add_users.sql`, `V3__update_email_index.sql` — mantendo a ordem numérica e **dois underscores** (`__`).
+
+* **Nunca edite uma migration já aplicada**
+  Se precisar mudar algo em uma tabela existente, **crie uma nova migration** (ex.: `V4__alter_table_users.sql`).
+  Alterar uma migration antiga gera erro de *checksum* e quebra o histórico.
+
+* **Verifique o resultado no banco**
+  Confira a tabela `flyway_schema_history` para confirmar o sucesso de cada versão.
+
+* **Mantenha `spring.jpa.hibernate.ddl-auto=validate`**
+  Isso garante que o Hibernate apenas **valide** o schema, sem criar nem alterar nada automaticamente — deixando o controle 100% nas migrations.
+
+* **Use scripts reversíveis (opcional)**
+  Sempre que possível, adicione comandos que permitam desfazer alterações (DROP, DELETE, etc.) para facilitar rollbacks em ambiente de testes.
+
+* **Sincronize a numeração entre branches**
+  Em times, coordene a criação de novas migrations para evitar conflitos (duas `V5__...` diferentes).
+
+
 ## Estrutura do Projeto
 
 ```
-apps/mobile/
-├── android/              # Arquivos específicos do Android
-├── ios/                  # Arquivos específicos do iOS
-├── lib/                  # Código fonte Flutter
-│   └── main.dart        # Ponto de entrada do app
-├── web/                  # Arquivos específicos da web
-├── test/                 # Arquivos de teste
-├── pubspec.yaml          # Dependências do Flutter
-├── Dockerfile            # Configuração do container
-└── README.md            # Este arquivo
+Codigo/
+ ├── apps/
+ │   ├── backend/              # Projeto Spring Boot
+ │   │   ├── src/
+ │   │   └── Dockerfile
+ │   └── mobile/               # Projeto Flutter (opcional)
+ │       ├── src/
+ │       └── Dockerfile
+ ├── docker-compose.yml        # Orquestração dos serviços
+ ├── .env                      # Variáveis de ambiente
+ └── README.md
 ```
 
 ## Solução de Problemas
