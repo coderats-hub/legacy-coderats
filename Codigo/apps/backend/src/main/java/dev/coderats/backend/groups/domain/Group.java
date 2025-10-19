@@ -57,8 +57,7 @@ public class Group {
         this.deletedAt = deletedAt;
     }
 
-    public static Group create(String name, String image, String code, GroupMethod method,
-                               GroupStatus status, String description, URI repository,
+    public static Group create(String name, String image, String code, GroupMethod method, String description, URI repository,
                                Instant startDate, Instant endDate, Clock clock) {
 
         return new Group(

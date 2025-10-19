@@ -2,9 +2,9 @@ package dev.coderats.backend.users.domain;
 
 import dev.coderats.backend.shared.domain.Identifier;
 
+// Mesma coisa que groupId, para manter o padrão de código
 public final class UserId extends Identifier {
 
-    // Esse construtor é privado para garantir que os IDs de usuário sejam criados apenas através dos métodos estáticos da classe.
     private UserId(String value) {
         super(value);
     }

@@ -42,7 +42,6 @@ public class CreateGroupUseCase {
                 command.image(),
                 groupCode,
                 command.method(),
-                command.status(),
                 command.description(),
                 command.repository(),
                 command.startDate(),
