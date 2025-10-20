@@ -1,9 +1,16 @@
 package dev.coderats.backend.users.api;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import dev.coderats.backend.shared.infra.security.UserPrincipal; // Assumindo
+import org.springframework.web.bind.annotation.GetMapping; // Assumindo
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import dev.coderats.backend.shared.infra.security.UserPrincipal;
 import dev.coderats.backend.users.api.dto.PrivateUserProfileDTO;
 import dev.coderats.backend.users.api.dto.UserUpdateDTO;
 import dev.coderats.backend.users.app.GetMeUseCase;
@@ -12,9 +19,8 @@ import dev.coderats.backend.users.app.ListMyGroupsUseCase;
 import dev.coderats.backend.users.app.UpdateMeUseCase;
 import dev.coderats.backend.users.app.command.UpdateMeCommand;
 import dev.coderats.backend.users.domain.User;
-import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/users/me")
@@ -27,8 +33,6 @@ public class MeController {
     private final ListMyBadgesUseCase listMyBadgesUseCase;
     private final UserApiMapper mapper;
     
-    // (Mappers para Groups e Badges seriam injetados aqui)
-
     @GetMapping
     public ResponseEntity<PrivateUserProfileDTO> getMe(
             @AuthenticationPrincipal UserPrincipal currentUser
