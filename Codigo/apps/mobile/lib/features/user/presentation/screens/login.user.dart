@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: Image.asset(
-                        '/images/logo.png',
+                        'assets/images/logo.png',
                         width: 300,
                         height: 300,
                         fit: BoxFit.contain,
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Container(
                             margin: const EdgeInsets.only(right: 8),
                             child: Image.asset(
-                              '/icons/github.png',
+                              'assets/icons/github.png',
                               width: 32,
                               height: 32,
                               color: const Color(0xFFD9D9D9),
