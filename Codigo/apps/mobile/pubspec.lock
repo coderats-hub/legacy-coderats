@@ -343,9 +343,6 @@ packages:
       sha256: "45caa6c5917fa127b5dbcfbd1fa60b14e583afdc08bfc96dda38886ca252eb60"
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
-    version: "4.1.4"
-=======
     version: "15.0.2"
   web:
     dependency: transitive
@@ -363,7 +360,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.15.0"
->>>>>>> development
   xdg_directories:
     dependency: transitive
     description:
@@ -373,10 +369,5 @@ packages:
     source: hosted
     version: "1.1.0"
 sdks:
-<<<<<<< HEAD
-  dart: ">=2.19.4 <3.0.0"
-  flutter: ">=3.7.0"
-=======
   dart: ">=3.9.0 <4.0.0"
   flutter: ">=3.35.0"
->>>>>>> development

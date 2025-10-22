@@ -46,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: Image.asset(
-                      '/images/logo.png',
+                      'assets/images/logo.png',
                       width: 180,
                       height: 120,
                       fit: BoxFit.contain,
@@ -86,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Container(
                             margin: const EdgeInsets.only(right: AppSpacing.sm),
                             child: Image.asset(
-                              '/icons/github.png',
+                              'assets/icons/github.png',
                               width: 32,
                               height: 32,
                               color: AppColors.textPrimary,
