@@ -16,7 +16,7 @@ class TelaInicio extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'images/logo.png',
+                  'assets/images/logo.png',
                   width: 400,
                   height: 240,
                   fit: BoxFit.contain,
