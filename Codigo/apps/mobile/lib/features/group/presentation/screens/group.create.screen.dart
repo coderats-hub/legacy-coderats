@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
-import '../../../../shared/components/textfield.dart';
+import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
-import 'scoring.group.dart';
+import 'group.scoring.screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -84,13 +85,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   void _continue() {
     if (_formKey.currentState!.validate()) {
-      if (_startDate == null || _endDate == null) {
+      if (_endDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione as datas de início e fim')),
+          const SnackBar(content: Text('Por favor, selecione a data de fim')),
         );
         return;
       }
-      
+      // Define a data de início como agora
+      _startDate = DateTime.now();
       // Navegar para a tela de método avaliativo
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -102,45 +104,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
-        backgroundColor: colors.background,
-        elevation: 0,
-        titleSpacing: 8,
-        centerTitle: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.onBackground),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Criar grupo',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+      backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: 'Criar grupo',
+        onBack: () => Navigator.of(context).maybePop(),
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Escolher foto de capa
-              _buildCoverImageSection(colors, textTheme),
-              const SizedBox(height: 24),
-              
+              _buildCoverImageSection(),
+              const SizedBox(height: AppSpacing.lg),
               // Nome do Grupo
-              AppTextField(
+              SharedTextField(
                 label: 'Nome do Grupo',
-                hintText: 'Insira o nome do seu grupo',
-                required: true,
+                placeholder: 'Insira o nome do seu grupo',
                 controller: _nameController,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -149,39 +132,24 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-              
+              const SizedBox(height: AppSpacing.lg),
               // Descrição
-              AppTextField(
+              SharedTextField(
                 label: 'Descrição',
-                hintText: 'Insira a descrição do grupo',
+                placeholder: 'Insira a descrição do grupo',
                 controller: _descriptionController,
                 maxLines: 3,
               ),
-              const SizedBox(height: 20),
-              
+              const SizedBox(height: AppSpacing.lg),
               // Adicionar repositório
-              AppTextField(
+              SharedTextField(
                 label: 'Adicionar repositório',
-                hintText: 'Adicionar link do repositório do grupo',
+                placeholder: 'Adicionar link do repositório do grupo',
                 controller: _repositoryController,
-                icon: Icons.code,
                 keyboardType: TextInputType.url,
               ),
-              const SizedBox(height: 20),
-              
-              // Data de Início
-              _buildDateField(
-                label: 'Data de Início',
-                hintText: 'Escolha a data de início do grupo',
-                required: true,
-                date: _startDate,
-                onTap: () => _selectDate(context, true),
-                colors: colors,
-                textTheme: textTheme,
-              ),
-              const SizedBox(height: 20),
-              
+              const SizedBox(height: AppSpacing.lg),
+              // Data de início removida: será sempre a data atual
               // Data de Fim
               _buildDateField(
                 label: 'Data de Fim',
@@ -189,37 +157,33 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 required: true,
                 date: _endDate,
                 onTap: () => _selectDate(context, false),
-                colors: colors,
-                textTheme: textTheme,
               ),
-              const SizedBox(height: 20),
-              
+              const SizedBox(height: AppSpacing.lg),
               // Duração
               if (_duration != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: colors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.outline),
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppCorners.md),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.schedule, color: colors.primary, size: 20),
-                      const SizedBox(width: 12),
+                      const Icon(Icons.schedule, color: AppColors.primary, size: 20),
+                      const SizedBox(width: AppSpacing.md),
                       Text(
-                        'Duração: $_duration dias',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurface,
+                        'Duração: ${_duration ?? ''} dias',
+                        style: AppTextStyles.subtitle.copyWith(
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppSpacing.xl),
               ],
-              
               // Botão Continuar
               AppButtonPrimary(
                 type: AppButtonPrimaryType.secondary,
@@ -233,34 +197,34 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     );
   }
 
-  Widget _buildCoverImageSection(ColorScheme colors, TextTheme textTheme) {
+  Widget _buildCoverImageSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Escolher foto de capa',
-          style: textTheme.bodyMedium?.copyWith(
-            color: colors.onSurface,
+          style: AppTextStyles.subtitle.copyWith(
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         GestureDetector(
           onTap: _selectCoverImage,
           child: Container(
             height: 120,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: colors.surfaceVariant,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
               border: Border.all(
-                color: colors.outline,
+                color: AppColors.border,
                 style: BorderStyle.solid,
               ),
             ),
             child: _coverImagePath != null
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppCorners.md),
                     child: Image.asset(
                       _coverImagePath!,
                       fit: BoxFit.cover,
@@ -269,17 +233,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.image_outlined,
-                        color: colors.onSurfaceVariant,
+                        color: AppColors.textSecondary,
                         size: 32,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Toque para adicionar imagem',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
+                        style: AppTextStyles.inputHint,
                       ),
                     ],
                   ),
@@ -295,8 +257,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     required bool required,
     required DateTime? date,
     required VoidCallback onTap,
-    required ColorScheme colors,
-    required TextTheme textTheme,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,26 +264,26 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         RichText(
           text: TextSpan(
             text: label,
-            style: textTheme.bodyMedium?.copyWith(color: colors.onSurface),
+            style: AppTextStyles.inputLabel,
             children: required
                 ? [
                     TextSpan(
                       text: ' *',
-                      style: textTheme.bodyMedium?.copyWith(color: colors.error),
+                      style: AppTextStyles.inputLabel.copyWith(color: Colors.red),
                     )
                   ]
                 : [],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs),
         GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
             decoration: BoxDecoration(
-              color: colors.surfaceVariant,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.outline),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -332,14 +292,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     date != null
                         ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
                         : hintText,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: date != null ? colors.onSurface : colors.onSurfaceVariant,
+                    style: AppTextStyles.inputLabel.copyWith(
+                      color: date != null ? AppColors.textPrimary : AppColors.textSecondary,
                     ),
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.calendar_today,
-                  color: colors.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                   size: 20,
                 ),
               ],

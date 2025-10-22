@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
-import 'package:app/features/profile/presentation/screens/public.profile.dart';
-import 'package:app/features/checkin/presentation/screens/details.checkin.dart';
+import 'package:app/features/profile/presentation/screens/public.profile.screen.dart';
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
+import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupName;
@@ -90,8 +94,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  // final cs = Theme.of(context).colorScheme;
+  // final tt = Theme.of(context).textTheme;
 
     final grouped = _groupByDay(_items);
 
@@ -105,88 +109,108 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     if (_loading) rows.add(_Row.loader());
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.groupName),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
+      appBar: AppHeader(
+        title: widget.groupName,
+        onBack: () => Navigator.of(context).maybePop(),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline, color: AppColors.textPrimary),
             tooltip: 'Excluir',
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           TextButton.icon(
             onPressed: () {},
-            icon: const Icon(Icons.copy_all_rounded, size: 18),
+            icon: const Icon(Icons.copy_all_rounded, size: 18, color: AppColors.accent),
             label: Text(
               'Código: AWECVEW',
-              style: tt.labelLarge?.copyWith(color: cs.secondary),
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.accent),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.sm),
         ],
       ),
 
       body: ListView(
         controller: _scrollCtrl,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: BannerHero(
               imageUrl: widget.imageUrl,
               style: widget.bannerStyle,
               height: 128,
-              radius: 16,
+              radius: AppCorners.lg,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
 
           _DescriptionAccordion(
             open: _descOpen,
             onToggle: () => setState(() => _descOpen = !_descOpen),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Text(
                 "Aqui vai a descrição do grupo. Você pode inserir "
                 "orientações, links e qualquer detalhe relevante.",
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
               ),
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text("Ranking", style: tt.titleLarge),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Text("Ranking", style: AppTextStyles.title),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           _RankingTile(name: 'Alice', points: '49.5 pontos', pos: '1st'),
           _RankingTile(name: 'Felipe', points: '45.5 pontos', pos: '2st'),
           _RankingTile(name: 'Gustavo', points: '45.5 pontos', pos: '3st'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Align(
               alignment: Alignment.centerLeft,
               child: _RankingChip(
                 label: 'Todo Ranking',
-                onTap: () => null,
+                onTap: () {
+                  Navigator.of(context).pushNamed('/group-ranking');
+                },
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text("Check-ins", style: tt.titleLarge),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Check-ins", style: AppTextStyles.title),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CheckinScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Visualizar com detalhes',
+                    style: TextStyle(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
 
           // Lista linear com cabeçalhos e itens
           ...rows.map((r) {
@@ -196,35 +220,40 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               return _CheckinTile(c: r.item!);
             } else {
               return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
                 child: Center(child: CircularProgressIndicator()),
               );
             }
           }).toList(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AppFAB(
         onPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => CommitCheckinScreen(),
+              builder: (context) => const CommitCheckinScreen(),
             ),
           );
         },
-        child: const Icon(Icons.add),
+        icon: Icons.add,
+        tooltip: 'Novo check-in',
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // “Grupos”
-        onTap: (i) {},
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined), label: 'Início'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.groups_2_outlined), label: 'Grupos'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline), label: 'Perfil'),
-        ],
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 1,
+        onTap: (i) {
+          if (i == 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tela de Início não implementada')),
+            );
+          } else if (i == 1) {
+            // já está na tela de grupos
+          } else if (i == 2) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
+            );
+          }
+        },
       ),
     );
   }
@@ -290,28 +319,27 @@ class _DescriptionAccordion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  // final cs = Theme.of(context).colorScheme;
+  // final tt = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       child: Column(
         children: [
           InkWell(
             onTap: onToggle,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppCorners.sm),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     'Ver Descrição',
-                    style:
-                        tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                    style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
                   ),
                 ),
                 Icon(
                   open ? Icons.expand_less : Icons.expand_more,
-                  color: cs.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -319,7 +347,7 @@ class _DescriptionAccordion extends StatelessWidget {
           AnimatedCrossFade(
             firstChild: const SizedBox(height: 0),
             secondChild: Padding(
-              padding: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
               child: child,
             ),
             crossFadeState:
@@ -344,16 +372,16 @@ class _RankingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  // final cs = Theme.of(context).colorScheme;
+  // final tt = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       child: Row(
         children: [
-          const SizedBox(width: 8),
-          const CircleAvatar(radius: 18, backgroundColor: Colors.white24),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
+          const CircleAvatar(radius: 18, backgroundColor: AppColors.accentLight),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -366,21 +394,23 @@ class _RankingTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: tt.bodyLarge?.copyWith(
-                    color: Color(0xFF9A24DD), // Roxo padrão
+                  Text(name, style: AppTextStyles.title.copyWith(
+                    color: AppColors.textPrimary,
                     decoration: TextDecoration.none,
+                    fontSize: 16,
                   )),
                   Text(points,
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
+                      style: AppTextStyles.subtitle.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
                       )),
                 ],
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text(pos, style: tt.titleMedium),
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: Text(pos, style: AppTextStyles.title.copyWith(fontSize: 16)),
           ),
         ],
       ),
@@ -395,19 +425,19 @@ class _RankingChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    // final cs = Theme.of(context).colorScheme;
+    // final tt = Theme.of(context).textTheme;
     return Material(
-      color: cs.secondaryContainer.withOpacity(.2),
-      shape: StadiumBorder(side: BorderSide(color: cs.outline, width: .6)),
+      color: AppColors.surface.withOpacity(.2),
+      shape: StadiumBorder(side: BorderSide(color: AppColors.border, width: .6)),
       child: InkWell(
         onTap: onTap,
         customBorder: const StadiumBorder(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
           child: Text(
             label,
-            style: tt.labelMedium?.copyWith(color: cs.onSurface),
+            style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
           ),
         ),
       ),
@@ -421,12 +451,12 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    // final tt = Theme.of(context).textTheme;
     final formatted =
         "${_two(date.day)} de ${_monthName(date.month)}"; // ex.: 01 de Set
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
-      child: Text(formatted, style: tt.labelLarge),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.xs),
+      child: Text(formatted, style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
     );
   }
 
@@ -446,26 +476,26 @@ class _CheckinTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    // final cs = Theme.of(context).colorScheme;
+    // final tt = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: cs.surface, // card dos check-ins
-          borderRadius: BorderRadius.circular(14),
+          color: AppColors.surface, // card dos check-ins
+          borderRadius: BorderRadius.circular(AppCorners.md),
         ),
         child: Row(
           children: [
-            const CircleAvatar(radius: 18, backgroundColor: Colors.white24),
-            const SizedBox(width: 12),
+            const CircleAvatar(radius: 18, backgroundColor: AppColors.border),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(c.title, style: tt.bodyLarge),
+                  Text(c.title, style: AppTextStyles.title.copyWith(fontSize: 16)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -473,21 +503,21 @@ class _CheckinTile extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: cs.onSurfaceVariant,
+                          color: AppColors.textSecondary,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(c.author,
-                          style: tt.labelMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
+                          style: AppTextStyles.subtitle.copyWith(
+                            color: AppColors.textSecondary,
                           )),
                     ],
                   ),
                 ],
               ),
             ),
-            Text("${c.points} pnts", style: tt.labelLarge),
+            Text("${c.points} pnts", style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
           ],
         ),
       ),

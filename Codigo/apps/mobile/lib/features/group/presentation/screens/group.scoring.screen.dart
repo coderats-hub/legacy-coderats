@@ -1,5 +1,7 @@
-import 'package:app/features/group/presentation/screens/list.group.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
 
 enum EvaluationMethod {
@@ -21,34 +23,17 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
-        backgroundColor: colors.background,
-        elevation: 0,
-        titleSpacing: 8,
-        centerTitle: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colors.onBackground),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Método Avaliativo',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+      backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: 'Método Avaliativo',
+        onBack: () => Navigator.of(context).maybePop(),
       ),
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -58,10 +43,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                     title: 'Maior streak de fotos',
                     description: 'Usuário com maior frequência usando fotografias',
                     method: EvaluationMethod.photoStreak,
-                    colors: colors,
-                    textTheme: textTheme,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   
                   // Opção 2: Maior streak de commits
                   _buildEvaluationOption(
@@ -69,10 +52,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                     title: 'Maior streak de commits',
                     description: 'Usuário com maior frequência usando commits',
                     method: EvaluationMethod.commitStreak,
-                    colors: colors,
-                    textTheme: textTheme,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   
                   // Opção 3: Maior número de commits
                   _buildEvaluationOption(
@@ -80,10 +61,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                     title: 'Maior número de commits',
                     description: 'Usuário com maior números de commits acumulados',
                     method: EvaluationMethod.commitCount,
-                    colors: colors,
-                    textTheme: textTheme,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.md),
                   
                   // Opção 4: Maior número de linhas de código
                   _buildEvaluationOption(
@@ -91,8 +70,6 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                     title: 'Maior número de linhas de código',
                     description: 'Usuário com maior acumulo de linhas de código',
                     method: EvaluationMethod.codeLines,
-                    colors: colors,
-                    textTheme: textTheme,
                   ),
                 ],
               ),
@@ -101,8 +78,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
           
           // Botão Criar Grupo
           Container(
-            padding: const EdgeInsets.all(24),
-            child:             AppButtonPrimary(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: AppButtonPrimary(
               type: AppButtonPrimaryType.secondary,
               text: 'Criar grupo',
               onPressed: _selectedMethod != null ? _createGroup : null,
@@ -119,11 +96,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
     required String title,
     required String description,
     required EvaluationMethod method,
-    required ColorScheme colors,
-    required TextTheme textTheme,
   }) {
     final isSelected = _selectedMethod == method;
-    
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -131,7 +105,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
             // Ícone
@@ -139,17 +113,16 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
               width: 48,
               height: 48,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Image.asset(
                   iconPath,
                   width: 32,
                   height: 32,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
-            const SizedBox(width: 16),
-            
+            const SizedBox(width: AppSpacing.md),
             // Conteúdo
             Expanded(
               child: Column(
@@ -157,23 +130,23 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
                 children: [
                   Text(
                     title,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
+                    style: AppTextStyles.title.copyWith(
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     description,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                    style: AppTextStyles.subtitle.copyWith(
+                      color: AppColors.textSecondary,
                       height: 1.3,
                     ),
                   ),
                 ],
               ),
             ),
-            
             // Radio Button
             Container(
               width: 24,
@@ -181,13 +154,13 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   width: 2,
                 ),
-                color: isSelected ? Colors.white : Colors.transparent,
+                color: isSelected ? AppColors.textPrimary : Colors.transparent,
               ),
               child: isSelected
-                  ? Icon(
+                  ? const Icon(
                       Icons.check,
                       color: Colors.black,
                       size: 16,
@@ -202,16 +175,13 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
 
   void _createGroup() {
     if (_selectedMethod != null) {
-      final colors = Theme.of(context).colorScheme;
-      
       // TODO: Implementar lógica de criação do grupo com método selecionado
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Grupo criado com método: ${_getMethodName(_selectedMethod!)}'),
-          backgroundColor: colors.secondary,
+          backgroundColor: AppColors.accent,
         ),
       );
-      
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => GroupsPage(),

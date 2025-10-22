@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
+import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
+import 'package:flutter_calendar_carousel/classes/event.dart';
 
 class PublicProfileScreen extends StatelessWidget {
   PublicProfileScreen({super.key});
@@ -10,21 +13,14 @@ class PublicProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF7B1FA2),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text('Perfil: Alice'),
-        centerTitle: false,
+      backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: 'Perfil: Alice',
+        // Não exibe botão de voltar
+        onBack: null,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -68,22 +64,22 @@ class _ProfileHeader extends StatelessWidget {
           width: 96,
           height: 96,
           decoration: const BoxDecoration(
-            color: Color(0xFF7B1FA2),
+                color: AppColors.surface,
             shape: BoxShape.circle,
           ),
           child: const Center(child: Icon(Icons.person, color: Colors.white, size: 48)),
         ),
-        const SizedBox(height: 8),
+  const SizedBox(height: AppSpacing.sm),
         Text(
           name,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+          style: AppTextStyles.title.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs),
         _ChipButton(
           label: actionLabel,
           icon: actionIcon,
           onPressed: onAction,
-          color: const Color(0xFF2E7D32),
+          color: AppColors.primary,
         ),
       ],
     );
@@ -101,18 +97,18 @@ class _ChipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color,
-      borderRadius: BorderRadius.circular(20),
+  borderRadius: BorderRadius.circular(AppCorners.xl),
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
+  borderRadius: BorderRadius.circular(AppCorners.xl),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              const SizedBox(width: AppSpacing.xs),
+              Text(label, style: AppTextStyles.button.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -130,45 +126,30 @@ class _CalendarCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppCorners.lg),
       ),
-      padding: const EdgeInsets.all(12),
-      child: TableCalendar<dynamic>(
-        calendarStyle: CalendarStyle(
-          todayDecoration: BoxDecoration(
-            color: const Color(0xFF2E7D32),
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: BoxDecoration(
-            color: const Color(0xFF2E7D32),
-            shape: BoxShape.circle,
-          ),
-          defaultDecoration: BoxDecoration(
-            color: Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          weekendDecoration: BoxDecoration(
-            color: Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-        ),
-        headerStyle: HeaderStyle(
-          titleTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-          formatButtonVisible: false,
-          leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white),
-          rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white),
-        ),
-        firstDay: DateTime.utc(2020, 01, 01),
-        lastDay: DateTime.utc(2030, 12, 31),
-        focusedDay: currentDate,
-        selectedDayPredicate: (day) => isSameDay(currentDate, day),
-        onDaySelected: (selectedDay, focusedDay) {
-          // Handle day selection
-        },
-        eventLoader: (date) {
-          return markedDateMap[date] ?? [];
-        },
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: CalendarCarousel<Event>(
+        thisMonthDayBorderColor: Colors.transparent,
+        daysHaveCircularBorder: true,
+  weekendTextStyle: AppTextStyles.inputHint.copyWith(color: Colors.white70),
+  weekdayTextStyle: AppTextStyles.inputHint.copyWith(color: Colors.white54),
+  daysTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
+  selectedDayTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
+  selectedDayButtonColor: AppColors.primary,
+  todayButtonColor: Colors.transparent,
+  todayBorderColor: AppColors.primary,
+        selectedDateTime: currentDate,
+        showOnlyCurrentMonthDate: true,
+  headerTextStyle: AppTextStyles.title.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+        iconColor: Colors.white70,
+        weekFormat: false,
+        height: 360,
+        isScrollable: false,
+        headerMargin: const EdgeInsets.only(bottom: 8),
+        markedDatesMap: markedDateMap,
+        onDayPressed: (date, events) {},
       ),
     );
   }
@@ -186,7 +167,7 @@ class _BadgesRow extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Badges', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('Badges', style: AppTextStyles.title),
             if (showSeeAll)
               TextButton(
                 onPressed: () {},
@@ -194,11 +175,11 @@ class _BadgesRow extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+  const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             _BadgePlaceholder(label: '2x'),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.sm),
             _BadgePlaceholder(label: '1x', warning: true),
           ],
         ),
@@ -219,13 +200,13 @@ class _BadgePlaceholder extends StatelessWidget {
         Container(
           width: 44, height: 44,
           decoration: BoxDecoration(
-            color: warning ? Colors.red : Colors.white10,
+            color: warning ? AppColors.error : Colors.white10,
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.emoji_events, color: Colors.white),
         ),
-        const SizedBox(width: 6),
-        Text(label, style: const TextStyle(color: Colors.white)),
+  const SizedBox(width: AppSpacing.xs),
+  Text(label, style: AppTextStyles.inputLabel.copyWith(color: Colors.white)),
       ],
     );
   }
@@ -237,10 +218,10 @@ class _GroupsInCommon extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 8),
-        Text('Grupos em Comum', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        SizedBox(height: 8),
-        Text('— em breve —', style: TextStyle(color: Colors.white54)),
+  const SizedBox(height: AppSpacing.sm),
+  Text('Grupos em Comum', style: AppTextStyles.title.copyWith(color: Colors.white)),
+  const SizedBox(height: AppSpacing.sm),
+  Text('— em breve —', style: AppTextStyles.inputHint.copyWith(color: Colors.white54)),
       ],
     );
   }

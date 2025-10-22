@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
-import 'details.checkin.dart';
+import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
 
 // A tela foi convertida para StatefulWidget para gerenciar o próprio estado
@@ -61,23 +63,24 @@ class _CheckinScreenState extends State<CheckinScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Theme(
       data: SharedTheme.buildDarkTheme(),
       child: Scaffold(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: AppColors.background,
+        appBar: AppHeader(
+          title: 'Check-ins: Code Rats',
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+              tooltip: 'Recarregar',
+              onPressed: _loadCheckins,
+            ),
+          ],
+        ),
         body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 16),
-              // Header compartilhado
-              SharedHeader(
-                title: 'Check-ins: Code Rats',
-                showRefreshButton: true,
-                onRefresh: _loadCheckins,
-              ),
-              const SizedBox(height: 4),
-              
               // Conteúdo principal
               Expanded(
                 child: _buildBody(),
@@ -85,27 +88,17 @@ class _CheckinScreenState extends State<CheckinScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: const SharedBottomNav(),
-        floatingActionButton: SizedBox(
-          width: 64,
-          height: 64,
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CommitCheckinScreen(),
-                ),
-              );
-            },
-            backgroundColor: const Color(0xFF7DCDC1),
-            elevation: 0,
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 32,
-            ),
-          ),
+        floatingActionButton: AppFAB(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CommitCheckinScreen(),
+              ),
+            );
+          },
+          icon: Icons.add,
+          tooltip: 'Novo check-in',
         ),
       ),
     );
@@ -383,193 +376,158 @@ class _PostCard extends StatelessWidget {
       children: [
         // Header com avatar e nome
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.lg),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.grey[600],
-                child: Icon(Icons.person, color: Colors.white, size: 18),
+                backgroundColor: AppColors.surface,
+                child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
               ),
-              const SizedBox(width: 8), 
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 username,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+                style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w500),
               ),
             ],
           ),
         ),
-        
-        // Card colorido principal 
+        // Card colorido principal
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Container(
             height: 329,
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: isGradient 
-                ? LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: gradientColors ?? [const Color(0xFF4A0A77), const Color(0xFF9A24DD)],
-                  )
-                : null,
-              color: isGradient ? null : color,
-              borderRadius: BorderRadius.circular(12),
+              gradient: isGradient && gradientColors != null
+                  ? LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: gradientColors!,
+                    )
+                  : null,
+              color: isGradient ? null : AppColors.accent,
+              borderRadius: BorderRadius.circular(AppCorners.md),
             ),
-          child: Stack(
-            children: [
-              // Footer GitHub com background opaco
-              if (githubText.isNotEmpty)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 50,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF000000).withOpacity(0.5),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(12),
-                        bottomRight: Radius.circular(12),
+            child: Stack(
+              children: [
+                // Footer GitHub com background opaco
+                if (githubText.isNotEmpty)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 50,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.background.withOpacity(0.5),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(AppCorners.md),
+                          bottomRight: Radius.circular(AppCorners.md),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            githubText,
+                            style: AppTextStyles.inputHint.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.xs),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(AppCorners.sm),
+                            ),
+                            child: const Icon(
+                              Icons.code_outlined,
+                              color: AppColors.textPrimary,
+                              size: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          githubText,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: const Color(0xFFFFFFFF),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.code_outlined,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
-        
         // Informações e stats
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Stats (likes, comentários, pontos) 
+              // Stats (likes, comentários, pontos)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   children: [
-                    Icon(Icons.favorite_border, size: 24, color: const Color(0xFFD9D9D9)),
-                    const SizedBox(width: 4),
+                    const Icon(Icons.favorite_border, size: 24, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.xs),
                     Text(
                       likes.toString(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFFFFFFFF),
-                      ),
+                      style: AppTextStyles.inputHint,
                     ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.chat_bubble_outline, size: 24, color: const Color(0xFFD9D9D9)),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.md),
+                    const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.xs),
                     Text(
                       comments.toString(),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFFFFFFFF),
-                      ),
+                      style: AppTextStyles.inputHint,
                     ),
                     const Spacer(),
                     Text(
                       '$points pnts',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFFD9D9D9),
-                      ),
+                      style: AppTextStyles.inputHint,
                     ),
                   ],
                 ),
               ),
-              
-              const SizedBox(height: 8),
-              
+              const SizedBox(height: AppSpacing.sm),
               // Título e descrição lado a lado
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFFD9D9D9),
-                        fontWeight: FontWeight.bold, 
-                      ),
+                      style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
                         description,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: const Color(0xFFD9D9D9),
-                          fontWeight: FontWeight.normal, 
-                        ),
+                        style: AppTextStyles.inputHint,
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              const SizedBox(height: 4),
-              
+              const SizedBox(height: AppSpacing.xs),
               // Tempo separado
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Text(
                   timeAgo,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: const Color(0xFFACACAC), 
-                  ),
+                  style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
                 ),
               ),
             ],
           ),
         ),
-        
         // Linha divisória
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           child: Container(
             height: 1,
             width: double.infinity,
-            color: Colors.grey[800],
-            margin: const EdgeInsets.only(top: 8),
+            color: AppColors.border,
+            margin: const EdgeInsets.only(top: AppSpacing.xs),
           ),
         ),
       ],
