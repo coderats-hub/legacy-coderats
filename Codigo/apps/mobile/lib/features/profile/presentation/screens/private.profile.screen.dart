@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
-import 'package:flutter_calendar_carousel/flutter_calendar_carousel.dart';
-import 'package:flutter_calendar_carousel/classes/event.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 
@@ -10,7 +9,6 @@ class PrivateProfileScreen extends StatelessWidget {
   PrivateProfileScreen({super.key});
 
   final DateTime _currentDate = DateTime.now();
-  // final EventList<Event> _markedDateMap = EventList<Event>(events: {});
   final Map<DateTime, List<dynamic>> _markedDateMap = {};
 
   @override
@@ -249,26 +247,60 @@ class _CalendarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppCorners.lg),
       ),
       padding: const EdgeInsets.all(AppSpacing.md),
-      child: CalendarCarousel<Event>(
-        thisMonthDayBorderColor: Colors.transparent,
-        daysHaveCircularBorder: true,
-  weekendTextStyle: AppTextStyles.inputHint.copyWith(color: Colors.white70),
-  weekdayTextStyle: AppTextStyles.inputHint.copyWith(color: Colors.white54),
-  daysTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
-  selectedDayTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
-  selectedDayButtonColor: AppColors.primary,
-  todayButtonColor: Colors.transparent,
-  todayBorderColor: AppColors.primary,
-        selectedDateTime: currentDate,
-        showOnlyCurrentMonthDate: true,
-        headerTextStyle: AppTextStyles.title.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
-        iconColor: Colors.white70,
-        weekFormat: false,
+      child: SizedBox(
         height: 360,
-        isScrollable: false,
-        headerMargin: const EdgeInsets.only(bottom: AppSpacing.xs),
-        markedDatesMap: markedDateMap,
-        onDayPressed: (date, events) {},
+        child: TableCalendar<dynamic>(
+          firstDay: DateTime.utc(2000, 1, 1),
+          lastDay: DateTime.utc(2100, 12, 31),
+          focusedDay: currentDate,
+          headerStyle: HeaderStyle(
+            formatButtonVisible: false,
+            titleTextStyle: AppTextStyles.title.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+            leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white70),
+            rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white70),
+            // header spacing handled by parent padding
+          ),
+          calendarStyle: CalendarStyle(
+            outsideDaysVisible: false,
+            defaultTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
+            weekendTextStyle: AppTextStyles.inputHint.copyWith(color: Colors.white70),
+            selectedTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
+            todayTextStyle: AppTextStyles.inputLabel.copyWith(color: Colors.white),
+            selectedDecoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            todayDecoration: BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary),
+            ),
+            markerDecoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            markersMaxCount: 3,
+          ),
+          daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle: AppTextStyles.inputHint.copyWith(color: Colors.white54),
+            weekendStyle: AppTextStyles.inputHint.copyWith(color: Colors.white70),
+          ),
+          selectedDayPredicate: (day) => isSameDay(day, currentDate),
+          eventLoader: (day) {
+            final events = <dynamic>[];
+            for (final entry in markedDateMap.entries) {
+              if (isSameDay(entry.key, day)) {
+                events.addAll(entry.value);
+              }
+            }
+            return events;
+          },
+          onDaySelected: (selectedDay, focusedDay) {},
+        ),
       ),
     );
   }
