@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -9,7 +8,7 @@ class PublicProfileScreen extends StatelessWidget {
   PublicProfileScreen({super.key});
 
   final DateTime _currentDate = DateTime.now();
-  final EventList<Event> _markedDateMap = EventList<Event>(events: {});
+  final Map<DateTime, List<dynamic>> _markedDateMap = {};
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +119,7 @@ class _ChipButton extends StatelessWidget {
 
 class _CalendarCard extends StatelessWidget {
   final DateTime currentDate;
-  final EventList<Event> markedDateMap;
+  final Map<DateTime, List<dynamic>> markedDateMap;
   const _CalendarCard({required this.currentDate, required this.markedDateMap});
 
   @override

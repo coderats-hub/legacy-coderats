@@ -43,7 +43,7 @@ class OnboardingStartScreen extends StatelessWidget {
                 Semantics(
                   label: 'Ilustração de um ratinho programando em um notebook',
                   child: Image.asset(
-                    '/images/firstMouse.png',
+                    'assets/images/firstMouse.png',
                     width: 260,
                     height: 260,
                     fit: BoxFit.contain,

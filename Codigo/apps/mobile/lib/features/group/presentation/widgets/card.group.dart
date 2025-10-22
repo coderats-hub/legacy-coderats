@@ -151,13 +151,24 @@ class _BannerHero extends StatelessWidget {
     Widget child;
 
     if (imageUrl != null && imageUrl!.isNotEmpty) {
+      final src = imageUrl!;
+      final isNetwork = src.startsWith('http://') || src.startsWith('https://');
+      final onError = (BuildContext _, Object __, StackTrace? ___) =>
+          _gradient(radius, gradientByStyle[style]!);
+
       child = ClipRRect(
         borderRadius: radius,
-        child: Image.network(
-          imageUrl!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _gradient(radius, gradientByStyle[style]!),
-        ),
+        child: isNetwork
+            ? Image.network(
+                src,
+                fit: BoxFit.cover,
+                errorBuilder: onError,
+              )
+            : Image.asset(
+                src,
+                fit: BoxFit.cover,
+                errorBuilder: onError,
+              ),
       );
     } else {
       child = _gradient(radius, gradientByStyle[style]!);
