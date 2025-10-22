@@ -1,52 +1,46 @@
-FROM cirrusci/flutter:stable
+###########
+# Build   #
+###########
+FROM ghcr.io/cirruslabs/flutter:3.24.3 AS build
 
-# Cria usuário flutteruser
-RUN useradd -ms /bin/bash flutteruser
+# Preparar artefatos para web (sem trocar de canal)
+RUN flutter config --no-analytics \
+ && flutter precache --web
 
-# Instala dependências Linux necessárias para build
-USER root
-RUN apt-get update && apt-get install -y \
-    cmake \
-    ninja-build \
-    pkg-config \
-    libgtk-3-dev \
-    clang \
-    git \
-    wget \
-    gnupg \
-    software-properties-common \
-    xvfb \
- && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Instala Google Chrome
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
- && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
- && apt-get update \
- && apt-get install -y google-chrome-stable \
- && rm -rf /var/lib/apt/lists/*
-
-# Ajusta permissões do Flutter SDK
-RUN chown -R flutteruser:flutteruser /sdks/flutter
-
-# Volta para o usuário normal
-USER flutteruser
-
-# Configura Flutter channel
-RUN cd /sdks/flutter && git remote set-url origin https://github.com/flutter/flutter.git || git remote add origin https://github.com/flutter/flutter.git
-RUN cd /sdks/flutter && git fetch origin
-RUN cd /sdks/flutter && git checkout origin/stable -B stable || echo "Using existing Flutter version"
-
-WORKDIR /home/flutteruser/app
-
-# Define variáveis de ambiente
-ENV DISPLAY=:99
-ENV CHROME_EXECUTABLE=/usr/bin/google-chrome
-
-# Copia pubspec primeiro (para cache)
-COPY pubspec.* ./
-RUN flutter pub get || echo "Nenhum pubspec.yaml encontrado, pulando flutter pub get"
+# Cache de dependências (aproveita camadas de build)
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
 
 # Copia o restante do código
 COPY . .
 
+# Build web para pasta dedicada (fora de mounts do host)
+RUN flutter build web --release --web-renderer=html --output /app/build/web
+
+############
+# Runtime  #
+############
+FROM nginx:alpine AS runtime
+
+# Cria usuário compatível com docker-compose
+RUN addgroup -S flutteruser && adduser -S -G flutteruser flutteruser
+
+# Copia artefatos do build
+COPY --from=build /app/build/web /usr/share/nginx/html
+
+# Config NGINX para escutar na porta 8080 e SPA fallback
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Porta de execução
 EXPOSE 8080
+
+# Ajusta permissões para executar NGINX sem root
+RUN mkdir -p /var/cache/nginx /var/run/nginx \
+ && chown -R flutteruser: /var/cache/nginx /var/run /usr/share/nginx/html
+
+# Executa como flutteruser (compatível com docker-compose)
+USER flutteruser
+
+CMD ["nginx", "-g", "daemon off;"]
