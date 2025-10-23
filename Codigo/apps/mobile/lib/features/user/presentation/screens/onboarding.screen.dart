@@ -1,6 +1,8 @@
-import 'package:app/features/group/presentation/screens/create.group.dart';
-import 'package:app/features/group/presentation/screens/list.group.dart';
+import 'package:app/features/group/presentation/screens/group.create.screen.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/app_components.dart';
 
 /// Tela de onboarding inicial do app "coderats".
 /// Mantém a identidade visual do CadastroScreen:
@@ -14,7 +16,7 @@ class OnboardingStartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _AppColors.background,
+  backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           // Scroll para telas pequenas / teclado
@@ -27,25 +29,13 @@ class OnboardingStartScreen extends StatelessWidget {
                 Text(
                   'Vamos começar?',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 22,
-                    color: _AppColors.textPrimary,
-                    height: 1.2,
-                  ),
+                  style: AppTextStyles.title,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Nós estamos muito felizes de vê-lo aqui!',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                    color: _AppColors.textSecondary,
-                    height: 1.4,
-                  ),
+                  style: AppTextStyles.subtitle,
                 ),
 
                 // ---------- Ilustração ----------
@@ -53,7 +43,7 @@ class OnboardingStartScreen extends StatelessWidget {
                 Semantics(
                   label: 'Ilustração de um ratinho programando em um notebook',
                   child: Image.asset(
-                    '/images/firstMouse.png',
+                    'assets/images/firstMouse.png',
                     width: 260,
                     height: 260,
                     fit: BoxFit.contain,
@@ -67,14 +57,12 @@ class OnboardingStartScreen extends StatelessWidget {
                   onCreateGroup: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => CreateGroupScreen(),
+                        builder: (context) => const CreateGroupScreen(),
                       ),
                     );
                   },
                   onJoinWithCode: () {
-                    // TODO: Navegar para fluxo de entrar via código
-                    // Navigator.of(context).pu shNamed('/groups/join');
-                    _showSnack(context, 'Ação: Entrar via código');
+                    Navigator.of(context).pushNamed('/join-group');
                   },
                 ),
 
@@ -84,17 +72,14 @@ class OnboardingStartScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => GroupsPage(),
+                        builder: (context) => const GroupsPage(),
                       ),
                     );
                   },
-                  child: const Text(
+                  child: Text(
                     'Pular por enquanto',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      // A imagem sugere um destaque alaranjado no link
-                      color: _AppColors.accentSkip,
+                    style: AppTextStyles.inputHint.copyWith(
+                      color: AppColors.skip,
                       decoration: TextDecoration.none,
                     ),
                   ),
@@ -110,10 +95,10 @@ class OnboardingStartScreen extends StatelessWidget {
   static void _showSnack(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: _AppColors.primary, // mesmo verde usado no app
+        backgroundColor: AppColors.primary, // mesmo verde usado no app
         content: Text(
           message,
-          style: const TextStyle(fontFamily: 'Inter'),
+          style: AppTextStyles.subtitle,
         ),
         behavior: SnackBarBehavior.floating,
       ),
@@ -138,9 +123,9 @@ class _ActionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _AppColors.surface,
+  color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _AppColors.border, width: 1),
+  border: Border.all(color: AppColors.border, width: 1),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -153,7 +138,7 @@ class _ActionsCard extends StatelessWidget {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Divider(color: _AppColors.border, height: 1),
+            child: Divider(color: AppColors.border, height: 1),
           ),
           _ActionRow(
             icon: Icons.groups_outlined,
@@ -195,7 +180,7 @@ class _ActionRow extends StatelessWidget {
         child: Row(
           children: [
             // Ícone à esquerda
-            Icon(icon, size: 28, color: _AppColors.textPrimary),
+            Icon(icon, size: 28, color: AppColors.textPrimary),
             const SizedBox(width: 12),
 
             // Título e subtítulo (ocupam o espaço restante)
@@ -207,26 +192,14 @@ class _ActionRow extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: _AppColors.textPrimary,
-                      height: 1.2,
-                    ),
+                    style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600, fontSize: 16, height: 1.2),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 13,
-                      color: _AppColors.textSecondary,
-                      height: 1.35,
-                    ),
+                    style: AppTextStyles.inputHint.copyWith(fontSize: 13, height: 1.35),
                   ),
                 ],
               ),
@@ -235,7 +208,7 @@ class _ActionRow extends StatelessWidget {
             const SizedBox(width: 8),
 
             // Chevron à direita
-            const Icon(Icons.chevron_right, color: _AppColors.textSecondary),
+            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -245,15 +218,4 @@ class _ActionRow extends StatelessWidget {
 
 /// Paleta/constantes locais (mantém a identidade do app).
 /// Sugestão: mover para um tema global/shared caso ainda não exista.
-class _AppColors {
-  static const background = Color(0xFF222222);
-  static const surface = Color(0xFF333333);
-  static const border = Color(0xFF444444);
 
-  static const primary = Color(0xFF25A18E); // verde do app
-  static const textPrimary = Color(0xFFD9D9D9);
-  static const textSecondary = Color(0xFFAAAAAA);
-
-  // A tela de referência mostra o link de pular em tom alaranjado
-  static const accentSkip = Color(0xFFFF7A45);
-}

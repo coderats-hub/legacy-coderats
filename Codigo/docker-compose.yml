@@ -46,18 +46,22 @@ services:
   mobile:
     build: ./apps/mobile
     container_name: coderats-mobile
-    # network_mode: "host"
-    user: flutteruser
     ports:
-      - "8081:8080"  
+      - "8081:8080"
+    restart: unless-stopped
+
+  mobile-dev:
+    image: ghcr.io/cirruslabs/flutter:3.24.3
+    container_name: coderats-mobile-dev
+    working_dir: /src
     volumes:
-      - ./apps/mobile:/home/flutteruser/app
-    tty: true
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+      - ./apps/mobile:/src
+    entrypoint: ["/bin/bash", "-lc"]
+    command: "./scripts/dev-web.sh"
+    ports:
+      - "8082:8080"
     stdin_open: true
-    command: sh
+    tty: true
 
 volumes:
   pgdata:
