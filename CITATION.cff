@@ -1,31 +1,54 @@
-cff-version: 1.0.1
-message: Please cite this software using these metadata.
-title: 
+cff-version: 1.2.0
+message: Please cite this software using these metadata. Developed as part of Computer Science course at PUC Minas.
+title: CodeRats
+abstract: "CodeRats is a mobile application that transforms technology students' coding routine into a friendly game. The idea involves tracking progress, accumulating points, and comparing results in rankings to create healthy competition that stimulates consistency."
 authors:
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names: 
-  - family-names: 
-    given-names:
+  - family-names: Menezes Heráclito Alves
+    given-names: Laura
+  - family-names: de Parde Motta
+    given-names: Raquel
+  - family-names: Barros Ratton de Almeida 
+    given-names: Felipe
+  - family-names: Almeida Mendonça
+    given-names: Mariana
+  - family-names: Salim Khouri Antunes
+    given-names: Alice
+  - family-names: Henrique Rodrigues de Castro
+    given-names: Gustavo
   - name-suffix: Professor
     affiliation: PUC Minas
-    family-names: 
-    given-names: 
+    family-names: Neri Nobre
+    given-names: Cristiane
   - name-suffix: Professor
     affiliation: PUC Minas
-    family-names: 
-    given-names: 
+    family-names: Neves Rodrigues
+    given-names: Cristiano
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Amy Saldanha Rivero
+    given-names: Ilo
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Henrique Ramos Costa
+    given-names: Pedro
+  - name-suffix: Professor
+    affiliation: PUC Minas
+    family-names: Ribeiro da Mota
+    given-names: Rosilene
 keywords:
-  - 
-  - 
-repository-code: 
+  - gamification
+  - programming-education
+  - mobile-app
+  - git-analytics
+  - student-motivation
+  - coding-habits
+  - progress-tracking
+  - leaderboards
+  - artificial-intelligence
+  - coding-community
+  - Flutter
+repository-code: https://github.com/ICEI-PUC-Minas-CC-TI/plmg-cc-ti4-2025-2-g13-coderats
+url: https://github.com/ICEI-PUC-Minas-CC-TI/plmg-cc-ti4-2025-2-g13-coderats
 license: CC-BY-4.0
 version: 1.0.0
-date-released: 2022-07-14
+date-released: XXXX-XX-XX
