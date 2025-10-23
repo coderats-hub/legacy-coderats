@@ -6,11 +6,11 @@ O objetivo é proporcionar motivação para os estudos por comunidade e metas cl
 
 ## Alunos integrantes da equipe
 
-* Alice
-* Felipe
-* Gustavo
-* Laura
-* Mariana
+* Alice Salim Khouri Antunes
+* Felipe Barros Ratton de Almeida
+* Gustavo Henrique Rodrigues de Castro
+* Laura Menezes Heráclito Alves
+* Mariana Almeida Mendonça
 * Raquel de Parde Motta
 
 ## Professores responsáveis
