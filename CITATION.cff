@@ -13,8 +13,8 @@ authors:
     given-names: Mariana
   - family-names: Salim Khouri Antunes
     given-names: Alice
-  - family-names: Henrique Rodrigues de Castro
-    given-names: Gustavo
+  - family-names: Rodrigues de Castro
+    given-names: Gustavo Henrique
   - name-suffix: Professor
     affiliation: PUC Minas
     family-names: Neri Nobre
@@ -29,8 +29,8 @@ authors:
     given-names: Ilo
   - name-suffix: Professor
     affiliation: PUC Minas
-    family-names: Henrique Ramos Costa
-    given-names: Pedro
+    family-names: Ramos Costa
+    given-names: Pedro Henrique
   - name-suffix: Professor
     affiliation: PUC Minas
     family-names: Ribeiro da Mota
