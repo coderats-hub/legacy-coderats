@@ -3,20 +3,20 @@
 ###########
 FROM ghcr.io/cirruslabs/flutter:3.24.3 AS build
 
-# Preparar artefatos para web (sem trocar de canal)
+# Pre-cache Flutter web artifacts
 RUN flutter config --no-analytics \
  && flutter precache --web
 
 WORKDIR /app
 
-# Cache de dependências (aproveita camadas de build)
+# Cache dependencies
 COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
-# Copia o restante do código
+# Copy the rest of the source
 COPY . .
 
-# Build web para pasta dedicada (fora de mounts do host)
+# Build Flutter web to a dedicated folder
 RUN flutter build web --release --web-renderer=html --output /app/build/web
 
 ############
@@ -24,23 +24,14 @@ RUN flutter build web --release --web-renderer=html --output /app/build/web
 ############
 FROM nginx:alpine AS runtime
 
-# Cria usuário compatível com docker-compose
-RUN addgroup -S flutteruser && adduser -S -G flutteruser flutteruser
-
-# Copia artefatos do build
+# Copy build artifacts into nginx html root
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Config NGINX para escutar na porta 8080 e SPA fallback
+# NGINX config to listen on 8080 with SPA fallback
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Porta de execução
 EXPOSE 8080
 
-# Ajusta permissões para executar NGINX sem root
-RUN mkdir -p /var/cache/nginx /var/run/nginx \
- && chown -R flutteruser: /var/cache/nginx /var/run /usr/share/nginx/html
-
-# Executa como flutteruser (compatível com docker-compose)
-USER flutteruser
-
+# Run nginx in foreground (master as root; workers drop to 'nginx' user)
 CMD ["nginx", "-g", "daemon off;"]
+

@@ -19,6 +19,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: coderats_pgadmin
+    platform: linux/amd64
     depends_on:
       - db
     environment:
