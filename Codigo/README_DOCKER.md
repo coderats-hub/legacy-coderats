@@ -140,12 +140,12 @@ O comando abaixo copia o código para `/tmp` dentro do container antes de execut
 #### Linux / WSL
 
 ```bash
-docker run --rm -it -p 8081:8080 -v "$PWD/apps/mobile":/src ghcr.io/cirruslabs/flutter:3.24.3 bash -lc '
-WORK=$(mktemp -d) &&
-tar -C /src -cf - --exclude=.git --exclude=build --exclude=.dart_tool . | tar -C "$WORK" -xf - &&
-cd "$WORK" && flutter clean && flutter pub get &&
-flutter run -d web-server --web-hostname=0.0.0.0 --web-port=8080 --web-renderer=html
-'
+docker run --rm -it -p 8082:8080 -v "$PWD/apps/mobile":/src ghcr.io/cirruslabs/flutter:3.24.3 bash -lc "
+cd /src &&
+flutter clean &&
+flutter pub get &&
+flutter run --hot -d web-server --web-hostname=0.0.0.0 --web-port=8080 --web-renderer=html
+"
 ```
 
 Acesse: **http://localhost:8081**
