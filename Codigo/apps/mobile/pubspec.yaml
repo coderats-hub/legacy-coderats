@@ -36,6 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   google_fonts: ^4.0.0
+  image_picker: ^0.8.7+4
 
   # Added for Dart 3.x compatibility (used by transitive packages)
   win32: ^5.5.1

@@ -6,6 +6,7 @@ import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/comments.modal.dart';
 
 // A tela foi convertida para StatefulWidget para gerenciar o próprio estado
 class CheckinScreen extends StatefulWidget {
@@ -473,7 +474,21 @@ class _PostCard extends StatelessWidget {
                       style: AppTextStyles.inputHint,
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    IconButton(
+                      onPressed: () {
+                        final sample = [
+                          CommentItem(author: 'Gustavo', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.'),
+                          CommentItem(author: 'Você', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.', canDelete: true),
+                        ];
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => CommentsModal(title: 'Comentários', comments: sample),
+                        );
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       comments.toString(),

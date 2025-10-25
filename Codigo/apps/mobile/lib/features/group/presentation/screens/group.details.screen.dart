@@ -4,6 +4,7 @@ import 'package:app/features/profile/presentation/screens/public.profile.screen.
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
+import 'package:app/features/group/presentation/screens/group.edit.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -113,6 +114,18 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         title: widget.groupName,
         onBack: () => Navigator.of(context).maybePop(),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => GroupEditScreen(initialName: widget.groupName, initialDescription: null, imageUrl: widget.imageUrl),
+                ),
+              );
+            },
+            icon: const Icon(Icons.edit, color: AppColors.textPrimary, size: 20),
+            tooltip: 'Editar',
+          ),
+          const SizedBox(width: AppSpacing.xs),
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.delete_outline, color: AppColors.textPrimary),
