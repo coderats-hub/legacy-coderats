@@ -29,15 +29,3 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
-subprojects {
-    if (project.name == "app" && project.hasProperty("android")) {
-        project.android {
-            compileSdkVersion 35
-            defaultConfig {
-                targetSdkVersion 35
-            }
-        }
-    }
-}
-
