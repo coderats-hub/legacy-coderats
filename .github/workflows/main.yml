@@ -64,6 +64,11 @@ jobs:
         with:
           flutter-version: "3.24.3"
 
+      - name: 📦 Install Android SDK 35
+        run: |
+          yes | sdkmanager --licenses
+          yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
+  
       - name: Clean Flutter build and cache
         working-directory: Codigo/apps/mobile
         run: |
