@@ -64,27 +64,6 @@ jobs:
         with:
           flutter-version: "3.24.3"
 
-      - name: 📦 Install Android SDK 35
-        run: |
-          echo "📲 Instalando Android SDK Platform 35..."
-          sudo mkdir -p /usr/local/lib/android/sdk/cmdline-tools
-          sudo mkdir -p /usr/local/lib/android/sdk/licenses
-          sudo chown -R $USER:$USER /usr/local/lib/android/sdk
-          
-          # Baixa e instala o command-line tools (contém o sdkmanager)
-          cd /usr/local/lib/android/sdk
-          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          rm cmdline-tools.zip
-          mv cmdline-tools/cmdline-tools cmdline-tools/latest
-          
-          # Adiciona o sdkmanager ao PATH
-          export ANDROID_HOME=/usr/local/lib/android/sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          
-          yes | sdkmanager --licenses
-          yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
       - name: Clean Flutter build and cache
         working-directory: Codigo/apps/mobile
         run: |
