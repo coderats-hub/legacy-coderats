@@ -31,14 +31,13 @@ task clean(type: Delete) {
 }
 
 subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
-                compileSdkVersion 35
-                defaultConfig {
-                    targetSdkVersion 35
-                }
+    if (project.name == "app" && project.hasProperty("android")) {
+        project.android {
+            compileSdkVersion 35
+            defaultConfig {
+                targetSdkVersion 35
             }
         }
     }
 }
+
