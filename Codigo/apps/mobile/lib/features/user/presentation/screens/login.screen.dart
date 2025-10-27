@@ -1,3 +1,32 @@
+/**
+ * Tela de Login (LoginScreen) - ARQUIVO DESCONTINUADO
+ * 
+ * LOCALIZAÇÃO: /features/user/presentation/screens/login.screen.dart
+ * STATUS: NÃO UTILIZADO - Login agora é exclusivamente via GitHub
+ * 
+ * HISTÓRICO:
+ * - Originalmente implementada para login tradicional com email/senha
+ * - Descontinuada em favor da autenticação OAuth via GitHub
+ * - Mantida para referência histórica do desenvolvimento
+ * 
+ * FUNCIONALIDADES ORIGINAIS:
+ * - Formulário de login com email e senha
+ * - Validação de campos obrigatórios
+ * - Toggle de visibilidade de senha
+ * - Link para tela de registro
+ * - Logo e identidade visual do Code Rats
+ * 
+ * SUBSTITUÍDO POR:
+ * - Autenticação via GitHub OAuth
+ * - Fluxo direto de onboarding após autenticação
+ * - Integração com perfis do GitHub para dados do usuário
+ * 
+ * NOTA: Arquivo mantido para histórico, mas não é usado no fluxo atual
+ */
+
+/* 
+NÃO ESTAMOS UTILIZANDO ESSE ARQUIVO NO MOMENTO, POIS O FLUXO DE LOGIN/CADASTRO FOI ALTERADO PARA USAR APENAS O GITHUB.
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -230,4 +259,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
+} */

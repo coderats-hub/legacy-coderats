@@ -1,3 +1,36 @@
+/**
+ * Tela de Registro (RegisterScreen) - ARQUIVO DESCONTINUADO
+ * 
+ * LOCALIZAÇÃO: /features/user/presentation/screens/register.screen.dart
+ * STATUS: NÃO UTILIZADO - Registro agora é exclusivamente via GitHub
+ * 
+ * HISTÓRICO:
+ * - Originalmente implementada para cadastro tradicional com dados pessoais
+ * - Incluía validação de email, senha e confirmação de senha
+ * - Descontinuada em favor da autenticação OAuth via GitHub
+ * - Mantida para referência histórica do desenvolvimento
+ * 
+ * FUNCIONALIDADES ORIGINAIS:
+ * - Formulário de cadastro completo (nome, email, senha, confirmação)
+ * - Validações robustas de campos obrigatórios
+ * - Verificação de força da senha
+ * - Confirmação de senha matching
+ * - Toggle de visibilidade das senhas
+ * - Link para voltar ao login
+ * - Navegação para onboarding após cadastro
+ * 
+ * SUBSTITUÍDO POR:
+ * - Autenticação direta via GitHub OAuth
+ * - Uso do perfil do GitHub para dados básicos
+ * - Eliminação da necessidade de senhas locais
+ * - Fluxo simplificado direto para o aplicativo
+ * 
+ * NOTA: Arquivo mantido para histórico, mas não é usado no fluxo atual
+ */
+
+/* 
+NÃO ESTAMOS UTILIZANDO ESSE ARQUIVO NO MOMENTO, POIS O FLUXO DE LOGIN/CADASTRO FOI ALTERADO PARA USAR APENAS O GITHUB.
+
 import 'package:flutter/material.dart';
 import 'login.screen.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -282,4 +315,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-}
+} */

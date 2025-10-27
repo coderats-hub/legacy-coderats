@@ -1,15 +1,35 @@
+/**
+ * TELA DE ONBOARDING/BOAS-VINDAS
+ * 
+ * Tela exibida após o login inicial para dar boas-vindas ao usuário
+ * e apresentar as principais ações que pode realizar.
+ * 
+ * Onde é usada:
+ * - Navegação da TelaInicio após login GitHub
+ * - Rota '/started' no main.dart
+ * 
+ * Funcionalidades:
+ * - Mensagem de boas-vindas personalizada
+ * - Ilustração do mascote Code Rats
+ * - Card com duas ações principais:
+ *   1. Criar grupo novo
+ *   2. Entrar em grupo via código
+ * - Design responsivo com scroll
+ * - Feedback visual com snackbars
+ * 
+ * Navegação:
+ * - Vai para: CreateGroupScreen (criar grupo)
+ * - Vai para: GroupsPage (entrar via código - funcionalidade futura)
+ */
+
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/theme/app_theme_extended.dart';
 import 'package:app/shared/components/app_components.dart';
 
-/// Tela de onboarding inicial do app "coderats".
-/// Mantém a identidade visual do CadastroScreen:
-/// - Fundo #222222, superfícies #333333, borda #444444
-/// - Texto principal #D9D9D9, texto secundário #AAAAAA
-/// - Verde primário #25A18E para ações principais
-/// - Tipografia: Inter (declarar no pubspec.yaml)
+// Tela de onboarding com boas-vindas e ações principais
 class OnboardingStartScreen extends StatelessWidget {
   const OnboardingStartScreen({super.key});
 
@@ -18,39 +38,44 @@ class OnboardingStartScreen extends StatelessWidget {
     return Scaffold(
   backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Center(
-          // Scroll para telas pequenas / teclado
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // ---------- Cabeçalho ----------
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+                const SizedBox(height: 40),
+                
+                // Título de boas-vindas
                 Text(
                   'Vamos começar?',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.title,
+                  style: AppTextStyles.titleBlack, // Estilo título principal
                 ),
                 const SizedBox(height: 6),
+                
+                // Subtítulo explicativo
                 Text(
                   'Nós estamos muito felizes de vê-lo aqui!',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.subtitle,
+                  style: AppTextStylesExtended.subtitleWhite.copyWith(
+                    fontWeight: FontWeight.w400, 
+                    fontSize: 14
+                  ),
                 ),
 
-                // ---------- Ilustração ----------
-                const SizedBox(height: 28),
+                // Ilustração do mascote Code Rats
+                const SizedBox(height: 40),
                 Semantics(
-                  label: 'Ilustração de um ratinho programando em um notebook',
+                  label: 'Ilustração de um ratinho programando em um notebook', // Acessibilidade
                   child: Image.asset(
-                    'assets/images/firstMouse.png',
+                    'assets/images/onboardingMouse.png',
                     width: 260,
                     height: 260,
                     fit: BoxFit.contain,
                   ),
                 ),
 
-                const SizedBox(height: 36),
+                const SizedBox(height: 48),
 
                 // ---------- Cartão de ações ----------
                 _ActionsCard(
@@ -78,14 +103,10 @@ class OnboardingStartScreen extends StatelessWidget {
                   },
                   child: Text(
                     'Pular por enquanto',
-                    style: AppTextStyles.inputHint.copyWith(
-                      color: AppColors.skip,
-                      decoration: TextDecoration.none,
-                    ),
+                    style: AppTextStyles.skipBold,
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -123,11 +144,11 @@ class _ActionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-  color: AppColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-  border: Border.all(color: AppColors.border, width: 1),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
           _ActionRow(
@@ -136,10 +157,16 @@ class _ActionsCard extends StatelessWidget {
             subtitle: 'Iniciar algo novo e convidar outros amigos para se juntar.',
             onTap: onCreateGroup,
           ),
+          const SizedBox(height: 8),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Divider(color: AppColors.border, height: 1),
+            child: Divider(
+              color: Color(0xFFACACAC),
+              thickness: 2,
+              height: 1,
+            ),
           ),
+          const SizedBox(height: 8),
           _ActionRow(
             icon: Icons.groups_outlined,
             title: 'Entrar via código',
@@ -180,9 +207,8 @@ class _ActionRow extends StatelessWidget {
         child: Row(
           children: [
             // Ícone à esquerda
-            Icon(icon, size: 28, color: AppColors.textPrimary),
+            Icon(icon, size: 32, color: AppColorsExtended.white),
             const SizedBox(width: 12),
-
             // Título e subtítulo (ocupam o espaço restante)
             Expanded(
               child: Column(
@@ -192,23 +218,21 @@ class _ActionRow extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.w600, fontSize: 16, height: 1.2),
+                    style: AppTextStyles.actionBoldWhite,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.inputHint.copyWith(fontSize: 13, height: 1.35),
+                    style: AppTextStyles.descriptionWhite,
                   ),
                 ],
               ),
             ),
-
             const SizedBox(width: 8),
-
             // Chevron à direita
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            const Icon(Icons.chevron_right, color: AppColorsExtended.white),
           ],
         ),
       ),

@@ -1,3 +1,19 @@
+/**
+ * ARQUIVO PRINCIPAL DA APLICAÇÃO CODE RATS
+ * 
+ * Este é o ponto de entrada da aplicação Flutter.
+ * Define a configuração global do app incluindo:
+ * - Tema da aplicação (escuro)
+ * - Roteamento entre telas
+ * - Configurações do MaterialApp
+ * - Tela inicial (TelaInicio)
+ * 
+ * Funcionalidades:
+ * - Sistema de navegação por rotas nomeadas
+ * - Tema customizado Code Rats
+ * - Integração com todas as features do app
+ */
+
 import 'package:app/features/group/presentation/screens/group.ranking.screen.dart';
 import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/screens/group.join.screen.dart';
@@ -13,27 +29,35 @@ import 'package:app/features/user/presentation/screens/register.screen.dart';
 import 'package:flutter/material.dart';
 import 'shared/theme/app.theme.dart';
 
+// Ponto de entrada da aplicação
 void main() => runApp(const App());
 
+// Widget raiz da aplicação - configura MaterialApp e roteamento
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // Configurações básicas do app
       title: 'Code Rats',
-      theme: AppTheme.dark(),
-  home: const TelaInicio(),
-      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark(), // Tema escuro personalizado
+      home: const TelaInicio(), // Tela inicial (splash/welcome)
+      debugShowCheckedModeBanner: false, // Remove banner de debug
+      
+      // Sistema de rotas nomeadas para navegação
       routes: {
-        '/started': (_) => const OnboardingStartScreen(),
-        '/join-group': (_) => const JoinGroupScreen(),
-  '/group-ranking': (_) => GroupRankingScreen(),
-        '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
-        '/login': (_) => const LoginScreen(),
-        '/register': (_) => const RegisterScreen(),
-        '/groups':  (_) => const GroupsPage(),
-        '/profile': (_) => PrivateProfileScreen(),
+        '/started': (_) => const OnboardingStartScreen(),  // Onboarding
+        '/join-group': (_) => const JoinGroupScreen(),     // Entrar em grupo
+        '/group-ranking': (_) => GroupRankingScreen(),     // Ranking do grupo
+        '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'), // Detalhes do grupo
+        
+        // Rotas de autenticação
+        /* '/login': (_) => const LoginScreen(),
+        '/register': (_) => const RegisterScreen(), */
+        
+        '/groups':  (_) => const GroupsPage(),             // Lista de grupos
+        '/profile': (_) => PrivateProfileScreen(),         // Perfil privado
       },
     );
   }

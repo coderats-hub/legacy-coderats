@@ -1,3 +1,32 @@
+/**
+ * Tela de Criação de Grupo (CreateGroupScreen)
+ * 
+ * NAVEGAÇÃO: Acessível via FAB na lista de grupos (group.list.screen.dart)
+ * 
+ * FUNÇÃO:
+ * - Primeira etapa da criação de grupos com informações básicas
+ * - Coleta nome, descrição, repositório, datas e imagem de capa
+ * - Valida formulário e calcula duração automaticamente
+ * - Redireciona para próxima etapa (configuração de pontuação)
+ * 
+ * FORMULÁRIO:
+ * - Nome do grupo (obrigatório, 50 caracteres max)
+ * - Descrição (obrigatório, 200 caracteres max)  
+ * - Link do repositório (opcional, com validação de URL)
+ * - Data de início e fim (obrigatórias, com validação de período)
+ * - Imagem de capa (opcional, placeholder para futura implementação)
+ * 
+ * VALIDAÇÕES:
+ * - Campos obrigatórios preenchidos
+ * - Formato válido de URLs
+ * - Data de fim posterior à data de início
+ * - Cálculo automático da duração em dias
+ * 
+ * FLUXO NAVEGAÇÃO:
+ * - Para configurar pontuação → group.scoring.screen.dart
+ * - Volta para lista de grupos ao cancelar
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
@@ -13,29 +42,35 @@ class CreateGroupScreen extends StatefulWidget {
 }
 
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Chave para validação do formulário
+  
+  // Controladores dos campos de texto
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _repositoryController = TextEditingController();
   
-  DateTime? _startDate;
-  DateTime? _endDate;
-  String? _coverImagePath;
+  // Estados das datas e imagem
+  DateTime? _startDate; // Data de início do grupo
+  DateTime? _endDate;   // Data de fim do grupo
+  String? _coverImagePath; // Caminho da imagem de capa (futuro)
 
   @override
   void dispose() {
+    // Limpa controladores para evitar memory leaks
     _nameController.dispose();
     _descriptionController.dispose();
     _repositoryController.dispose();
     super.dispose();
   }
 
+  // Recalcula duração quando as datas mudam
   void _calculateDuration() {
     if (_startDate != null && _endDate != null) {
-      setState(() {});
+      setState(() {}); // Força rebuild para mostrar duração atualizada
     }
   }
 
+  // Calcula duração em dias entre as datas selecionadas
   int? get _duration {
     if (_startDate != null && _endDate != null) {
       return _endDate!.difference(_startDate!).inDays;
@@ -43,13 +78,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     return null;
   }
 
+  // Abre seletor de data com tema personalizado
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: isStartDate ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now(), // Não permite datas passadas
+      lastDate: DateTime.now().add(const Duration(days: 365)), // Limite de 1 ano
       builder: (context, child) {
+        // Aplica tema customizado ao date picker
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
@@ -65,6 +102,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       setState(() {
         if (isStartDate) {
           _startDate = picked;
+          // Se data de fim é anterior à nova data de início, remove ela
           if (_endDate != null && _endDate!.isBefore(picked)) {
             _endDate = null;
           }
@@ -72,28 +110,37 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           _endDate = picked;
         }
       });
-      _calculateDuration();
+      _calculateDuration(); // Recalcula duração após mudança
     }
   }
 
+  // Placeholder para seleção de imagem de capa
   void _selectCoverImage() {
-    // TODO: Implementar seleção de imagem
+    // TODO: Implementar seleção de imagem com image_picker
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Funcionalidade de upload será implementada')),
     );
   }
 
+  // Valida formulário e navega para próxima etapa
   void _continue() {
+    // Valida campos de texto obrigatórios
     if (_formKey.currentState!.validate()) {
+      // Valida data de início
+      if (_startDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione a data de início')),
+        );
+        return;
+      }
+      // Valida data de fim
       if (_endDate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Por favor, selecione a data de fim')),
         );
         return;
       }
-      // Define a data de início como agora
-      _startDate = DateTime.now();
-      // Navegar para a tela de método avaliativo
+      // Navega para configuração de pontuação
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => const ScoringModeGroupsScreen(),
@@ -106,10 +153,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Header com título e botão de voltar
       appBar: AppHeader(
         title: 'Criar grupo',
         onBack: () => Navigator.of(context).maybePop(),
       ),
+      // Formulário scrollável com validação
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -125,6 +174,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 label: 'Nome do Grupo',
                 placeholder: 'Insira o nome do seu grupo',
                 controller: _nameController,
+                required: true,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Nome do grupo é obrigatório';
@@ -141,15 +191,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: AppSpacing.lg),
-              // Adicionar repositório
-              SharedTextField(
-                label: 'Adicionar repositório',
-                placeholder: 'Adicionar link do repositório do grupo',
-                controller: _repositoryController,
-                keyboardType: TextInputType.url,
+              // Data de Início
+              _buildDateField(
+                label: 'Data de Início',
+                hintText: 'Escolha a data de início do grupo',
+                required: true,
+                date: _startDate,
+                onTap: () => _selectDate(context, true),
               ),
               const SizedBox(height: AppSpacing.lg),
-              // Data de início removida: será sempre a data atual
               // Data de Fim
               _buildDateField(
                 label: 'Data de Fim',
@@ -174,7 +224,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       const SizedBox(width: AppSpacing.md),
                       Text(
                         'Duração: ${_duration ?? ''} dias',
-                        style: AppTextStyles.subtitle.copyWith(
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w500,
                         ),
@@ -185,10 +237,24 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 const SizedBox(height: AppSpacing.xl),
               ],
               // Botão Continuar
-              AppButtonPrimary(
-                type: AppButtonPrimaryType.secondary,
-                text: 'Continuar',
-                onPressed: _continue,
+              const SizedBox(height: AppSpacing.xl),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppCorners.md),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: _continue,
+                  child: const Text(
+                    'Continuar',
+                    style: AppTextStyles.headlineBold16White,
+                  ),
+                ),
               ),
             ],
           ),
@@ -203,7 +269,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       children: [
         Text(
           'Escolher foto de capa',
-          style: AppTextStyles.subtitle.copyWith(
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w500,
           ),
@@ -241,7 +309,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Toque para adicionar imagem',
-                        style: AppTextStyles.inputHint,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                          fontSize: 16,
+                          color: Color(0xFFACACAC),
+                        ),
                       ),
                     ],
                   ),
@@ -292,9 +365,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     date != null
                         ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
                         : hintText,
-                    style: AppTextStyles.inputLabel.copyWith(
-                      color: date != null ? AppColors.textPrimary : AppColors.textSecondary,
-                    ),
+                    style: date != null 
+                        ? AppTextStyles.inputLabel
+                        : const TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            color: Color(0xFFACACAC),
+                          ),
                   ),
                 ),
                 const Icon(

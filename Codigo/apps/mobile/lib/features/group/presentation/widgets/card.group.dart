@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app/shared/theme/app_theme.dart';
 
 enum BannerStyle { primary, secondary, tertiary }
 enum GroupStatus { ativo, concluido }
@@ -64,7 +65,10 @@ class _GroupCardState extends State<GroupCard> {
                               color: cs.onSurfaceVariant,
                             )),
                         const SizedBox(height: 2),
-                        Text(widget.title, style: tt.titleLarge),
+                        Text(
+                          widget.title, 
+                          style: AppTextStyles.actionBoldWhite.copyWith(fontSize: 18),
+                        ),
                       ],
                     ),
                   ),
@@ -72,7 +76,7 @@ class _GroupCardState extends State<GroupCard> {
                   const SizedBox(width: 6),
                   Icon(
                     _open ? Icons.expand_less : Icons.expand_more,
-                    color: cs.onSurfaceVariant,
+                    color: Colors.white,
                   ),
                 ],
               ),
@@ -108,11 +112,10 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     final isActive = status == GroupStatus.ativo;
-    final bg = isActive ? cs.primary.withOpacity(.15) : cs.error.withOpacity(.15);
-    final fg = isActive ? cs.primary : cs.error;
+    final bg = isActive ? AppColors.primary.withOpacity(0.2) : cs.error.withOpacity(.15);
+    final fg = isActive ? AppColors.primary : cs.error;
     final label = isActive ? 'Ativo' : 'Concluído';
 
     return Container(
@@ -121,7 +124,13 @@ class _StatusPill extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: tt.labelSmall?.copyWith(color: fg)),
+      child: Text(
+        label, 
+        style: AppTextStyles.descriptionWhite.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

@@ -1,10 +1,30 @@
+/**
+ * TELA DE PERFIL PRIVADO
+ * 
+ * Esta é a tela do perfil do próprio usuário logado.
+ * Mostra informações pessoais e ações que o usuário pode realizar:
+ * - Header com avatar, nome e botão "Ver GitHub"
+ * - Botões para "Criar grupo" e "Entrar via código"
+ * - Calendário de atividades (temporariamente comentado)
+ * - Badges conquistadas (temporariamente comentado)
+ * - Grupos em comum (temporariamente comentado)
+ * 
+ * Funcionalidades:
+ * - Navegação para criar grupo
+ * - Navegação para entrar em grupo via código
+ * - Bottom navigation para outras telas
+ * - Link para GitHub pessoal
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 
+// Tela de perfil do usuário logado (perfil privado/próprio)
 class PrivateProfileScreen extends StatelessWidget {
   PrivateProfileScreen({super.key});
 
@@ -15,51 +35,36 @@ class PrivateProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          color: AppColors.background,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: SafeArea(
-            bottom: false,
-            child: SizedBox(
-              height: kToolbarHeight,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Perfil: Alice',
-                  style: AppTextStyles.title,
-                ),
-              ),
-            ),
-          ),
-        ),
+      appBar: AppHeader(
+        title: 'Perfil: Alice',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ProfileHeader(
+            ProfileHeader(
               name: "Alice",
-              actionLabel: "Adicionar GitHub",
+              actionLabel: "Ver GitHub",
               actionIcon: Icons.link,
               onAction: () {},
             ),
             const SizedBox(height: 12),
             _PrivateActions(),
             const SizedBox(height: 12),
-            _CalendarCard(
-              currentDate: _currentDate,
-              markedDateMap: _markedDateMap,
-            ),
-            const SizedBox(height: 16),
-            _BadgesRow(
-              showSeeAll: false,
-            ),
-            const SizedBox(height: 16),
-            _GroupsInCommon(),
+            // TODO: Calendário temporariamente comentado
+            // _CalendarCard(
+            //   currentDate: _currentDate,
+            //   markedDateMap: _markedDateMap,
+            // ),
+            // const SizedBox(height: 16),
+            // TODO: Badges temporariamente comentados
+            // _BadgesRow(
+            //   showSeeAll: false,
+            // ),
+            // const SizedBox(height: 16),
+            // TODO: Grupos em comum temporariamente comentados
+            // _GroupsInCommon(),
           ],
         ),
       ),
@@ -83,80 +88,7 @@ class PrivateProfileScreen extends StatelessWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  final String name;
-  final String actionLabel;
-  final IconData actionIcon;
-  final VoidCallback onAction;
-
-  const _ProfileHeader({
-    required this.name,
-    required this.actionLabel,
-    required this.actionIcon,
-    required this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(child: Icon(Icons.person, color: Colors.white, size: 48)),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          name,
-          style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _ChipButton(
-          label: actionLabel,
-          icon: actionIcon,
-          onPressed: onAction,
-          color: AppColors.primary, // verde padrão do app
-        ),
-      ],
-    );
-  }
-}
-
-class _ChipButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color color;
-  const _ChipButton({required this.label, required this.icon, required this.onPressed, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(AppCorners.lg),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(AppCorners.lg),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: AppSpacing.xs),
-              Text(label, style: AppTextStyles.button.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
+// Widget com as ações principais do perfil privado (Criar/Entrar em grupo)
 class _PrivateActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -164,9 +96,10 @@ class _PrivateActions extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Row(
         children: [
+          // Botão para criar novo grupo
           Expanded(
             child: _ActionCard(
-              label: "Criar um grupo",
+              label: "Criar grupo",
               icon: Icons.add_circle_outline,
               onTap: () {
                 Navigator.of(context).push(
@@ -178,6 +111,7 @@ class _PrivateActions extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
+          // Botão para entrar em grupo via código
           Expanded(
             child: _ActionCard(
               label: "Entrar via código",
@@ -193,6 +127,7 @@ class _PrivateActions extends StatelessWidget {
   }
 }
 
+// Card individual para cada ação (criar/entrar em grupo)
 class _ActionCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -203,23 +138,22 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppCorners.lg),
+      borderRadius: BorderRadius.circular(AppCorners.md),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppCorners.lg),
+        borderRadius: BorderRadius.circular(AppCorners.md),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: Colors.white, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
+              Expanded(
                 child: Text(
                   label, 
                   style: AppTextStyles.button.copyWith(
                     color: Colors.white, 
                     fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
