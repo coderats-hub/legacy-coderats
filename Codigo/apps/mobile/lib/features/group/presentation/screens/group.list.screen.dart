@@ -21,120 +21,90 @@
  * - Para criar grupo → group.create.screen.dart  
  * - Para perfil privado → private.profile.screen.dart
  */
-
-import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
-import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/widgets/card.group.dart';
 import 'package:app/features/group/presentation/widgets/banner.group.dart' as banner;
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'group.create.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
+import 'package:app/features/group/data/service/group_service.dart';
 
 class GroupsPage extends StatelessWidget {
   const GroupsPage({super.key});
 
+Future<List<Map<String, dynamic>>> _loadGroups() async {
+  final service = GroupService(); // sem passar token
+  return await service.fetchGroups();
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar simples com título "Grupos" - sem botão de voltar pois é tela principal
       appBar: AppBar(
-        title: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: const Text(
-            'Grupos', 
-            style: AppTextStyles.headerTitle,
-          ),
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text('Grupos', style: AppTextStyles.headerTitle),
         ),
         backgroundColor: AppColors.background,
         elevation: 0,
-        automaticallyImplyLeading: false, // Remove botão de voltar
+        automaticallyImplyLeading: false,
       ),
-      // Lista principal de grupos - cada card é expansível e navega para detalhes
-      body: ListView(
-        children: [
-          // Grupo ativo com estilo tertiary
-          GroupCard(
-            title: 'Code Rats',
-            bannerStyle: BannerStyle.tertiary,
-            status: GroupStatus.ativo,
-            expanded: const _ExpandedGroupDemo(), // Mostra ranking quando expandido
-            onBannerTap: () {
-              // Navega para tela de detalhes do grupo específico
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(
-                    groupName: 'Code Rats',
-                    bannerStyle: banner.BannerStyle.tertiary,
-                  ),
-                ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _loadGroups(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro ao carregar grupos'));
+          }
+
+          final grupos = snapshot.data!;
+          return ListView.builder(
+            itemCount: grupos.length,
+            itemBuilder: (context, index) {
+              final grupo = grupos[index];
+              return GroupCard(
+                title: grupo['name'],
+                bannerStyle: BannerStyle.primary,
+                status: grupo['status'] == true ? GroupStatus.ativo : GroupStatus.concluido,
+                imageUrl: grupo['image'], // se houver
+                expanded: const _ExpandedGroupDemo(), // pode ser adaptado com dados reais
+                onBannerTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GroupDetailPage(
+                        groupName: grupo['name'],
+                        bannerStyle: banner.BannerStyle.tertiary,
+                      ),
+                    ),
+                  );
+                },
               );
             },
-          ),
-          // Grupo concluído com estilo secondary
-          GroupCard(
-            title: 'Ratitos 123',
-            bannerStyle: BannerStyle.secondary,
-            status: GroupStatus.concluido,
-            expanded: const _ExpandedGroupDemo(), // Mesmo layout expandido
-            onBannerTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(
-                    groupName: 'Ratitos 123',
-                    bannerStyle: banner.BannerStyle.secondary,
-                  ),
-                ),
-              );
-            },
-          ),
-          // Grupo com imagem personalizada (sobrescreve bannerStyle)
-          GroupCard(
-            title: 'Com Imagem',
-            imageUrl: 'https://picsum.photos/800/300',
-            bannerStyle: BannerStyle.primary, // ignorado se houver imagem
-            expanded: const _ExpandedGroupDemo(),
-            onBannerTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const GroupDetailPage(
-                    groupName: 'Com Imagem',
-                    bannerStyle: banner.BannerStyle.primary,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.xl), // Espaçamento final
-        ],
+          );
+        },
       ),
-      // Barra de navegação inferior - tela de grupos está ativa (índice 1)
       bottomNavigationBar: AppNavbar(
-        currentIndex: 1, // Grupos é a aba ativa
+        currentIndex: 1,
         onTap: (i) {
           if (i == 0) {
-            // Tela de início ainda não implementada
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Tela de Início não implementada')),
             );
-          } else if (i == 1) {
-            // Já está na tela de grupos - não faz nada
           } else if (i == 2) {
-            // Navega para perfil privado do usuário
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
             );
           }
         },
       ),
-      // Botão flutuante para criar novos grupos
       floatingActionButton: AppFAB(
         onPressed: () {
-          // Navega para tela de criação de grupo
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const CreateGroupScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
           );
         },
         icon: Icons.add,
@@ -143,6 +113,7 @@ class GroupsPage extends StatelessWidget {
     );
   }
 }
+
 
 /**
  * Widget de conteúdo expandido dos cards de grupo
@@ -254,3 +225,4 @@ class _AvatarStat extends StatelessWidget {
     );
   }
 }
+
