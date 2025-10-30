@@ -1,9 +1,16 @@
 package dev.coderats.backend.features.group;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@Entity
+@Table(name = "groups") // nome da tabela no banco
 public class Group {
-    private String id;
+
+    @Id
+    private UUID id;
+
     private String name;
     private String description;
     private String repository;
@@ -15,7 +22,7 @@ public class Group {
     public Group() {
     }
 
-    public Group(String id, String name, String description, String repository, String method,
+    public Group(UUID id, String name, String description, String repository, String method,
                  boolean status, LocalDateTime startDate, LocalDateTime endDate) {
         this.id = id;
         this.name = name;
@@ -27,11 +34,11 @@ public class Group {
         this.endDate = endDate;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

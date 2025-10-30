@@ -1,8 +1,12 @@
 package dev.coderats.backend.features.group;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface GroupRepository {
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface GroupRepository extends JpaRepository<Group, UUID> {
     List<Group> findGroupsByUserId(String userId);
 }
-
