@@ -1,62 +1,51 @@
 import 'dart:async';
-// Flutter widgets import removed because it's unused in this file.
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-final uuid = Uuid();
+final _uuid = Uuid();
 
-/// ===============================================================
-///  DATABASE HELPER (Singleton)
-/// ===============================================================
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  static Database? _db;
   DatabaseHelper._init();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('coderats_database.db');
-    return _database!;
+    if (_db != null) return _db!;
+    _db = await _open('coderats_cache.db');
+    return _db!;
   }
 
-  Future<Database> _initDB(String filePath) async {
+  Future<Database> _open(String fileName) async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
+    final path = join(dbPath, fileName);
     return await openDatabase(
       path,
       version: 1,
-      // Habilita as chaves estrangeiras toda vez que o banco é aberto.
-      onConfigure: _onConfigure,
-      onCreate: _createDB,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onCreate: (db, v) async => _create(db),
     );
   }
 
-  // NOVO MÉTODO: Executa comandos na configuração do banco.
-  Future<void> _onConfigure(Database db) async {
-    await db.execute('PRAGMA foreign_keys = ON');
-  }
-
-  // MÉTODO ATUALIZADO com as constraints e foreign keys
-  Future<void> _createDB(Database db, int version) async {
-    // 1. USERS TABLE - types aligned with Postgres semantics
-    // Using TEXT for UUIDs, TIMESTAMPTZ stored as ISO8601 TEXT
+  Future<void> _create(Database db) async {
+    // NOTE: SQLite types mapped to Postgres semantics
+    // UUID -> TEXT, TIMESTAMPTZ -> TEXT (ISO8601), BOOLEAN -> INTEGER(0/1)
     await db.execute('''
       CREATE TABLE users (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        email TEXT UNIQUE,
+        email TEXT,
         image TEXT,
         github_user TEXT NOT NULL UNIQUE,
         github_id INTEGER NOT NULL UNIQUE,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
         deleted_at TEXT
       );
     ''');
 
-    // 2. GROUPS TABLE - Sem alterações, já estava correta.
     await db.execute('''
       CREATE TABLE groups (
         id TEXT PRIMARY KEY,
@@ -69,44 +58,34 @@ class DatabaseHelper {
         repository TEXT,
         start_date TEXT NOT NULL,
         end_date TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
+        created_at TEXT,
+        updated_at TEXT,
         deleted_at TEXT
       );
     ''');
 
-    // 3. GROUP_PARTICIPANTS TABLE - Grandes melhorias aqui!
     await db.execute('''
       CREATE TABLE group_participants (
-        user_id TEXT NOT NULL,
+        id TEXT PRIMARY KEY,
         group_id TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'member' CHECK(role IN ('admin', 'member')),
-        points INTEGER NOT NULL DEFAULT 0,
-        joined_at TEXT NOT NULL,
-        PRIMARY KEY (user_id, group_id),
-        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-        FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE
+        user_id TEXT NOT NULL,
+        role TEXT,
+        points REAL DEFAULT 0,
+        created_at TEXT,
+        FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE CASCADE,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
       );
     ''');
   }
-
-  /// Fecha o banco de dados se estiver aberto.
-  Future<void> close() async {
-    final db = _database;
-    if (db != null) {
-      await db.close();
-      _database = null;
-    }
-  }
 }
 
-// ===================================================
-// USER MODEL
-// ===================================================
+final dbHelper = DatabaseHelper.instance;
+
+// ===================== MODELS =====================
 class User {
   final String id;
   final String name;
-  final String email;
+  final String? email;
   final String? image;
   final String githubUser;
   final int githubId;
@@ -117,49 +96,42 @@ class User {
   User({
     String? id,
     required this.name,
-    required this.email,
-    this.image,
     required this.githubUser,
     required this.githubId,
+    this.email,
+    this.image,
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
-  }) : id = id ?? uuid.v4();
+  }) : id = id ?? _uuid.v4();
 
-  Map<String, Object?> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'image': image,
-      'github_user': githubUser,
-      'github_id': githubId,
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-      'deleted_at': deletedAt?.toIso8601String(),
-    };
-  }
+  Map<String, Object?> toMap() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'image': image,
+        'github_user': githubUser,
+        'github_id': githubId,
+        'created_at': createdAt?.toIso8601String(),
+        'updated_at': updatedAt?.toIso8601String(),
+        'deleted_at': deletedAt?.toIso8601String(),
+      };
 
-  factory User.fromMap(Map<String, Object?> map) {
-    return User(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      email: map['email'] as String,
-      image: map['image'] as String?,
-      githubUser: map['github_user'] as String,
-      githubId: map['github_id'] as int,
-  createdAt: _tryParseIso(map['created_at'] as String?),
-  updatedAt: _tryParseIso(map['updated_at'] as String?),
-  deletedAt: _tryParseIso(map['deleted_at'] as String?),
-    );
-  }
+  factory User.fromMap(Map<String, Object?> m) => User(
+        id: m['id'] as String?,
+        name: (m['name'] ?? '') as String,
+        email: m['email'] as String?,
+        image: m['image'] as String?,
+        githubUser: (m['github_user'] ?? '') as String,
+        githubId: (m['github_id'] is int)
+            ? (m['github_id'] as int)
+            : int.parse('${m['github_id']}'),
+        createdAt: _parseDate(m['created_at']),
+        updatedAt: _parseDate(m['updated_at']),
+        deletedAt: _parseDate(m['deleted_at']),
+      );
 }
 
-
-
-// ===================================================
-// GROUP MODEL
-// ===================================================
 class Group {
   final String id;
   final String name;
@@ -167,250 +139,198 @@ class Group {
   final String? image;
   final String? code;
   final String? method;
-  final bool status;
+  final bool status; // true active, false inactive
   final String? repository;
   final DateTime startDate;
   final DateTime? endDate;
-  final DateTime? createdAt; 
-  final DateTime? updatedAt;  
-  final DateTime? deletedAt; 
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
 
   Group({
     String? id,
     required this.name,
+    required this.startDate,
     this.description,
     this.image,
     this.code,
     this.method,
     this.status = true,
     this.repository,
-    required this.startDate,
     this.endDate,
-    this.createdAt, 
-    this.updatedAt, 
-    this.deletedAt, 
-  }) : id = id ?? uuid.v4();
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+  }) : id = id ?? _uuid.v4();
 
-  Map<String, Object?> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'image': image,
-      'code': code,
-      'method': method,
-      'status': status ? 1 : 0, // boolean -> integer
-      'repository': repository,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate?.toIso8601String(),
-      'created_at': createdAt?.toIso8601String(), 
-      'updated_at': updatedAt?.toIso8601String(),  
-      'deleted_at': deletedAt?.toIso8601String(), 
-    };
-  }
+  Map<String, Object?> toMap() => {
+        'id': id,
+        'name': name,
+        'description': description,
+        'image': image,
+        'code': code,
+        'method': method,
+        'status': status ? 1 : 0,
+        'repository': repository,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate?.toIso8601String(),
+        'created_at': createdAt?.toIso8601String(),
+        'updated_at': updatedAt?.toIso8601String(),
+        'deleted_at': deletedAt?.toIso8601String(),
+      };
 
-  factory Group.fromMap(Map<String, Object?> map) {
-    return Group(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      description: map['description'] as String?,
-      image: map['image'] as String?,
-      code: map['code'] as String?,
-      method: map['method'] as String?,
-  status: ((map['status'] as int?) ?? 1) == 1,
-      repository: map['repository'] as String?,
-  startDate: DateTime.parse(map['start_date'] as String),
-  endDate: _tryParseIso(map['end_date'] as String?),
-  createdAt: _tryParseIso(map['created_at'] as String?),
-  updatedAt: _tryParseIso(map['updated_at'] as String?),
-  deletedAt: _tryParseIso(map['deleted_at'] as String?),
-    );
-  }
+  factory Group.fromMap(Map<String, Object?> m) => Group(
+        id: m['id'] as String?,
+        name: (m['name'] ?? '') as String,
+        description: m['description'] as String?,
+        image: m['image'] as String?,
+        code: m['code'] as String?,
+        method: m['method'] as String?,
+        status: (m['status'] is int)
+            ? ((m['status'] as int) != 0)
+            : ('${m['status']}' == 'true' || '${m['status']}' == '1'),
+        repository: m['repository'] as String?,
+        startDate: _parseDate(m['start_date']) ?? DateTime.now(),
+        endDate: _parseDate(m['end_date']),
+        createdAt: _parseDate(m['created_at']),
+        updatedAt: _parseDate(m['updated_at']),
+        deletedAt: _parseDate(m['deleted_at']),
+      );
 }
 
-// ===================================================
-// GROUP PARTICIPANT MODEL
-// ===================================================
 class GroupParticipant {
-  final String userId;
+  final String id;
   final String groupId;
-  final String role;
-  final int points;
-  final DateTime joinedAt; 
+  final String userId;
+  final String? role;
+  final double points;
+  final DateTime? createdAt;
 
   GroupParticipant({
-    required this.userId,
+    String? id,
     required this.groupId,
-    this.role = 'member',
-    this.points = 0,
-    required this.joinedAt, 
-  });
+    required this.userId,
+    this.role,
+    this.points = 0.0,
+    this.createdAt,
+  }) : id = id ?? _uuid.v4();
 
-  Map<String, Object?> toMap() {
-    return {
-      'user_id': userId,
-      'group_id': groupId,
-      'role': role,
-      'points': points,
-      'joined_at': joinedAt.toIso8601String(),
-    };
-  }
+  Map<String, Object?> toMap() => {
+        'id': id,
+        'group_id': groupId,
+        'user_id': userId,
+        'role': role,
+        'points': points,
+        'created_at': createdAt?.toIso8601String(),
+      };
 
-  factory GroupParticipant.fromMap(Map<String, Object?> map) {
-    return GroupParticipant(
-      userId: map['user_id'] as String,
-      groupId: map['group_id'] as String,
-      role: map['role'] as String,
-  points: map['points'] as int,
-  joinedAt: _tryParseIso(map['joined_at'] as String?) ?? DateTime.now(),
-    );
-  }
+  factory GroupParticipant.fromMap(Map<String, Object?> m) => GroupParticipant(
+        id: m['id'] as String?,
+        groupId: (m['group_id'] ?? '') as String,
+        userId: (m['user_id'] ?? '') as String,
+        role: m['role'] as String?,
+        points: (m['points'] is num)
+            ? (m['points'] as num).toDouble()
+            : double.tryParse('${m['points']}') ?? 0.0,
+        createdAt: _parseDate(m['created_at']),
+      );
 }
 
-final dbHelper = DatabaseHelper.instance;
-
-// Helper: safe ISO8601 parser
-DateTime? _tryParseIso(String? s) => s == null ? null : DateTime.tryParse(s);
-
-// Ensure timestamps exist for non-nullable DB columns
-Map<String, Object?> _ensureTimestamps(Map<String, Object?> map) {
-  final now = DateTime.now().toIso8601String();
-  return {
-    ...map,
-    'created_at': map['created_at'] ?? now,
-    'updated_at': map['updated_at'] ?? now,
-  };
+class GroupDetails {
+  final Group group;
+  final List<GroupParticipantWithUser> participants; // enriched for ranking
+  GroupDetails({required this.group, required this.participants});
 }
 
-// =============================
-// USERS CRUD
-// =============================
-Future<void> insertUser(User user) async {
-  final db = await dbHelper.database;
-  final map = _ensureTimestamps(user.toMap());
-  final updated = await db.update('users', map, where: 'id = ?', whereArgs: [user.id]);
-  if (updated == 0) {
-    await db.insert('users', map);
+class GroupParticipantWithUser {
+  final GroupParticipant participant;
+  final User user;
+  GroupParticipantWithUser(this.participant, this.user);
+}
+
+DateTime? _parseDate(Object? v) {
+  if (v == null) return null;
+  try {
+    return DateTime.parse(v as String).toLocal();
+  } catch (_) {
+    return null;
   }
 }
 
-Future<List<User>> getUsers() async {
+// ===================== CRUD HELPERS =====================
+Future<void> insertOrReplaceUser(User u) async {
   final db = await dbHelper.database;
-  final maps = await db.query('users');
-  return maps.map((m) => User.fromMap(m)).toList();
+  await db.insert('users', u.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
-Future<void> updateUser(User user) async {
+Future<void> insertOrReplaceGroup(Group g) async {
   final db = await dbHelper.database;
-  await db.update('users', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
+  await db.insert('groups', g.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
-Future<void> deleteUser(String id) async {
+Future<void> insertOrReplaceParticipant(GroupParticipant p) async {
   final db = await dbHelper.database;
-  await db.delete('users', where: 'id = ?', whereArgs: [id]);
-}
-
-// =============================
-// GROUPS CRUD
-// =============================
-Future<void> insertGroup(Group group) async {
-  final db = await dbHelper.database;
-  final map = _ensureTimestamps(group.toMap());
-  final updated = await db.update('groups', map, where: 'id = ?', whereArgs: [group.id]);
-  if (updated == 0) {
-    await db.insert('groups', map);
-  }
+  await db.insert('group_participants', p.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
 Future<List<Group>> getGroups() async {
   final db = await dbHelper.database;
-  final maps = await db.query('groups');
+  final maps = await db.query('groups', orderBy: 'start_date DESC');
   return maps.map((m) => Group.fromMap(m)).toList();
 }
 
-Future<void> updateGroup(Group group) async {
-  final db = await dbHelper.database;
-  await db.update('groups', group.toMap(), where: 'id = ?', whereArgs: [group.id]);
-}
-
-Future<void> deleteGroup(String id) async {
-  final db = await dbHelper.database;
-  await db.delete('groups', where: 'id = ?', whereArgs: [id]);
-}
-
-// =============================
-// GROUP PARTICIPANTS CRUD
-// =============================
-Future<void> insertGroupParticipant(GroupParticipant gp) async {
-  final db = await dbHelper.database;
-  final map = gp.toMap();
-  final updated = await db.update(
-    'group_participants',
-    map,
-    where: 'user_id = ? AND group_id = ?',
-    whereArgs: [gp.userId, gp.groupId],
-  );
-  if (updated == 0) {
-    await db.insert('group_participants', map);
-  }
-}
-
-Future<List<GroupParticipant>> getGroupParticipants() async {
-  final db = await dbHelper.database;
-  final maps = await db.query('group_participants');
-  return maps.map((m) => GroupParticipant.fromMap(m)).toList();
-}
-
-Future<void> updateGroupParticipant(GroupParticipant gp) async {
-  final db = await dbHelper.database;
-  await db.update(
-    'group_participants',
-    gp.toMap(),
-    where: 'user_id = ? AND group_id = ?',
-    whereArgs: [gp.userId, gp.groupId],
-  );
-}
-
-Future<void> deleteGroupParticipant(String userId, String groupId) async {
-  final db = await dbHelper.database;
-  await db.delete(
-    'group_participants',
-    where: 'user_id = ? AND group_id = ?',
-    whereArgs: [userId, groupId],
-  );
-}
-
-// Buscar participantes de um grupo específico
-Future<List<GroupParticipant>> getGroupParticipantsByGroup(String groupId) async {
-  final db = await dbHelper.database;
-  final maps = await db.query(
-    'group_participants',
-    where: 'group_id = ?',
-    whereArgs: [groupId],
-  );
-  return maps.map((m) => GroupParticipant.fromMap(m)).toList();
-}
-
-// Buscar usuários de um grupo
-Future<List<User>> getUsersByGroup(String groupId) async {
-  final db = await dbHelper.database;
-  final maps = await db.rawQuery('''
-    SELECT u.* FROM users u
-    INNER JOIN group_participants gp ON u.id = gp.user_id
-    WHERE gp.group_id = ?
-  ''', [groupId]);
-  
-  return maps.map((m) => User.fromMap(m)).toList();
-}
-
-// Buscar grupos de um usuário
 Future<List<Group>> getGroupsByUser(String userId) async {
   final db = await dbHelper.database;
   final maps = await db.rawQuery('''
-    SELECT g.* FROM groups g
-    INNER JOIN group_participants gp ON g.id = gp.group_id
+    SELECT DISTINCT g.*
+    FROM groups g
+    INNER JOIN group_participants gp ON gp.group_id = g.id
     WHERE gp.user_id = ?
+    ORDER BY g.start_date DESC
   ''', [userId]);
-  
   return maps.map((m) => Group.fromMap(m)).toList();
+}
+
+Future<GroupDetails?> getGroupDetailsFromCache(String groupId) async {
+  final db = await dbHelper.database;
+  final groupRows = await db.query('groups', where: 'id = ?', whereArgs: [groupId], limit: 1);
+  if (groupRows.isEmpty) return null;
+  final group = Group.fromMap(groupRows.first);
+
+  final rows = await db.rawQuery('''
+    SELECT gp.*, u.id as u_id, u.name as u_name, u.email as u_email, u.image as u_image,
+           u.github_user as u_github_user, u.github_id as u_github_id
+    FROM group_participants gp
+    JOIN users u ON u.id = gp.user_id
+    WHERE gp.group_id = ?
+    ORDER BY gp.points DESC
+  ''', [groupId]);
+
+  final participants = rows.map((r) {
+    final p = GroupParticipant.fromMap(r);
+    final user = User(
+      id: r['u_id'] as String?,
+      name: (r['u_name'] ?? '') as String,
+      email: r['u_email'] as String?,
+      image: r['u_image'] as String?,
+      githubUser: (r['u_github_user'] ?? '') as String,
+      githubId: (r['u_github_id'] is int)
+          ? r['u_github_id'] as int
+          : int.parse('${r['u_github_id']}'),
+    );
+    return GroupParticipantWithUser(p, user);
+  }).toList();
+
+  return GroupDetails(group: group, participants: participants);
+}
+
+Future<void> cacheGroupDetails(Group group, List<GroupParticipantWithUser> participants) async {
+  final db = await dbHelper.database;
+  await db.transaction((txn) async {
+    await txn.insert('groups', group.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    for (final pwu in participants) {
+      await txn.insert('users', pwu.user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      await txn.insert('group_participants', pwu.participant.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  });
 }
