@@ -30,6 +30,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+    
+  # === Necessário para usar SQLite ===
+  sqflite: ^2.3.3
+
+  # === Necessário para gerar UUIDs (id únicos) ===
+  uuid: ^4.4.0
+
+  # === Recomendado para manipular caminhos de arquivos (getDatabasesPath) ===
+  path: ^1.9.0
+
   table_calendar: ^3.0.0
 
   # The following adds the Cupertino Icons font to your application.
