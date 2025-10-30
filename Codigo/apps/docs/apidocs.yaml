@@ -4,7 +4,7 @@ info:
   description: |-
     API social e gamificada para desenvolvedores acompanharem seu progresso de estudos.
     Análoga ao conceito de "Gym Rats", mas para o mundo do código.
-  version: 1.2.0
+  version: 1.2.1
 servers:
   - url: https://virtserver.swaggerhub.com/coderats/code-rats-api/1.2.0
     description: Servidor de Mock
@@ -23,66 +23,40 @@ tags:
 
 paths:
   # =============================================
-  # Autenticação
+  # Autenticação (Novo)
   # =============================================
-  /auth/register:
+  /auth/github/callback:
     post:
       tags:
         - Autenticação
-      summary: Registrar um novo usuário
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserRegister'
-      responses:
-        '201':
-          description: Usuário criado com sucesso. Retorna o objeto do usuário e o token JWT.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/PrivateUserProfile'
-                  token:
-                    type: string
-              example:
-                user:
-                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
-                  name: "Ana Coder"
-                  email: "ana.coder@email.com"
-                  image: "https://example.com/path/to/image.png"
-                  github_user: "anacoder"
-                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-  /auth/login:
-    post:
-      tags:
-        - Autenticação
-      summary: Autenticar um usuário
+      summary: Realizar login ou registro via GitHub
+      description: |-
+        Recebe o código temporário 'code' fornecido pelo GitHub OAuth.
+        O backend troca esse código por um token de acesso do GitHub,
+        autentica ou cria o usuário na plataforma Code Rats,
+        e retorna o perfil do usuário e um token JWT da sessão.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [email, password]
+              required: [code]
               properties:
-                email: { type: string, format: email }
-                password: { type: string, format: password }
+                code:
+                  type: string
+                  description: O código temporário recebido do GitHub após o consentimento do usuário.
+                  example: "a1b2c3d4e5f6g7h8"
       responses:
         '200':
-          description: Login bem-sucedido.
+          description: Autenticação bem-sucedida. Retorna o objeto do usuário e o token JWT.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   user:
-                    $ref: '#/components/schemas/PrivateUserProfile'
+                    $ref: '#/components/schemas/PrivateUserResponse'
                   token:
                     type: string
               example:
@@ -90,11 +64,18 @@ paths:
                   id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                   name: "Ana Coder"
                   email: "ana.coder@email.com"
-                  image: "https://example.com/path/to/image.png"
+                  image: "https://avatars.githubusercontent.com/u/12345"
                   github_user: "anacoder"
                 token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        '400':
+          description: "Código 'code' inválido ou expirado."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 400
+                message: "Código OAuth inválido."
 
   # =============================================
   # Usuários (/me)
@@ -112,7 +93,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrivateUserProfile'
+                $ref: '#/components/schemas/PrivateUserResponse'
               example:
                 id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                 name: "Ana Coder"
@@ -138,7 +119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PrivateUserProfile'
+                $ref: '#/components/schemas/PrivateUserResponse'
               example:
                 id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
                 name: "Ana Coder Silva"
@@ -695,11 +676,12 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         image: { type: string, format: uri, nullable: true }
-        github_user: { type: string, nullable: true }
+        github_user: { type: string }
+        github_id: { type: integer }
     PublicUserProfile:
       allOf:
         - $ref: '#/components/schemas/UserBase'
-    PrivateUserProfile:
+    PrivateUserResponse:
       allOf:
         - $ref: '#/components/schemas/UserBase'
         - type: object
@@ -711,20 +693,11 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         image: { type: string, format: uri, nullable: true }
-    UserRegister:
-      type: object
-      required: [name, email, password]
-      properties:
-        name: { type: string, example: "João da Silva" }
-        email: { type: string, format: email, example: "joao.silva@email.com" }
-        password: { type: string, format: password, example: "s3nh@F0rt3" }
-        github_user: { type: string, example: "joaodasilva" }
     UserUpdate:
       type: object
       properties:
         name: { type: string }
         image: { type: string, format: uri }
-        github_user: { type: string }
     Group:
       type: object
       properties:
@@ -786,11 +759,6 @@ components:
         points: { type: integer }
         createdAt: { type: string, format: date-time }
         author: { $ref: '#/components/schemas/UserSummary' }
-        commits: 
-          type: array
-          description: "Indica os commits relacionados com o check-in."
-          items: 
-            $ref: "#/components/schemas/Commits"
         likes_count:
           type: integer
           description: "O número total de curtidas no check-in."
@@ -810,11 +778,6 @@ components:
         description: { type: string, example: "Foquei em mocks e spies." }
         image: { type: string, format: uri }
         summary_ai: { type: string }
-        commits: 
-          type: array
-          description: "Indica os commits relacionados com o check-in."
-          items: 
-            $ref: "#/components/schemas/Commits"
     Badge:
       type: object
       properties:
@@ -890,11 +853,6 @@ components:
           example: "2025-09-26T11:00:00Z"
         author:
           $ref: '#/components/schemas/UserSummary'
-        commits: 
-          type: array
-          description: "Indica os commits relacionados com o check-in."
-          items: 
-            $ref: "#/components/schemas/Commits"
 
     GroupWithDetails:
       allOf:
