@@ -145,19 +145,12 @@ class _GroupListScreenState extends State<GroupListScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, i) {
                       final g = groups[i];
+                      final currentUserId = _overrideUserId ?? widget.currentUserId;
                       return _GroupCard(
                         group: g,
-                        onTap: () async {
-                          final details = await _repo.getGroupDetails(g.id);
-                          if (!mounted) return;
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => _GroupDetailsPage(details: details),
-                            ),
-                          );
-                        },
+                        currentUserId: currentUserId,
                       );
-                    },
+                    }
                   );
                 },
               ),
@@ -169,32 +162,207 @@ class _GroupListScreenState extends State<GroupListScreen> {
   }
 }
 
-/// Adapter that maps our `Group` model into your custom Card widget API.
-/// If parameter names differ in your CardGroup implementation, adjust them here only.
-class _GroupCard extends StatelessWidget {
+class _GroupCard extends StatefulWidget {
   final Group group;
-  final VoidCallback onTap;
-  const _GroupCard({required this.group, required this.onTap});
+  final String currentUserId;
+  const _GroupCard({required this.group, required this.currentUserId});
+
+  @override
+  State<_GroupCard> createState() => _GroupCardState();
+}
+
+class _GroupCardState extends State<_GroupCard> {
+  final _repo = GroupRepository();
+  GroupDetails? _details;
+  bool _loading = false;
+  bool _openedOnce = false;
+
+  Future<void> _onExpandChanged(bool open) async {
+    _openedOnce = open || _openedOnce;
+    if (!open) return;
+    if (_details != null || _loading) return;
+
+    setState(() => _loading = true);
+    final d = await _repo.getGroupDetails(widget.group.id);
+    if (!mounted) return;
+    setState(() {
+      _details = d;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Map our Group model to the shared GroupCard widget.
+    // Expanded area content
+    Widget? expanded;
+    if (_loading) {
+      expanded = const Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 8),
+            Text('Carregando ranking...', style: TextStyle(color: Colors.white70)),
+          ],
+        ),
+      );
+    } else if (_details != null) {
+      expanded = _RankingBlock(details: _details!, currentUserId: widget.currentUserId);
+    } else if ((widget.group.description ?? '').isNotEmpty) {
+      // Before first load, show the description as a placeholder
+      expanded = Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          widget.group.description!,
+          style: const TextStyle(color: Colors.white70),
+        ),
+      );
+    } else if (_openedOnce) {
+      expanded = const Padding(
+        padding: EdgeInsets.all(12),
+        child: Text(
+          'Sem cache de ranking para este grupo (abra online pelo menos uma vez).',
+          style: TextStyle(color: Colors.white70),
+        ),
+      );
+    }
+
     return GroupCard(
-      title: group.name,
-      imageUrl: group.image,
-      bannerStyle: group.status ? BannerStyle.primary : BannerStyle.tertiary,
-      status: group.status ? GroupStatus.ativo : GroupStatus.concluido,
-      expanded: (group.description ?? '').isNotEmpty
-          ? Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(group.description!, style: const TextStyle(color: Colors.white70)),
-            )
-          : null,
-      onBannerTap: onTap,
-      onExpandChanged: (_) {},
+      title: widget.group.name,
+      imageUrl: widget.group.image,
+      bannerStyle: widget.group.status ? BannerStyle.primary : BannerStyle.tertiary,
+      status: widget.group.status ? GroupStatus.ativo : GroupStatus.concluido,
+      expanded: expanded,
+      onBannerTap: () async {
+        // Optional: open full screen details on banner tap
+        final d = _details ?? await _repo.getGroupDetails(widget.group.id);
+        if (!mounted) return;
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => _GroupDetailsPage(details: d)),
+        );
+      },
+      onExpandChanged: _onExpandChanged,
     );
   }
 }
+
+// Pretty ranking block (Leader + Você + Top 3)
+class _RankingBlock extends StatelessWidget {
+  final GroupDetails details;
+  final String currentUserId;
+  const _RankingBlock({required this.details, required this.currentUserId});
+
+  String _ordinal(int n) {
+    if (n % 100 >= 11 && n % 100 <= 13) return '${n}th';
+    switch (n % 10) {
+      case 1: return '${n}st';
+      case 2: return '${n}nd';
+      case 3: return '${n}rd';
+      default: return '${n}th';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    // Ensure sorted by points desc
+    final participants = [...details.participants]
+      ..sort((a, b) => b.participant.points.compareTo(a.participant.points));
+
+    final leader = participants.isNotEmpty ? participants.first : null;
+    final me = participants.where((x) => x.user.id == currentUserId).cast<GroupParticipantWithUser?>().firstWhere(
+      (e) => e != null,
+      orElse: () => null,
+    );
+    final top3 = participants.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Row: Leader & Você
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Row(
+            children: [
+              if (leader != null) _pill(
+                context,
+                labelLeft: 'Leader',
+                name: leader.user.name,
+                points: leader.participant.points,
+                color: cs.primary,
+              ),
+              const SizedBox(width: 12),
+              if (me != null) _pill(
+                context,
+                labelLeft: 'Você',
+                name: me.user.name,
+                points: me.participant.points,
+                color: cs.tertiary,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Title: Ranking
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text('Ranking', style: Theme.of(context).textTheme.titleMedium),
+        ),
+        const SizedBox(height: 8),
+
+        // Top 3
+        ...List.generate(top3.length, (i) {
+          final row = top3[i];
+          final pos = i + 1;
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              leading: const CircleAvatar(),
+              title: Text(row.user.name, style: const TextStyle(color: Colors.white)),
+              subtitle: Text(
+                '${row.participant.points.toStringAsFixed(1)} pontos',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(_ordinal(pos), style: const TextStyle(color: Colors.white)),
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
+      ],
+    );
+  }
+
+  Widget _pill(BuildContext context,
+      {required String labelLeft, required String name, required double points, required Color color}) {
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.circle, size: 12, color: color),
+        const SizedBox(width: 6),
+        Text(labelLeft, style: tt.labelMedium?.copyWith(color: Colors.white70)),
+        const SizedBox(width: 8),
+        Text(name, style: tt.labelLarge),
+        const SizedBox(width: 8),
+        Text('${points.toStringAsFixed(1)} pontos', style: tt.labelMedium?.copyWith(color: Colors.white70)),
+      ],
+    );
+  }
+}
+
 
 /// Minimal details page (read‑only offline). Replace by your real screen.
 class _GroupDetailsPage extends StatelessWidget {
