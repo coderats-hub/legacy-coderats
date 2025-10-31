@@ -66,10 +66,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(ep))
                 .authorizeHttpRequests(reg -> reg
-                .requestMatchers(HttpMethod.GET, "/").permitAll()
-                .requestMatchers("/auth/**").permitAll() // <— garante GET e POST
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .anyRequest().authenticated()
+                    .anyRequest().permitAll()
                 )
                 .formLogin(fl -> fl.disable())
                 .httpBasic(hb -> hb.disable())
