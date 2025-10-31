@@ -1,16 +1,11 @@
 package dev.coderats.backend.github;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 @Service
 public class GitHubOAuthService {
@@ -24,52 +19,69 @@ public class GitHubOAuthService {
   @Value("${github.oauth.redirect-uri}")
   private String redirectUri;
 
-  private final RestTemplate restTemplate = new RestTemplate();
+  private final RestClient rest = RestClient.builder()
+      .baseUrl("https://github.com")
+      .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+      .build();
 
-  public record TokenResponse(String access_token, String scope, String token_type) {}
-  public record GitHubUser(Long id, String login, String name, String avatar_url, String email) {}
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record TokenResponse(
+      @JsonProperty("access_token") String accessToken,
+      String scope,
+      @JsonProperty("token_type") String tokenType,
+      String error,
+      @JsonProperty("error_description") String errorDescription
+  ) {}
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record GitHubUser(
+      Long id,
+      String login,
+      String name,
+      @JsonProperty("avatar_url") String avatarUrl,
+      String email
+  ) {}
 
   public String exchangeCodeForToken(String code) {
-    String url = "https://github.com/login/oauth/access_token";
+    var body = """
+      {
+        "client_id":"%s",
+        "client_secret":"%s",
+        "code":"%s",
+        "redirect_uri":"%s"
+      }
+      """.formatted(clientId, clientSecret, code, redirectUri);
 
-    Map<String, String> body = new HashMap<>();
-    body.put("client_id", clientId);
-    body.put("client_secret", clientSecret);
-    body.put("code", code);
-    body.put("redirect_uri", redirectUri);
+    var resp = rest.post()
+        .uri("/login/oauth/access_token")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(body)
+        .retrieve()
+        .toEntity(TokenResponse.class);
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    headers.setAccept(java.util.List.of(MediaType.APPLICATION_JSON));
-
-    HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
-
-    ResponseEntity<TokenResponse> response = restTemplate.exchange(
-        url, HttpMethod.POST, entity, TokenResponse.class);
-
-    if (response.getBody() == null || response.getBody().access_token() == null) {
-      throw new RuntimeException("Falha ao obter access_token do GitHub");
+    var tr = resp.getBody();
+    if (tr == null || tr.accessToken() == null) {
+      var msg = (tr != null && tr.error() != null)
+          ? "Falha ao obter access_token do GitHub: %s - %s".formatted(tr.error(), tr.errorDescription())
+          : "Falha ao obter access_token do GitHub (resposta vazia)";
+      throw new RuntimeException(msg);
     }
-
-    return response.getBody().access_token();
+    return tr.accessToken();
   }
 
   public GitHubUser getUser(String accessToken) {
-    String url = "https://api.github.com/user";
+    var api = RestClient.builder()
+        .baseUrl("https://api.github.com")
+        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+        .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+        .build();
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setBearerAuth(accessToken);
-    headers.setAccept(java.util.List.of(MediaType.APPLICATION_JSON));
-
-    HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-    ResponseEntity<GitHubUser> response = restTemplate.exchange(
-        url, HttpMethod.GET, entity, GitHubUser.class);
-
-    if (response.getBody() == null) {
+    // GET /user
+    var resp = api.get().uri("/user").retrieve().toEntity(GitHubUser.class);
+    var gh = resp.getBody();
+    if (gh == null) {
       throw new RuntimeException("Falha ao buscar dados do usuário no GitHub");
     }
-
-    return response.getBody();
+    return gh;
   }
 }
