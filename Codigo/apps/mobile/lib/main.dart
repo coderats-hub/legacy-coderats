@@ -6,6 +6,8 @@ import 'package:app/features/profile/presentation/screens/private.profile.screen
 import 'package:app/features/user/presentation/screens/code_exchange.screen.dart';
 import 'package:app/features/user/presentation/screens/register.screen.dart';
 import 'package:app/features/user/presentation/screens/home.screen.dart';
+import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
+import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -36,6 +38,8 @@ class App extends StatelessWidget {
         '/groups': (_) => const GroupsPage(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),
+        '/onboarding': (_) => const OnboardingStartScreen(),
+        '/create-group': (_) => const CreateGroupScreen(),
       },
     );
   }

@@ -38,8 +38,8 @@ class _CodeExchangeScreenState extends State<CodeExchangeScreen> {
       final bool success = await _authService.exchangeCodeForToken(code);
 
       if (success && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const TelaInicio()),
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/onboarding',
           (route) => false,
         );
       }
