@@ -82,7 +82,6 @@ CREATE TABLE group_participants (
     user_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     group_id  UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     role      VARCHAR(50) NOT NULL DEFAULT 'member',
-    points    INTEGER NOT NULL DEFAULT 0,
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY (user_id, group_id),

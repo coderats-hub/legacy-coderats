@@ -21,9 +21,6 @@ public class GroupParticipant {
     @Column(nullable = false)
     private String role = "member"; // admin or member
     
-    @Column(nullable = false)
-    private int points = 0;
-    
     @Column(name = "joined_at", nullable = false)
     private OffsetDateTime joinedAt;
     
@@ -45,9 +42,6 @@ public class GroupParticipant {
     
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-    
-    public int getPoints() { return points; }
-    public void setPoints(int points) { this.points = points; }
     
     public OffsetDateTime getJoinedAt() { return joinedAt; }
     public void setJoinedAt(OffsetDateTime joinedAt) { this.joinedAt = joinedAt; }
