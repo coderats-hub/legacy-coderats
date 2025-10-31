@@ -260,11 +260,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             expanded: false,
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (context) => const OnboardingStartScreen(),
-                                  ),
-                                  (route) => false,
+                                // Temporarily show the modal so the designer can preview it
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => TaskDescriptionModal(parentContext: context),
                                 );
                               }
                             },

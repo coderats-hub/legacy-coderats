@@ -159,6 +159,44 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
+  Future<void> _showImageSourceActionSheet() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeria'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Câmera'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+    try {
+      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
   // Valida formulário e navega para próxima etapa
   void _continue() {
     // Valida campos de texto obrigatórios
