@@ -37,13 +37,30 @@ class _GroupListScreenState extends State<GroupListScreen> {
   }
 
   Future<void> _reload() async {
+    // 1) Detect connectivity and update the offline banner
     final isOnline = await _net.isOnline();
     setState(() => _online = isOnline);
+
+    // 2) Get the current user id (keeps your debug “switch user”)
+    final userId = _overrideUserId ?? widget.currentUserId;
+
+    // 3) Fetch the groups (online-first w/ cache fallback)
+    final groups = await _repo.getUserGroups(userId);
+
+    // 4) Show the list immediately
     setState(() {
-      final userId = _overrideUserId ?? widget.currentUserId;
-      _futureGroups = _repo.getUserGroups(userId);
+      _futureGroups = Future.value(groups);
+    });
+
+    // 5) NEW: warm up each group's details (participants/ranking) in the cache.
+    //    This calls the API when online and writes to SQLite; offline it’s a no-op.
+    Future.microtask(() async {
+      for (final g in groups) {
+        await _repo.getGroupDetails(g.id);
+      }
     });
   }
+
 
   Future<void> _showUserSwitchDialog() async {
     final controller = TextEditingController(text: _overrideUserId ?? widget.currentUserId);
