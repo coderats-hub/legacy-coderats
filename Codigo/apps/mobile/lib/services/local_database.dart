@@ -334,3 +334,20 @@ Future<void> cacheGroupDetails(Group group, List<GroupParticipantWithUser> parti
     }
   });
 }
+
+Future<void> ensureMembership(String userId, String groupId) async {
+  final db = await dbHelper.database;
+  final existing = await db.query(
+    'group_participants',
+    columns: ['id'],
+    where: 'group_id = ? AND user_id = ?',
+    whereArgs: [groupId, userId],
+    limit: 1,
+  );
+  if (existing.isEmpty) {
+    // Insert a minimal participant row so the offline join works.
+    final p = GroupParticipant(groupId: groupId, userId: userId);
+    await db.insert('group_participants', p.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+}

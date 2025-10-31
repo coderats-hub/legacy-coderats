@@ -14,18 +14,30 @@ class GroupRepository {
     if (online) {
       try {
         final groups = await fetchGroupsForUser(userId);
-        // Cache minimal group rows (participants are cached when details are fetched)
+
+        // Cache groups + ensure membership so offline join works.
         for (final g in groups) {
           await insertOrReplaceGroup(g);
+          await ensureMembership(userId, g.id); // <— add this line
         }
+
         return groups;
       } catch (_) {
         // fall through to cache
       }
     }
-    // Offline or API failed
-    return await getGroupsByUser(userId);
+
+    // Offline or API failed — read from cache.
+    final cached = await getGroupsByUser(userId);
+
+    // Safety net: if for some reason membership wasn’t written yet,
+    // still show whatever groups we have cached.
+    if (cached.isEmpty) {
+      return await getGroups();
+    }
+    return cached;
   }
+
 
 
   /// Get details (group + participants ranking)
