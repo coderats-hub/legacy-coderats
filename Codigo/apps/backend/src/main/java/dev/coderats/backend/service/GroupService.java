@@ -24,6 +24,7 @@ import dev.coderats.backend.web.dto.GroupWithDetailsResponse;
 
 @Service
 public class GroupService {
+
     private final GroupRepository groupRepository;
     private final GroupParticipantRepository participantRepository;
     private final UserRepository userRepository;
@@ -35,9 +36,12 @@ public class GroupService {
         this.userRepository = userRepository;
     }
 
+    // CORREÇÃO: Removido o .toString()
     public List<Group> getGroupsForUser(UUID userId) {
-        return groupRepository.findGroupsByUserId(userId.toString());
+        return groupRepository.findGroupsByUserId(userId);
     }
+
+    // REMOVIDO: O método findCommonGroups foi movido para o GroupRepository
 
     @Transactional
     public Group createGroup(GroupCreateRequest request, UUID creatorUserId) {
@@ -51,127 +55,138 @@ public class GroupService {
         group.setStartDate(request.start_date() != null ? request.start_date() : OffsetDateTime.now(ZoneOffset.UTC));
         group.setEndDate(request.end_date());
         group.setStatus(true);
-        
+
         // Gerar código único se não fornecido
         if (request.code() != null && !request.code().trim().isEmpty()) {
             group.setCode(request.code().trim());
         } else {
             group.setCode(generateUniqueCode());
         }
-        
+
         Group savedGroup = groupRepository.save(group);
-        
+
         // Adicionar o criador como administrador do grupo
         GroupParticipant creator = new GroupParticipant(creatorUserId, savedGroup.getId(), "admin");
         participantRepository.save(creator);
-        
+
         return savedGroup;
     }
-    
+
     public Optional<Group> getGroupById(UUID groupId) {
         return groupRepository.findById(groupId);
     }
-    
+
     public GroupWithDetailsResponse getGroupWithDetails(UUID groupId) {
         Optional<Group> groupOpt = groupRepository.findById(groupId);
         if (groupOpt.isEmpty()) {
             return null;
         }
-        
+
         Group group = groupOpt.get();
-        
+
         // Buscar participantes
-        // CORREÇÃO AQUI
         List<GroupParticipant> participants = participantRepository.findByIdGroupId(groupId);
         List<UserSummary> participantSummaries = participants.stream()
-            .map(participant -> {
-                // Use o getter correto dependendo da sua implementação (Solução A ou B)
-                // Assumindo Solução A (@EmbeddedId):
-                var user = userRepository.findById(participant.getUserId()).orElse(null);
-                if (user == null) return null;
-                return new UserSummary(user.getId(), user.getName(), user.getImage());
-            })
-            .filter(summary -> summary != null)
-            .collect(Collectors.toList());
-            
+                .map(participant -> {
+                    // Use o getter correto dependendo da sua implementação
+                    var user = userRepository.findById(participant.getUserId()).orElse(null);
+                    if (user == null) {
+                        return null;
+                    }
+                    return new UserSummary(user.getId(), user.getName(), user.getImage());
+                })
+                .filter(summary -> summary != null)
+                .collect(Collectors.toList());
+
         // Por enquanto, checkins vazios - seria necessário implementar a busca de checkins
         List<CheckinSummary> recentCheckins = List.of();
-        
+
         return new GroupWithDetailsResponse(
-            group.getId(),
-            group.getName(), 
-            group.getDescription(),
-            group.getImage(),
-            group.getCode(),
-            group.getRepository(),
-            group.getMethod(),
-            group.isStatus(),
-            group.getStartDate(),
-            group.getEndDate(),
-            group.getCreatedAt(),
-            group.getUpdatedAt(),
-            participantSummaries,
-            recentCheckins
+                group.getId(),
+                group.getName(),
+                group.getDescription(),
+                group.getImage(),
+                group.getCode(),
+                group.getRepository(),
+                group.getMethod(),
+                group.isStatus(),
+                group.getStartDate(),
+                group.getEndDate(),
+                group.getCreatedAt(),
+                group.getUpdatedAt(),
+                participantSummaries,
+                recentCheckins
         );
     }
-    
+
     @Transactional
     public Group updateGroup(UUID groupId, GroupUpdateRequest request, UUID userIdFromAuth) {
         Optional<Group> groupOpt = groupRepository.findById(groupId);
         if (groupOpt.isEmpty()) {
             throw new RuntimeException("Grupo não encontrado");
         }
-        
+
         Group group = groupOpt.get();
-        
+
         // Verificar se o usuário é admin do grupo
-        // CORREÇÃO AQUI
         Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
         if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
             throw new RuntimeException("Apenas administradores podem atualizar o grupo");
         }
-        
+
         // Atualizar campos se fornecidos
-        if (request.name() != null) group.setName(request.name());
-        if (request.description() != null) group.setDescription(request.description());
-        if (request.image() != null) group.setImage(request.image());
-        if (request.repository() != null) group.setRepository(request.repository());
-        if (request.method() != null) group.setMethod(request.method());
-        if (request.status() != null) group.setStatus(request.status());
-        if (request.end_date() != null) group.setEndDate(request.end_date());
-        
+        if (request.name() != null) {
+            group.setName(request.name());
+        }
+        if (request.description() != null) {
+            group.setDescription(request.description());
+        }
+        if (request.image() != null) {
+            group.setImage(request.image());
+        }
+        if (request.repository() != null) {
+            group.setRepository(request.repository());
+        }
+        if (request.method() != null) {
+            group.setMethod(request.method());
+        }
+        if (request.status() != null) {
+            group.setStatus(request.status());
+        }
+        if (request.end_date() != null) {
+            group.setEndDate(request.end_date());
+        }
+
         // Remover participantes se especificado
         if (request.remove_participants() != null && !request.remove_participants().isEmpty()) {
             List<UUID> userIdsToRemove = request.remove_participants().stream()
-                .map(UUID::fromString)
-                .collect(Collectors.toList());
-            // CORREÇÃO AQUI
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList());
             participantRepository.deleteByIdUserIdInAndIdGroupId(userIdsToRemove, groupId);
         }
-        
+
         return groupRepository.save(group);
     }
-    
+
     @Transactional
     public void deleteGroup(UUID groupId, UUID userIdFromAuth) {
         Optional<Group> groupOpt = groupRepository.findById(groupId);
         if (groupOpt.isEmpty()) {
             throw new RuntimeException("Grupo não encontrado");
         }
-        
+
         // Verificar se o usuário é admin do grupo
-        // CORREÇÃO AQUI
         Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
         if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
             throw new RuntimeException("Apenas administradores podem excluir o grupo");
         }
-        
+
         // Marcar como deletado (soft delete)
         Group group = groupOpt.get();
         group.setDeletedAt(OffsetDateTime.now(ZoneOffset.UTC));
         groupRepository.save(group);
     }
-    
+
     private String generateUniqueCode() {
         String code;
         do {

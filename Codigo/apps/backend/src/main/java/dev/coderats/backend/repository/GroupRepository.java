@@ -14,15 +14,28 @@ import dev.coderats.backend.domain.Group;
 @Repository
 public interface GroupRepository extends JpaRepository<Group, UUID> {
 
-    @Query(value = """
-            SELECT g.*
-            FROM groups g
-            JOIN group_participants gp ON gp.group_id = g.id
-            WHERE gp.user_id = CAST(:userId AS UUID)
-            AND g.deleted_at IS NULL
-            ORDER BY g.created_at DESC
-            """, nativeQuery = true)
-    List<Group> findGroupsByUserId(@Param("userId") String userId);
-    
+    /**
+     * Encontra todos os grupos dos quais um usuário participa.
+     * (Corrigido para aceitar UUID, como discutimos)
+     */
+    @Query("SELECT g FROM Group g JOIN g.participants p WHERE p.id.userId = :userId")
+    List<Group> findGroupsByUserId(@Param("userId") UUID userId);
+
+    /**
+     * Encontra um grupo pelo seu código de convite.
+     * (Necessário para o GroupService)
+     */
     Optional<Group> findByCode(String code);
+
+    /**
+     * ADICIONE ESTE MÉTODO
+     * Encontra grupos que ambos os usuários (userId1 e userId2) participam.
+     */
+    @Query("SELECT g FROM Group g "
+            + "JOIN g.participants p1 "
+            + "JOIN g.participants p2 "
+            + "WHERE p1.id.userId = :userId1 "
+            + "AND p2.id.userId = :userId2")
+    List<Group> findCommonGroups(@Param("userId1") UUID userId1, @Param("userId2") UUID userId2);
+
 }
