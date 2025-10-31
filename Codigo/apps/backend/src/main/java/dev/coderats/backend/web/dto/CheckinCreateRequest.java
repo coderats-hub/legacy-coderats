@@ -1,4 +1,4 @@
-package dev.coderats.backend.features.checkin;
+package dev.coderats.backend.web.dto;
 
 public record CheckinCreateRequest(
     String title,

@@ -1,4 +1,4 @@
-package dev.coderats.backend.features.group;
+package dev.coderats.backend.web.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;

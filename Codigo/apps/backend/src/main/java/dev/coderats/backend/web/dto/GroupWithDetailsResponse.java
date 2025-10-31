@@ -1,8 +1,11 @@
-package dev.coderats.backend.features.group;
+package dev.coderats.backend.web.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import dev.coderats.backend.domain.CheckinSummary;
+import dev.coderats.backend.domain.UserSummary;
 
 public record GroupWithDetailsResponse(
     UUID id,
@@ -19,12 +22,4 @@ public record GroupWithDetailsResponse(
     OffsetDateTime updated_at,
     List<UserSummary> participants,
     List<CheckinSummary> recent_checkins
-) {}
-
-// Classe auxiliar para representar checkins resumidos
-record CheckinSummary(
-    UUID id,
-    String title,
-    OffsetDateTime createdAt,
-    UserSummary author
 ) {}

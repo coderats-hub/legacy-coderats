@@ -1,12 +1,14 @@
-package dev.coderats.backend.features.checkin;
+package dev.coderats.backend.repository;
+
+import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
+import dev.coderats.backend.domain.Checkin;
 
 @Repository
 public interface CheckinRepository extends JpaRepository<Checkin, UUID> {

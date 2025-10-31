@@ -1,4 +1,4 @@
-package dev.coderats.backend.features.group;
+package dev.coderats.backend.domain;
 
 import java.util.UUID;
 
