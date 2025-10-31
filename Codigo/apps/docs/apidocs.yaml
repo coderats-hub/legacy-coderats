@@ -20,6 +20,8 @@ tags:
     description: Operações para registrar e visualizar o progresso dos usuários.
   - name: Badges
     description: Visualização de badges e conquistas.
+  - name: Mock API
+    description: Endpoints de mock para testes e desenvolvimento.
 
 paths:
   # =============================================
@@ -668,6 +670,166 @@ paths:
                   name: "Rato Iniciante"
                   image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
                   description: "Realizou seu primeiro check-in!"
+  
+  # =============================================
+  # Mock API endpoints for testing
+  # =============================================
+  /mock/users:
+    get:
+      tags:
+        - Mock API
+      summary: Get all users (Mock)
+      description: Mock endpoint for testing - returns all users
+      responses:
+        "200":
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MockUser"
+              example:
+                - id: "a1b2c3d4-e5f6-7890-1234-56789abcdef0"
+                  name: "Alice Johnson"
+                  email: "alice@example.com"
+                  image: "https://avatars.githubusercontent.com/u/101"
+                  github_user: "alicej"
+                  github_id: 101
+                  created_at: "2025-10-30T10:00:00Z"
+                  updated_at: "2025-10-30T10:00:00Z"
+                  deleted_at: null
+    post:
+      tags:
+        - Mock API
+      summary: Create new user (Mock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MockUser"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MockUser"
+
+  /mock/users/{userId}/groups:
+    get:
+      tags:
+        - Mock API
+      summary: Get all groups that a user belongs to (Mock)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of groups where the user is a participant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MockGroup"
+
+  /mock/groups:
+    get:
+      tags:
+        - Mock API
+      summary: Get all groups (Mock)
+      responses:
+        "200":
+          description: List of all groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MockGroup"
+    post:
+      tags:
+        - Mock API
+      summary: Create new group (Mock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MockGroup"
+      responses:
+        "201":
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MockGroup"
+
+  /mock/groups/{id}:
+    get:
+      tags:
+        - Mock API
+      summary: Get full details of a specific group (Mock)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Group details with participant list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  group:
+                    $ref: "#/components/schemas/MockGroup"
+                  participants:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MockGroupParticipant"
+
+  /mock/group_participants:
+    get:
+      tags:
+        - Mock API
+      summary: Get all group participants (Mock)
+      responses:
+        "200":
+          description: List of all group participants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MockGroupParticipant"
+    post:
+      tags:
+        - Mock API
+      summary: Add participant to group (Mock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MockGroupParticipant"
+      responses:
+        "201":
+          description: Participant added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MockGroupParticipant"
+
 components:
   schemas:
     UserBase:
@@ -869,6 +1031,57 @@ components:
               description: Os check-ins mais recentes realizados neste grupo.
               items:
                 $ref: '#/components/schemas/CheckinSummary'
+
+    # =============================================
+    # Mock API Schemas
+    # =============================================
+    MockUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string }
+        image: { type: string }
+        github_user: { type: string }
+        github_id: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        deleted_at: { type: string, format: date-time, nullable: true }
+        
+    MockGroup:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        image: { type: string }
+        code: { type: string }
+        method: { type: string }
+        status:
+          type: integer
+          example: 1
+        repository: { type: string }
+        start_date: { type: string, format: date-time }
+        end_date: { type: string, format: date-time, nullable: true }
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_at: { type: string, format: date-time, nullable: true }
+        
+    MockGroupParticipant:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        group_id: { type: string, format: uuid }
+        role:
+          type: string
+          enum: [admin, member]
+        joined_at: { type: string, format: date-time }
                 
   parameters:
     Limit:

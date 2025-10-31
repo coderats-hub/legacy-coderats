@@ -32,10 +32,14 @@
 NÃO ESTAMOS UTILIZANDO ESSE ARQUIVO NO MOMENTO, POIS O FLUXO DE LOGIN/CADASTRO FOI ALTERADO PARA USAR APENAS O GITHUB.
 
 import 'package:flutter/material.dart';
-import 'login.screen.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'onboarding.screen.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'code_exchange.screen.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -45,23 +49,51 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
+
+  Future<void> _launchGitHubLogin() async {
+    final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+
+    final String githubLoginUrl = '$baseUrl/auth/github/login';
+
+    final Uri uri = Uri.parse(githubLoginUrl);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CodeExchangeScreen(),
+            ),
+          );
+        }
+
+      } else {
+        _showErrorSnackBar('Não foi possível abrir o link.');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Erro ao tentar abrir o link: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +107,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo do ratinho codando
                   Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: Image.asset(
@@ -91,17 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     height: 56,
                     margin: const EdgeInsets.only(bottom: AppSpacing.xl),
                     child: OutlinedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Cadastro com GitHub em desenvolvimento',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: AppColors.accent,
-                          ),
-                        );
-                      },
+                      onPressed: _launchGitHubLogin,
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
                           color: AppColors.border,

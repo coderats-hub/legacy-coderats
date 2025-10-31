@@ -18,19 +18,22 @@ import 'package:app/features/group/presentation/screens/group.ranking.screen.dar
 import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/screens/group.join.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
-
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
-
-import 'package:app/features/user/presentation/screens/home.screen.dart';
-import 'package:app/features/user/presentation/screens/login.screen.dart';
-import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
+import 'package:app/features/user/presentation/screens/code_exchange.screen.dart';
 import 'package:app/features/user/presentation/screens/register.screen.dart';
+import 'package:app/features/user/presentation/screens/home.screen.dart';
+import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'shared/theme/app.theme.dart';
 
-// Ponto de entrada da aplicação
-void main() => runApp(const App());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  
+  runApp(const App()); 
+}
 
 // Widget raiz da aplicação - configura MaterialApp e roteamento
 class App extends StatelessWidget {
@@ -53,13 +56,13 @@ class App extends StatelessWidget {
         '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'), // Detalhes do grupo
         
         // Rotas de autenticação
-        /* '/login': (_) => const LoginScreen(),
-        '/register': (_) => const RegisterScreen(), */
+        // '/register': (_) => const RegisterScreen(),
+        /* '/login': (_) => const LoginScreen(), */
         
         '/groups':  (_) => const GroupsPage(),             // Lista de grupos
         '/profile': (_) => PrivateProfileScreen(),         // Perfil privado
+        '/code-exchange': (_) => const CodeExchangeScreen(), // Troca de código
       },
     );
   }
 }
-
