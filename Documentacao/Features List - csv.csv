@@ -1,0 +1,73 @@
+﻿Feature name,ID,Obs.,Prioridade,Sprint,Tela
+"O sistema deve permitir login de usuário que já esteja cadastrado, com seu e-mail e senha.",RF 03,,alta,01,login
+"O sistema deverá possuir badges, que sinalizam conquistas do usuário por PERFIL e podem ser visualizadas na tela de perfil do usuário.",,,,04,perfil
+"O sistema deve permitir o cadastro de usuários com nome, e-mail e senha.",RF 01,,alta,01,cadastro
+O sistema deverá emitir notificações quando um membro do grupo pontuar.,,,,03,
+O sistema deve possuir o scoring mode: maior número de linhas de código.,,,,03,criar grupo
+"Logo após um usuário se cadastrar ele deve ser direcionado para a página de get started, onde haverá 2 botões: criar grupo e entrar em grupo.",RF 06,,alta,01,get started
+A group home deverá possuir um botão para criação de um novo check-in.,RF 24,,alta,01,detalhes grupo
+O sistema não deve publicar atividades pendentes do GitHub na timeline nem pontuar nos modos Quantidade/Frequência até que sejam convertidas em check-in pelo usuário.,RNF 05,,alta,02,make check-in
+"Ao clicar em um check-in na group home, o usuário deverá ser capaz de visualizar os detalhes do check-in em questão (nome do usuário, pontos fornecidos, foto - se tiver -, descrição - se tiver - e data. )",RF 27,,média,01,viz check-in
+O sistema deve permitir a adição de uma foto de perfil.,RF 05,,baixa,01,perfil
+O sistema deve listar “Atividades do GitHub pendentes” do usuário (cada commit em repositório público = 1 atividade) com data e repositório.,RF 42,,alta,02,make check-in
+"O sistema deve permitir ao usuário selecionar uma ou mais atividades pendentes do GitHub para linkar ao seu check-in, exigindo título e captura de foto dentro do app.",RF 43,→ Chamaremos isso de CHECK-IN MANUAL,alta,02,make check-in
+"Nos check-ins linkados ao github, uma Inteligência Artificial fornecerá um overview (resumo) do que o código commitado linkado ao check-in se trata.",,,,03,viz check-in
+Cada grupo ativo deverá possuir sua página de detalhes,RF 19,,alta,01,detalhes grupo
+O sistema deve exibir o status da conexão com o GitHub - conectado / não conectado / ação necessária.,RF 30,,alta,02,settings
+O sistema deve permitir exclusão da conta.,RF 33,,média,02,settings
+"O sistema deverá possuir uma página home (início), que aparece quando o usuário abre o aplicativo.",RF 16,(provavelmente passar para S3),baixa,03,home feed
+O sistema deve ter acesso à câmera. A foto do check-in deve ser obrigatoriamente capturada dentro do aplicativo.,RNF 02,"política de permissão, o que acontece sem permissão?",alta,01,make check-in
+"O sistema deve permitir que o usuário faça check-in com: título, descrição (opcional), dia, horário e foto (opcional).",RF 25,"time zone, fuso fixo do grupo, pode registrar passado ou será timestamp automático?",alta,01,make check-in
+"Presença na aula será um scoring mode, avaliado automaticamente através de geolocalização e horário pré-definidos.",,,,04,criar grupo
+O sistema deve possuir botão para cadastro caso o usuário não possua conta ainda.,RF 04,,alta,01,login
+"Ao informar um código válido de grupo, o sistema deve exibir os ícones dos participantes daquele grupo antes da entrada.",RF 38,,baixa,02,entrar grupo
+O sistema deve permitir que o usuário conecte sua conta do GitHub via OAuth a partir do perfil.,RF 28,,alta,02,cadastro
+A group home deverá mostrar o nome do usuário logado e seu score.,RF 22,,baixa,01,detalhes grupo
+"O sistema deve calcular o score por usuário conforme o modo do grupo → Quantidade: soma de check-ins. Frequência: número de dias distintos com ≥1 check-in (no fuso do grupo), limitado a 1 ponto por dia.",RNF 03,,alta,01,rankings
+O sistema deve exibir uma lista ordenada descrescentemente pelo score atual dos membros do grupo.,RF 26,,alta,01,rankings
+ideia da sprint 2 → unir check-in manual com github (não necessariamente fazer um check-in automático ainda) → fazer de forma com que não seja obrigatório conectar com github para competir → a pessoa tem que abrir o app para registrar o check-in,,,,02,
+"A group home deverá mostrar o Ranking dos 3 primeiros membros de forma crescente, com foto de perfil, nome e pontuação.",RF 20,,baixa,01,detalhes grupo
+"O sistema deve permitir que o usuário conecte/desconecte sua conta do GitHub. ",RF 31,,baixa,02,settings
+"O sistema deve permitir a criação de um novo grupo, com: título, foto de capa, descrição, data de início, data de fim e scoring mode (método de avaliação).",RF 10,,alta,01,criar grupo
+O sistema deve permitir a alteração do nome e senha do perfil.,RF 32,,média,02,settings
+A group home deverá mostrar quantos dias faltam para o fim do desafio.,RF 40,,alta,02,detalhes grupo
+A group home deverá mostrar os check-ins de seus participantes em ordem cronológica ascendente e em seções indicando as datas (do dia mais recente para o mais antigo).,RF 23,,alta,01,detalhes grupo
+"O sistema deverá permitir navegação entre início (home feed), grupos e perfil do usuário.",RF 07,,alta,01,
+"O sistema deve permitir que um usuário entre em um grupo existente informando um código válido. ",RF 15,,alta,01,entrar grupo
+O sistema deve possuir o scoring mode: maior streak de fotos (frequência diária de check-ins).,RF 12,,alta,01,criar grupo
+"Ao criar um novo grupo, deve ser gerado um código.",RF 14,"unicidade, expiração, nº de caracteres, reutilização ?",alta,01,criar grupo
+Será possível visualizar os ‘group stats’: total de check-ins e total de pontos.,,,,04,rankings
+Implementar acessibilidade para cegos.,,,,04,
+Um usuário pode deixar comentários em check-ins de outros usuários.,,,,04,viz check-in
+"Depois de passada a data de fim estipulada para o grupo, ele deve ser inativado.",RN 01,,baixa,01,groups
+A tela “Grupos” deve mostrar todos os grupos ativos do usuário e permitir o acesso a eles.,RF 08,,alta,01,groups
+Os grupos inativos não possuem mais group page e não podem ser acessados.,RF 09,,baixa,01,groups
+Grupos inativos não podem ser acessados.,RN 02,,alta,02,groups
+"Além dos grupos ativos, “Grupos” deve mostrar os grupos inativos do usuário.",RF 34,,média,02,groups
+" É possível visualizar os rankings finais dos grupos inativos.",RF 35,,média,02,groups
+O perfil de um usuário deve conter um calendário que permite acessar check-ins dos últimos 2 meses.,,,,04,perfil
+A home terá o formato de feed rolável de check-ins em ordem decrescente (mais recente primeiro).,RF 17,(provavelmente passar para S3),baixa,03,home feed
+O feed de check-ins deverá incluir postagens de usuários em qualquer dos grupos em que a pessoa participa. (formato com: nome usuário - grupo - foto - descrição - data),RF 18,(provavelmente passar para S3),baixa,03,home feed
+O sistema deve possuir o scoring mode: maior número de fotos (quantidade de check-ins).,RF 13,,alta,01,criar grupo
+"Ao criar um grupo, o usuário criador pode escolher o método de avaliação (scoring mode) desejado.",RF 11,,alta,01,criar grupo
+O sistema deve possuir o scoring mode: maior número de commits (quantidade de check-ins ligados a atividade(s) do GitHub).,RF 36,,alta,02,criar grupo
+O sistema deve possuir o scoring mode: maior streak de commits (frequência diária de check-ins ligados a atividade(s) do GitHub).,RF 37,,alta,02,criar grupo
+O sistema deve ser capaz de recuperar via API a atividade de commits usuário no GitHub em repositórios públicos.,RNF 04,,alta,02,make check-in
+"No scoring mode de maior número de linhas de código, o sistema deve permitir duas opções: check-in manual ou check-in automático.",,,,03,criar grupo
+"O sistema deverá ser capaz de postar automaticamente no grupo a atividade de um usuário no GitHub, com overview do código por IA e número de linhas commitadas, incrementando a pontuação de acordo.",,,,03,detalhes grupo
+Por atividade de usuário entende-se: 1 commit em repositório público do GitHub.,RN 03,,alta,02,criar grupo
+A group home deverá mostrar o código para entrada no grupo de forma que permita copiar e colar facilmente.,RF 41,,alta,02,detalhes grupo
+"A group home deverá possuir um botão para visualizar todos os rankings do grupo,",RF 21,,alta,01,detalhes grupo
+O sistema deverá possuir opção de “Esqueci minha senha”,,,,03,login
+O código deve ser único por grupo e não expirar durante a duração do desafio.,RNF 01,,alta,01,entrar grupo
+"Ao ver o check-in de outro usuário, deve-se ser capaz de visualizar os commits do GitHub linkados a ele (se existirem).",RF 44,,alta,02,viz check-in
+O sistema deve permitir logout do usuário.,RF 02,,alta,01,perfil
+O usuário criador do grupo terá permissões de administrador sobre o grupo.,,,,03,edit group
+O administrador do grupo poderá excluir o grupo (tornar inativo).,,,,03,edit group
+O admin. do grupo poderá remover participantes.,,,,03,edit group
+O admin. do grupo poderá editar o nome do grupo.,,,,03,edit group
+O admin. do grupo poderá editar a foto de capa do grupo.,,,,03,edit group
+O check-in poderá ser curtido.,,,,04,viz check-in
+O check-in poderá ser comentado,,,,04,viz check-in
+A visualização de check-in deve apresentar botão de curtidas e número de curtidas.,,,,04,viz check-in
+A visualização de check-in deve apresentar botão de comentário e comentários.,,,,04,viz check-in
