@@ -30,6 +30,8 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
 import 'group.scoring.screen.dart';
@@ -52,7 +54,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   // Estados das datas e imagem
   DateTime? _startDate; // Data de início do grupo
   DateTime? _endDate;   // Data de fim do grupo
-  String? _coverImagePath; // Caminho da imagem de capa (futuro)
+  Uint8List? _pickedImageBytes;
 
   @override
   void dispose() {
@@ -116,10 +118,45 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   // Placeholder para seleção de imagem de capa
   void _selectCoverImage() {
-    // TODO: Implementar seleção de imagem com image_picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Funcionalidade de upload será implementada')),
+    _showImageSourceActionSheet();
+  }
+
+  Future<void> _showImageSourceActionSheet() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeria'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Câmera'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
     );
+
+    if (source == null) return;
+    try {
+      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      // ignore
+    }
   }
 
   // Valida formulário e navega para próxima etapa
@@ -290,12 +327,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 style: BorderStyle.solid,
               ),
             ),
-            child: _coverImagePath != null
+            child: _pickedImageBytes != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(AppCorners.md),
-                    child: Image.asset(
-                      _coverImagePath!,
+                    child: Image.memory(
+                      _pickedImageBytes!,
                       fit: BoxFit.cover,
+                      width: double.infinity,
                     ),
                   )
                 : Column(

@@ -35,7 +35,9 @@ import 'package:app/features/profile/presentation/screens/public.profile.screen.
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
+import 'package:app/features/group/presentation/screens/group.edit.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 
@@ -144,36 +146,59 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     if (_loading) rows.add(_Row.loader()); // Loader no final se carregando
 
     return Scaffold(
-      // Header com nome do grupo e ações (excluir e copiar código)
+      // Header com nome do grupo e menu de opções
       appBar: AppHeader(
         title: widget.groupName,
         onBack: () => Navigator.of(context).maybePop(),
         actions: [
-          // Botão de excluir grupo
-          IconButton(
-            onPressed: () {}, // TODO: Implementar exclusão de grupo
-            icon: const Icon(Icons.delete_outline, color: AppColors.textPrimary, size: 18),
-            tooltip: 'Excluir',
+          // Menu de 3 pontos com opções
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GroupEditScreen(
+                        initialName: widget.groupName, 
+                        initialDescription: null, 
+                        imageUrl: widget.imageUrl
+                      ),
+                    ),
+                  );
+                  break;
+                case 'delete':
+                  // TODO: Implementar exclusão de grupo
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Funcionalidade de exclusão será implementada')),
+                  );
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 20, color: AppColors.textPrimary),
+                    SizedBox(width: 8),
+                    Text('Editar grupo'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 20, color: AppColors.textPrimary),
+                    SizedBox(width: 8),
+                    Text('Excluir grupo'),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: AppSpacing.xs),
-          // Botão para copiar código do grupo
-          TextButton.icon(
-            onPressed: () {
-              // TODO: Copiar código real para clipboard
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Código copiado!'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            icon: const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
-            label: Text(
-              'Código: AWECVEW', // TODO: Usar código dinâmico do grupo
-              style: AppTextStyles.subtitle.copyWith(color: Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
         ],
       ),
 
@@ -193,6 +218,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
+
+          // Código do grupo (clicável para copiar)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: _GroupCodeWidget(),
+          ),
+          const SizedBox(height: AppSpacing.lg),
 
           // Descrição expansível do grupo
           _DescriptionAccordion(
@@ -579,6 +611,74 @@ class _CheckinTile extends StatelessWidget {
             ),
             Text("${c.points} pnts", style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget para exibir o código do grupo com efeito de toque
+class _GroupCodeWidget extends StatefulWidget {
+  @override
+  State<_GroupCodeWidget> createState() => _GroupCodeWidgetState();
+}
+
+class _GroupCodeWidgetState extends State<_GroupCodeWidget> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () async {
+        await Clipboard.setData(const ClipboardData(text: 'AWECVEW'));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Código copiado para área de transferência!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: IntrinsicWidth(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isPressed 
+              ? const Color(0xFF7DCDC1).withOpacity(0.1) 
+              : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppCorners.sm),
+            border: Border.all(
+              color: _isPressed 
+                ? const Color(0xFF7DCDC1).withOpacity(0.8)
+                : const Color(0xFF7DCDC1)
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.copy_all_rounded, 
+                size: 18, 
+                color: _isPressed 
+                  ? const Color(0xFF7DCDC1).withOpacity(0.8)
+                  : const Color(0xFF7DCDC1)
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Código: AWECVEW', // TODO: Usar código dinâmico do grupo
+                style: AppTextStyles.subtitle.copyWith(
+                  color: _isPressed 
+                    ? const Color(0xFF7DCDC1).withOpacity(0.8)
+                    : const Color(0xFF7DCDC1),
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

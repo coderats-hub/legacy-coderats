@@ -21,6 +21,8 @@ import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 import '../widgets/shared_widgets.dart';
 
 // Tela para criar um novo check-in de atividade
@@ -45,10 +47,10 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     CommitItem(title: 'Título do commit', isSelected: false),
   ];
   
-  // Variáveis de estado da tela
+ // Variáveis de estado da tela
   int _selectedCommitsCount = 0; // Contador de commits selecionados
-  bool _hasImage = false;        // Se uma imagem foi selecionada
-
+  Uint8List? _pickedImageBytes; 
+  
   @override
   void initState() {
     super.initState();
@@ -75,10 +77,45 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   }
 
   void _selectImage() {
-    setState(() {
-      _hasImage = true;
-    });
-    // TODO: Implementar seleção de imagem
+    _showImageSourceActionSheet();
+  }
+
+  Future<void> _showImageSourceActionSheet() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeria'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Câmera'),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+    try {
+      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      // ignore
+    }
   }
 
   @override
@@ -148,18 +185,14 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
             width: 1,
           ),
         ),
-        child: _hasImage
-            ? Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppCorners.md),
-                  color: AppColors.surface.withOpacity(0.7),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.image,
-                    size: 40,
-                    color: AppColors.accent,
-                  ),
+        child: _pickedImageBytes != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(AppCorners.md),
+                child: Image.memory(
+                  _pickedImageBytes!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
               )
             : Column(
@@ -172,7 +205,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Toque para adicionar imagem',
+                    'Adicione uma foto a sua atividade',
                     style: AppTextStyles.inputHint,
                   ),
                 ],

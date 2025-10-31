@@ -23,6 +23,7 @@ import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/comments.modal.dart';
 
 // Tela principal de lista de check-ins - StatefulWidget para gerenciar estados da UI
 class CheckinScreen extends StatefulWidget {
@@ -498,26 +499,38 @@ class _PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            /*   // Stats (likes, comentários, pontos)
+              /*  Stats (likes, comentários, pontos)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   children: [
-                    // TODO: Likes temporariamente comentados
-                    // const Icon(Icons.favorite_border, size: 24, color: AppColors.textSecondary),
-                    // const SizedBox(width: AppSpacing.xs),
-                    // Text(
-                    //   likes.toString(),
-                    //   style: AppTextStyles.inputHint,
-                    // ),
-                    // const SizedBox(width: AppSpacing.md),
-                    // TODO: Comentários temporariamente comentados
-                    // const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
-                    // const SizedBox(width: AppSpacing.xs),
-                    // Text(
-                    //   comments.toString(),
-                    //   style: AppTextStyles.inputHint,
-                    // ),
+                    const Icon(Icons.favorite_border, size: 24, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      likes.toString(),
+                      style: AppTextStyles.inputHint,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    IconButton(
+                      onPressed: () {
+                        final sample = [
+                          CommentItem(author: 'Gustavo', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.'),
+                          CommentItem(author: 'Você', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.', canDelete: true),
+                        ];
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => CommentsModal(title: 'Comentários', comments: sample),
+                        );
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      comments.toString(),
+                      style: AppTextStyles.inputHint,
+                    ),
                     const Spacer(),
                     Text(
                       '$points pnts',
@@ -526,7 +539,8 @@ class _PostCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm), */
+              const SizedBox(height: AppSpacing.sm), 
+              */
               // Título e descrição lado a lado
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
