@@ -121,9 +121,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                  Form(
-                    ...
-                  ),
+                  
                 ],
               ),
             ),
