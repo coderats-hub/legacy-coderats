@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.2.0 <4.0.0"
+  sdk: '>=3.2.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -31,34 +31,28 @@ dependencies:
   flutter:
     sdk: flutter
 
-  connectivity_plus: ^6.0.3
-    
-  # === Necessário para usar SQLite ===
-  sqflite: ^2.3.3
-
-  # === Necessário para gerar UUIDs (id únicos) ===
-  uuid: ^4.4.0
-
-  # HTTP client for calling the mock API
-  http: ^0.13.5
-
-  # === Recomendado para manipular caminhos de arquivos (getDatabasesPath) ===
-  path: ^1.9.0
-
+  # === UI & Calendar ===
   table_calendar: ^3.0.0
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   google_fonts: ^4.0.0
 
-  # Added for Dart 3.x compatibility (used by transitive packages)
+  # === Network & HTTP ===
+  connectivity_plus: ^6.0.3
+  http: ^1.2.1
+
+  # === Storage & Database ===
+  sqflite: ^2.3.3
+  shared_preferences: ^2.2.3
+
+  # === Utils & Tools ===
+  uuid: ^4.4.0
+  path: ^1.9.0
+  flutter_dotenv: ^5.1.0
+  url_launcher: ^6.2.6
+
+  # === Platform Compatibility (Dart 3.x) ===
   win32: ^5.5.1
   ffi: ^2.1.0
-  flutter_dotenv: ^5.1.0 
-  url_launcher: ^6.2.6
-  http: ^1.2.1
-  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:

@@ -27,7 +27,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
 
   String? _overrideUserId;
 
-  late Future<List<Group>> _futureGroups;
+  Future<List<Group>>? _futureGroups;
   bool _online = true;
 
   @override
@@ -133,13 +133,15 @@ class _GroupListScreenState extends State<GroupListScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _pullToRefresh,
-              child: FutureBuilder<List<Group>>(
-                future: _futureGroups,
-                builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final groups = snap.data ?? const <Group>[];
+              child: _futureGroups == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : FutureBuilder<List<Group>>(
+                      future: _futureGroups!,
+                      builder: (context, snap) {
+                        if (snap.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final groups = snap.data ?? const <Group>[];
                   if (groups.isEmpty) {
                     return ListView(
                       padding: const EdgeInsets.all(24),
@@ -156,21 +158,21 @@ class _GroupListScreenState extends State<GroupListScreen> {
                     );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                    itemCount: groups.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final g = groups[i];
-                      final currentUserId = _overrideUserId ?? widget.currentUserId;
-                      return _GroupCard(
-                        group: g,
-                        currentUserId: currentUserId,
-                      );
-                    }
-                  );
-                },
-              ),
+                        return ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                          itemCount: groups.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, i) {
+                            final g = groups[i];
+                            final currentUserId = _overrideUserId ?? widget.currentUserId;
+                            return _GroupCard(
+                              group: g,
+                              currentUserId: currentUserId,
+                            );
+                          }
+                        );
+                      },
+                    ),
             ),
           ),
         ],
