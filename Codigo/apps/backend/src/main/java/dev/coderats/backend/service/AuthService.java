@@ -14,8 +14,8 @@ import dev.coderats.backend.web.dto.AuthResponse;
 import dev.coderats.backend.web.dto.PrivateUserResponse;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
+@Slf4j
 public class AuthService {
   private final GitHubOAuthService gh;
   private final UserRepository users;
@@ -28,43 +28,33 @@ public class AuthService {
   @Transactional
   public AuthResponse githubLogin(String code) {
     log.info("🔑 Recebendo callback OAuth do GitHub com code={}", code);
+
     String accessToken = gh.exchangeCodeForToken(code);
     var ghUser = gh.getUser(accessToken);
-    String email = ghUser.email();
-    if (email == null) email = gh.getPrimaryEmail(accessToken);
 
-    var user = users.findByGithubId(ghUser.id())
-      .orElseGet(() -> users.save(new User()));
-    boolean isNew = (user.getId() == null);
+    String login = (ghUser.login() != null && !ghUser.login().isBlank()) ? ghUser.login() : "gh-" + ghUser.id();
+    String name  = (ghUser.name()  != null && !ghUser.name().isBlank())  ? ghUser.name()  : login;
+    var now = OffsetDateTime.now(ZoneOffset.UTC);
+
+    User user = users.findByGithubId(ghUser.id()).orElseGet(User::new);
 
     user.setGithubId(ghUser.id());
-    user.setGithubUser(ghUser.login());
-    user.setName(ghUser.name() != null ? ghUser.name() : ghUser.login());
+    user.setGithubUser(login);
+    user.setName(name);
+    user.setEmail(ghUser.email());
     user.setImage(ghUser.avatar_url());
-    user.setEmail(email);
-    var now = OffsetDateTime.now(ZoneOffset.UTC);
+
     if (user.getCreatedAt() == null) user.setCreatedAt(now);
     user.setUpdatedAt(now);
 
-    user = users.saveAndFlush(user);
-
-    if (isNew) log.info("🆕 Novo usuário GitHub detectado: {}", user.getGithubUser());
+    user = users.save(user);
 
     String jwtToken = jwt.generate(user.getId(), user.getGithubUser());
     var dto = new PrivateUserResponse(
-      user.getId(), user.getName(), user.getEmail(),
-      user.getImage(), user.getGithubUser(), user.getGithubId()
+        user.getId(), user.getName(), user.getEmail(), user.getImage(),
+        user.getGithubUser(), user.getGithubId()
     );
-    return new AuthResponse(dto, jwtToken);
-  }
 
-  @Transactional(readOnly = true)
-  public AuthResponse buildAuthResponse(User user) {
-    String jwtToken = jwt.generate(user.getId(), user.getGithubUser());
-    var dto = new PrivateUserResponse(
-      user.getId(), user.getName(), user.getEmail(),
-      user.getImage(), user.getGithubUser(), user.getGithubId()
-    );
     return new AuthResponse(dto, jwtToken);
   }
 }

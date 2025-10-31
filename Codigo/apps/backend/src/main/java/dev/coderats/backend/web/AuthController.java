@@ -3,14 +3,16 @@ package dev.coderats.backend.web;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.http.HttpStatus; 
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestController; 
 import org.springframework.web.servlet.view.RedirectView;
 
 import dev.coderats.backend.auth.EphemeralStore;
@@ -37,6 +39,33 @@ public class AuthController {
         this.users = users;
     }
 
+    public static class AuthFlowException extends RuntimeException {
+        public AuthFlowException(String message) {
+            super(message);
+        }
+        public AuthFlowException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    @ExceptionHandler(AuthFlowException.class)
+    public ResponseEntity<String> handleAuthFlowException(AuthFlowException ex) {
+        log.warn("Falha no fluxo de autenticação: {}", ex.getMessage());
+        
+        String htmlBody = """
+          <html><body style="font-family: 'Segoe UI', sans-serif; background-color: #282c34; color: #e0e0e0; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center;">
+            <div>
+              <h3>Erro no Login</h3>
+              <p style="color: #ff8b8b;">Ocorreu um erro: %s</p>
+              <p>Por favor, feche esta janela e tente fazer o login novamente.</p>
+            </div>
+          </body></html>
+        """.formatted(ex.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(htmlBody);
+    }
+
+
     @GetMapping("/github/login")
     public RedirectView login(@RequestParam(defaultValue = "web") String client,
             @RequestParam(required = false) String cont) {
@@ -52,25 +81,27 @@ public class AuthController {
 
         String meta = store.consumeState(state);
         if (!StringUtils.hasText(meta)) {
-            throw new RuntimeException("state inválido/expirado");
+            throw new AuthFlowException("State inválido ou expirado.");
         }
 
-        AuthResponse auth = authService.githubLogin(code);
+        AuthResponse auth;
+        try {
+            auth = authService.githubLogin(code);
 
-        String payload = auth.token();
+        } catch (Exception ex) {
+            log.error("Falha ao executar authService.githubLogin", ex);
+            throw new AuthFlowException("Não foi possível validar o login com o GitHub.", ex);
+        }
+        
+        String payload = auth.token(); 
         String loginCode = store.saveLoginCode(payload, 120);
 
         String url = "/auth/finish?login_code=" + URLEncoder.encode(loginCode, StandardCharsets.UTF_8);
         return new RedirectView(url);
     }
 
-    public record ExchangeRequest(String login_code) {
-
-    }
-
-    public record ExchangeResponse(String token) {
-
-    }
+    public record ExchangeRequest(String login_code) {}
+    public record ExchangeResponse(String token) {}
 
     @PostMapping("/exchange")
     public ResponseEntity<ExchangeResponse> exchange(@RequestBody ExchangeRequest req) {
