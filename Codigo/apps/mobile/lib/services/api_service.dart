@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'local_database.dart';
 
+//comentário só pra dar push
+
 
 const String _baseUrl = 'https://virtserver.swaggerhub.com/pucminas-1a5/raquelCodeRats/1';
 
