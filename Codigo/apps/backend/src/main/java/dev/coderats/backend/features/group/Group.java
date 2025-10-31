@@ -1,7 +1,8 @@
 package dev.coderats.backend.features.group;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
@@ -9,29 +10,70 @@ import java.util.UUID;
 public class Group {
 
     @Id
+    @GeneratedValue
     private UUID id;
 
+    @Column(nullable = false)
     private String name;
+    
+    @Column(columnDefinition = "TEXT")
     private String description;
-    private String repository;
+    
+    @Column(columnDefinition = "TEXT")
+    private String image;
+    
+    @Column(unique = true, length = 50)
+    private String code;
+    
+    @Column(columnDefinition = "TEXT")
     private String method;
-    private boolean status;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    
+    @Column(nullable = false)
+    private boolean status = true;
+    
+    @Column(columnDefinition = "TEXT")
+    private String repository;
+    
+    @Column(name = "start_date", nullable = false)
+    private OffsetDateTime startDate;
+    
+    @Column(name = "end_date")
+    private OffsetDateTime endDate;
+
+    @Column(name = "created_at", nullable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 
     public Group() {
     }
 
-    public Group(UUID id, String name, String description, String repository, String method,
-                 boolean status, LocalDateTime startDate, LocalDateTime endDate) {
+    public Group(UUID id, String name, String description, String image, String code, String repository, String method,
+                 boolean status, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.image = image;
+        this.code = code;
         this.repository = repository;
         this.method = method;
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    @PrePersist
+    void prePersist() {
+        createdAt = updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public UUID getId() {
@@ -58,6 +100,22 @@ public class Group {
         this.description = description;
     }
 
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public String getRepository() {
         return repository;
     }
@@ -82,19 +140,43 @@ public class Group {
         this.status = status;
     }
 
-    public LocalDateTime getStartDate() {
+    public OffsetDateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(OffsetDateTime startDate) {
         this.startDate = startDate;
     }
 
-    public LocalDateTime getEndDate() {
+    public OffsetDateTime getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(LocalDateTime endDate) {
+    public void setEndDate(OffsetDateTime endDate) {
         this.endDate = endDate;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public OffsetDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(OffsetDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }
