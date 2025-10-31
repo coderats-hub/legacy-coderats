@@ -1,16 +1,26 @@
-package dev.coderats.backend.features.group;
+package dev.coderats.backend.service;
 
-import dev.coderats.backend.repository.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.security.SecureRandom;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import dev.coderats.backend.domain.CheckinSummary;
+import dev.coderats.backend.domain.Group;
+import dev.coderats.backend.domain.GroupParticipant;
+import dev.coderats.backend.domain.UserSummary;
+import dev.coderats.backend.repository.GroupParticipantRepository;
+import dev.coderats.backend.repository.GroupRepository;
+import dev.coderats.backend.repository.UserRepository;
+import dev.coderats.backend.web.dto.GroupCreateRequest;
+import dev.coderats.backend.web.dto.GroupUpdateRequest;
+import dev.coderats.backend.web.dto.GroupWithDetailsResponse;
 
 @Service
 public class GroupService {
@@ -71,9 +81,12 @@ public class GroupService {
         Group group = groupOpt.get();
         
         // Buscar participantes
-        List<GroupParticipant> participants = participantRepository.findByGroupId(groupId);
+        // CORREÇÃO AQUI
+        List<GroupParticipant> participants = participantRepository.findByIdGroupId(groupId);
         List<UserSummary> participantSummaries = participants.stream()
             .map(participant -> {
+                // Use o getter correto dependendo da sua implementação (Solução A ou B)
+                // Assumindo Solução A (@EmbeddedId):
                 var user = userRepository.findById(participant.getUserId()).orElse(null);
                 if (user == null) return null;
                 return new UserSummary(user.getId(), user.getName(), user.getImage());
@@ -112,7 +125,8 @@ public class GroupService {
         Group group = groupOpt.get();
         
         // Verificar se o usuário é admin do grupo
-        Optional<GroupParticipant> participation = participantRepository.findByUserIdAndGroupId(userIdFromAuth, groupId);
+        // CORREÇÃO AQUI
+        Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
         if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
             throw new RuntimeException("Apenas administradores podem atualizar o grupo");
         }
@@ -131,7 +145,8 @@ public class GroupService {
             List<UUID> userIdsToRemove = request.remove_participants().stream()
                 .map(UUID::fromString)
                 .collect(Collectors.toList());
-            participantRepository.deleteByUserIdInAndGroupId(userIdsToRemove, groupId);
+            // CORREÇÃO AQUI
+            participantRepository.deleteByIdUserIdInAndIdGroupId(userIdsToRemove, groupId);
         }
         
         return groupRepository.save(group);
@@ -145,7 +160,8 @@ public class GroupService {
         }
         
         // Verificar se o usuário é admin do grupo
-        Optional<GroupParticipant> participation = participantRepository.findByUserIdAndGroupId(userIdFromAuth, groupId);
+        // CORREÇÃO AQUI
+        Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
         if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
             throw new RuntimeException("Apenas administradores podem excluir o grupo");
         }

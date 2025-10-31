@@ -1,10 +1,16 @@
-package dev.coderats.backend.features.group;
+package dev.coderats.backend.web;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import dev.coderats.backend.domain.Group;
+import dev.coderats.backend.service.GroupService;
+import dev.coderats.backend.web.dto.GroupCreateRequest;
+import dev.coderats.backend.web.dto.GroupUpdateRequest;
+import dev.coderats.backend.web.dto.GroupWithDetailsResponse;
 
 import java.util.List;
 import java.util.UUID;
