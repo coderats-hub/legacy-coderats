@@ -1,9 +1,7 @@
 package dev.coderats.backend.github;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -19,69 +17,63 @@ public class GitHubOAuthService {
   @Value("${github.oauth.redirect-uri}")
   private String redirectUri;
 
-  private final RestClient rest = RestClient.builder()
-      .baseUrl("https://github.com")
-      .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-      .build();
+  private final RestClient http = RestClient.create();
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record TokenResponse(
-      @JsonProperty("access_token") String accessToken,
-      String scope,
-      @JsonProperty("token_type") String tokenType,
-      String error,
-      @JsonProperty("error_description") String errorDescription
-  ) {}
+  public record TokenResponse(String access_token, String scope, String token_type, String error, String error_description) {}
+  public record GitHubUser(Long id, String login, String name, String avatar_url, String email) {}
+  public record GitHubEmail(String email, boolean primary, boolean verified, String visibility) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record GitHubUser(
-      Long id,
-      String login,
-      String name,
-      @JsonProperty("avatar_url") String avatarUrl,
-      String email
-  ) {}
+  public String buildAuthorizeUrl(String state) {
+    return "https://github.com/login/oauth/authorize"
+      + "?client_id=" + clientId
+      + "&redirect_uri=" + redirectUri
+      + "&scope=read:user%20user:email"
+      + "&state=" + state;
+  }
 
   public String exchangeCodeForToken(String code) {
-    var body = """
-      {
-        "client_id":"%s",
-        "client_secret":"%s",
-        "code":"%s",
-        "redirect_uri":"%s"
-      }
-      """.formatted(clientId, clientSecret, code, redirectUri);
+    TokenResponse res = http.post()
+      .uri("https://github.com/login/oauth/access_token")
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .body(java.util.Map.of(
+        "client_id", clientId,
+        "client_secret", clientSecret,
+        "code", code,
+        "redirect_uri", redirectUri
+      ))
+      .retrieve()
+      .body(TokenResponse.class);
 
-    var resp = rest.post()
-        .uri("/login/oauth/access_token")
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(body)
-        .retrieve()
-        .toEntity(TokenResponse.class);
-
-    var tr = resp.getBody();
-    if (tr == null || tr.accessToken() == null) {
-      var msg = (tr != null && tr.error() != null)
-          ? "Falha ao obter access_token do GitHub: %s - %s".formatted(tr.error(), tr.errorDescription())
-          : "Falha ao obter access_token do GitHub (resposta vazia)";
-      throw new RuntimeException(msg);
+    if (res == null || res.access_token() == null) {
+      String msg = (res != null && res.error() != null)
+        ? res.error() + " - " + res.error_description()
+        : "sem corpo";
+      throw new RuntimeException("Falha ao obter access_token do GitHub: " + msg);
     }
-    return tr.accessToken();
+    return res.access_token();
   }
 
   public GitHubUser getUser(String accessToken) {
-    var api = RestClient.builder()
-        .baseUrl("https://api.github.com")
-        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-        .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-        .build();
+    GitHubUser u = http.get()
+      .uri("https://api.github.com/user")
+      .header("Authorization", "Bearer " + accessToken)
+      .accept(MediaType.APPLICATION_JSON)
+      .retrieve()
+      .body(GitHubUser.class);
+    if (u == null) throw new RuntimeException("Falha ao buscar dados do usuário no GitHub");
+    return u;
+  }
 
-    // GET /user
-    var resp = api.get().uri("/user").retrieve().toEntity(GitHubUser.class);
-    var gh = resp.getBody();
-    if (gh == null) {
-      throw new RuntimeException("Falha ao buscar dados do usuário no GitHub");
-    }
-    return gh;
+  public String getPrimaryEmail(String accessToken) {
+    GitHubEmail[] emails = http.get()
+      .uri("https://api.github.com/user/emails")
+      .header("Authorization", "Bearer " + accessToken)
+      .accept(MediaType.APPLICATION_JSON)
+      .retrieve()
+      .body(GitHubEmail[].class);
+    if (emails == null || emails.length == 0) return null;
+    for (GitHubEmail e : emails) if (e.primary) return e.email;
+    return emails[0].email;
   }
 }
