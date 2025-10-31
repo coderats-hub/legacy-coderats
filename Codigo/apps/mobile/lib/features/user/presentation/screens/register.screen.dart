@@ -3,6 +3,7 @@ import 'login.screen.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'onboarding.screen.dart';
+import '../widgets/task_description_modal.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -227,11 +228,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             expanded: false,
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (context) => const OnboardingStartScreen(),
-                                  ),
-                                  (route) => false,
+                                // Temporarily show the modal so the designer can preview it
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => TaskDescriptionModal(parentContext: context),
                                 );
                               }
                             },
