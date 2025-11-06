@@ -139,31 +139,3 @@ jobs:
           echo "🚧 Publicando versão WEB em STAGING (S3_BUCKET_WEB_STAGING)"
           aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_STAGING }} --delete
 
-  # ------------------------------------------------------------
-  # 4. Deploy Backend to EC2 (ASG)
-  # ------------------------------------------------------------
-  deploy-backend:
-    runs-on: ubuntu-latest
-    needs: backend
-    if: github.ref_name == 'main' || github.ref_name == 'development'
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ vars.AWS_REGION }}
-
-      - name: Trigger ASG refresh
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            ASG_NAME="${{ vars.ASG_NAME_PROD }}"
-            echo "🚀 Atualizando ambiente de PRODUÇÃO: $ASG_NAME"
-          else
-            ASG_NAME="${{ vars.ASG_NAME_STAGING }}"
-            echo "🚧 Atualizando ambiente de STAGING: $ASG_NAME"
-          fi
-
-          aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
