@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
+// image picking removed; foundation/typed_data imports no longer required
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
@@ -20,8 +18,7 @@ class GroupEditScreen extends StatefulWidget {
 class _GroupEditScreenState extends State<GroupEditScreen> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descCtrl;
-  XFile? _pickedImage;
-  Uint8List? _pickedImageBytes;
+  // Image selection disabled: no picked image stored
 
   @override
   void initState() {
@@ -37,47 +34,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     super.dispose();
   }
 
-  void _pickImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (source == null) return;
-    try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _pickedImage = file;
-        _pickedImageBytes = bytes;
-      });
-    } catch (e) {
-    }
-  }
+  // Image selection removed: placeholder banner only
 
   void _save() {
     // TODO: persistir alterações (aqui apenas volta)
@@ -118,43 +75,38 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
               // Banner com gradiente ou imagem
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      height: 120,
-                      color: AppColors.accent,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: <Widget>[
-                          _pickedImageBytes == null
-                              ? Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFF9A24DD), Color(0xFF5A1A9A)],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                  ),
-                                )
-                              : Image.memory(_pickedImageBytes!, fit: BoxFit.cover, width: double.infinity),
-                          Center(
-                            child: Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.transparent,
-                                border: Border.all(color: Colors.white70, width: 1.6),
-                              ),
-                              child: const Center(
-                                child: Icon(Icons.camera_alt_outlined, color: Colors.white, size: 28),
-                              ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    height: 120,
+                    color: AppColors.accent,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF9A24DD), Color(0xFF5A1A9A)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        Center(
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.transparent,
+                              border: Border.all(color: Colors.white70, width: 1.6),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.camera_alt_outlined, color: Colors.white, size: 28),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

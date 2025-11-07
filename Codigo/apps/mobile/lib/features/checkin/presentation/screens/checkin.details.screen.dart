@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 import '../widgets/shared_widgets.dart';
 
 class CommitCheckinScreen extends StatefulWidget {
@@ -24,7 +22,6 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   ];
   
   int _selectedCommitsCount = 0;
-  Uint8List? _pickedImageBytes;
 
   @override
   void initState() {
@@ -51,47 +48,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     });
   }
 
-  void _selectImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (source == null) return;
-    try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _pickedImageBytes = bytes;
-      });
-    } catch (e) {
-      // ignore
-    }
-  }
+  // Image upload removed: placeholder UI only (no image picker)
 
   @override
   Widget build(BuildContext context) {
@@ -159,44 +116,31 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   }
 
   Widget _buildImageUploadSection() {
-    return GestureDetector(
-      onTap: _selectImage,
-      child: Container(
-        width: double.infinity,
-        height: 120,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppCorners.md),
-          border: Border.all(
-            color: AppColors.border.withOpacity(0.2),
-            width: 1,
-          ),
+    return Container(
+      width: double.infinity,
+      height: 120,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppCorners.md),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.2),
+          width: 1,
         ),
-        child: _pickedImageBytes != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(AppCorners.md),
-                child: Image.memory(
-                  _pickedImageBytes!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.image_outlined,
-                    size: 32,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Adicione uma foto a sua atividade',
-                    style: AppTextStyles.inputHint,
-                  ),
-                ],
-              ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.image_outlined,
+            size: 32,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Upload de imagem desativado',
+            style: AppTextStyles.inputHint,
+          ),
+        ],
       ),
     );
   }

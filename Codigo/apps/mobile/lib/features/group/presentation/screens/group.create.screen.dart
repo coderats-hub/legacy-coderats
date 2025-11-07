@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
 import 'group.scoring.screen.dart';
@@ -22,7 +20,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   
   DateTime? _startDate;
   DateTime? _endDate;
-  Uint8List? _pickedImageBytes;
 
   @override
   void dispose() {
@@ -78,47 +75,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
-  void _selectCoverImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (source == null) return;
-    try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _pickedImageBytes = bytes;
-      });
-    } catch (e) {
-      // ignore
-    }
-  }
+  // Image upload removed: placeholder only
 
   void _continue() {
     if (_formKey.currentState!.validate()) {
@@ -246,43 +203,31 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        GestureDetector(
-          onTap: _selectCoverImage,
-          child: Container(
-            height: 120,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppCorners.md),
-              border: Border.all(
-                color: AppColors.border,
-                style: BorderStyle.solid,
-              ),
+        Container(
+          height: 120,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppCorners.md),
+            border: Border.all(
+              color: AppColors.border,
+              style: BorderStyle.solid,
             ),
-            child: _pickedImageBytes != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(AppCorners.md),
-                    child: Image.memory(
-                      _pickedImageBytes!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.image_outlined,
-                        color: AppColors.textSecondary,
-                        size: 32,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Toque para adicionar imagem',
-                        style: AppTextStyles.inputHint,
-                      ),
-                    ],
-                  ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.image_outlined,
+                color: AppColors.textSecondary,
+                size: 32,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Upload de imagem desativado',
+                style: AppTextStyles.inputHint,
+              ),
+            ],
           ),
         ),
       ],
