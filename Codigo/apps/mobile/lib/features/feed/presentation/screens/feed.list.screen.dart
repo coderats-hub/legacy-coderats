@@ -9,6 +9,8 @@ import 'package:app/shared/theme/app_theme.dart';
 import '../../domain/feed.dart';
 import '../../data/feed.repository.dart';
 import '../widgets/feed.card.dart';
+import 'package:app/features/group/presentation/screens/group.list.screen.dart';
+import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 
 class FeedListScreen extends StatefulWidget {
   const FeedListScreen({Key? key}) : super(key: key);
@@ -55,8 +57,11 @@ class _FeedListScreenState extends State<FeedListScreen> {
     _page++;
     if (mounted) {
       setState(() {
-        _items.addAll(newItems);
-        _hasMore = newItems.length == _pageSize; // simulation
+        // deduplicate by id to avoid repeating same items
+        final existingIds = _items.map((e) => e.id).toSet();
+        final uniqueNew = newItems.where((it) => !existingIds.contains(it.id)).toList();
+        _items.addAll(uniqueNew);
+        _hasMore = newItems.length == _pageSize;
         _loading = false;
       });
     }
@@ -66,24 +71,6 @@ class _FeedListScreenState extends State<FeedListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppHeader(
-        title: 'Home',
-        actions: [
-          IconButton(
-            tooltip: 'Alternar recomendações',
-            icon: Icon(_useRecommendations ? Icons.star : Icons.star_border),
-            onPressed: () async {
-              setState(() {
-                _useRecommendations = !_useRecommendations;
-                _items.clear();
-                _page = 0;
-                _hasMore = true;
-              });
-              await _loadMore();
-            },
-          )
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {
@@ -95,7 +82,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
         },
         child: ListView.builder(
           controller: _ctrl,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.sm),
           itemCount: _items.length + (_loading ? 1 : 0),
           itemBuilder: (context, index) {
             if (index >= _items.length) {
@@ -109,36 +96,23 @@ class _FeedListScreenState extends State<FeedListScreen> {
           },
         ),
       ),
-      floatingActionButton: AppFAB(
-        onPressed: () {
-          // placeholder: abrir tela de novo check-in
-        },
-      ),
+      // FAB removed as requested
       bottomNavigationBar: AppNavbar(
         currentIndex: 0,
         onTap: (i) {
           if (i == 0) {
             // already here
           } else if (i == 1) {
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const _GroupsPlaceholder()));
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const GroupsPage()),
+            );
           } else if (i == 2) {
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => PrivateProfileScreenPlaceholder()));
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
+            );
           }
         },
       ),
     );
   }
-}
-
-// Placeholders used for navigation targets to avoid importing heavy files here.
-// They match the existing app routing in other screens which use pushReplacement.
-class _GroupsPlaceholder extends StatelessWidget {
-  const _GroupsPlaceholder();
-  @override
-  Widget build(BuildContext context) => Scaffold(body: Center(child: Text('Grupos')));
-}
-
-class PrivateProfileScreenPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(body: Center(child: Text('Perfil')));
 }

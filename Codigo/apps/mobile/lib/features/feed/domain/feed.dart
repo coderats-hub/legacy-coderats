@@ -13,7 +13,8 @@ class FeedItem {
   final String title;
   final String description;
   final DateTime createdAt;
-  final String author;
+  final String groupName;
+  final String userName;
   final int likes;
   final int comments;
   final int points;
@@ -27,7 +28,8 @@ class FeedItem {
     required this.title,
     required this.description,
     required this.createdAt,
-    required this.author,
+    required this.groupName,
+    required this.userName,
     this.likes = 0,
     this.comments = 0,
     this.points = 0,

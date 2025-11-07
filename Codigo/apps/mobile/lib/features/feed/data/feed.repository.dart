@@ -23,12 +23,13 @@ class FeedRepository {
 
       list.add(FeedItem(
         id: 'feed_$idx',
-        title: hasGithub ? 'Visualizar atividade Github' : 'Título da Atividade',
+  title: hasGithub ? 'titulo atividade Github' : 'Título da Atividade',
         description: hasGithub
             ? 'Descrição curta da atividade integrada com Github.'
             : 'Descrição da atividade aqui. Lorem ipsum dolor sit amet, consectetur.',
         createdAt: now,
-        author: (idx % 2 == 0) ? 'Code Rats' : 'Outro Usuário',
+        groupName: (idx % 2 == 0) ? 'Code Rats' : 'Outro Usuário',
+        userName: 'Nome',
         likes: (idx * 7) % 100,
         comments: (idx * 3) % 20,
         points: (idx % 5) + 1,

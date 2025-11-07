@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'register.screen.dart';
+import 'package:app/features/feed/presentation/screens/feed.list.screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -175,11 +176,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.accentLight,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
+                              // Show success and navigate to Feed as app home
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Login realizado com sucesso!'),
                                   backgroundColor: AppColors.accent,
                                 ),
+                              );
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (ctx) => const FeedListScreen()),
+                                (route) => false,
                               );
                             }
                           },

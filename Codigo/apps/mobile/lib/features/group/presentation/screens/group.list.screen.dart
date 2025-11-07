@@ -1,4 +1,5 @@
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
+import 'package:app/features/feed/presentation/screens/feed.list.screen.dart';
 import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/widgets/card.group.dart';
 import 'package:app/features/group/presentation/widgets/banner.group.dart' as banner;
@@ -76,8 +77,8 @@ class GroupsPage extends StatelessWidget {
         currentIndex: 1,
         onTap: (i) {
           if (i == 0) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de Início não implementada')),
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const FeedListScreen()),
             );
           } else if (i == 1) {
             // já está na tela de grupos

@@ -13,10 +13,7 @@ class FeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Two visual variants: github (hero card with gradient + button) and regular
-    if (item.hasGithub) {
-      return _GithubCard(item: item);
-    }
+    if (item.hasGithub) return _GithubCard(item: item);
     return _RegularCard(item: item);
   }
 }
@@ -28,86 +25,97 @@ class _GithubCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppCorners.md),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // big purple hero
-            Container(
-              height: 160,
-              margin: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppCorners.lg),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6A00F4), Color(0xFF9B22FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(radius: 16, backgroundColor: AppColors.border),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+          Text(item.groupName, style: AppTextStyles.title.copyWith(fontSize: 14)),
+        const SizedBox(height: 2),
+        Text(item.userName, style: AppTextStyles.subtitle.copyWith(fontSize: 12, color: AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+              Text('${item.points} pts', style: AppTextStyles.subtitle),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            height: 220,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppCorners.lg),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6A00F4), Color(0xFF9B22FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Abrir: ${item.githubUrl}')));
+                },
+                child: Container(
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A0B3C).withOpacity(0.9),
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppCorners.lg)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text('Visualizar atividade Github', textAlign: TextAlign.center, style: AppTextStyles.button),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.sm),
+                        child: Image.asset('assets/icons/github.png', width: 20, height: 20, color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(radius: 16, backgroundColor: AppColors.border),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.author, style: AppTextStyles.title.copyWith(fontSize: 14)),
-                            const SizedBox(height: 2),
-                            Text(item.title, style: AppTextStyles.subtitle.copyWith(fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      Text('${item.points} pts', style: AppTextStyles.subtitle),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton.icon(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.white24,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          onPressed: () {
-                            // abrir URL externamente em app real; aqui apenas placeholder
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Abrir: \\${item.githubUrl}')),
-                            );
-                          },
-                          icon: const Icon(Icons.open_in_new, size: 16),
-                          label: const Text('Visualizar atividade Github'),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Icon(Icons.favorite_border, color: AppColors.textSecondary),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                      const SizedBox(width: AppSpacing.md),
-                      Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-              ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Icon(Icons.favorite_border, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+              const SizedBox(width: AppSpacing.md),
+              Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+              const Spacer(),
+              Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // show title + description in one line (like regular check-ins)
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: item.title, style: AppTextStyles.inputLabel.copyWith(fontSize: 14)),
+                const TextSpan(text: ' '),
+                TextSpan(text: item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text('Há 2 dias', style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(color: AppColors.border),
+        ],
       ),
     );
   }
@@ -120,42 +128,52 @@ class _RegularCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppCorners.md),
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(radius: 18, backgroundColor: AppColors.border),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, style: AppTextStyles.title.copyWith(fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Text(item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.favorite_border, color: AppColors.textSecondary, size: 18),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                      const SizedBox(width: AppSpacing.md),
-                      Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 18),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                    ],
-                  ),
-                ],
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const CircleAvatar(radius: 16, backgroundColor: AppColors.border),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                            Text(item.groupName, style: AppTextStyles.title.copyWith(fontSize: 14)),
+                            const SizedBox(height: 2),
+                            Text(item.userName, style: AppTextStyles.subtitle.copyWith(fontSize: 12, color: AppColors.textSecondary)),
+                  ],
+                ),
               ),
+              Text('${item.points} pts', style: AppTextStyles.subtitle),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: item.title, style: AppTextStyles.inputLabel.copyWith(fontSize: 14)),
+                TextSpan(text: ' '),
+                TextSpan(text: item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+              ],
             ),
-            Text('${item.points} pnts', style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Icon(Icons.favorite_border, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+              const SizedBox(width: AppSpacing.md),
+              Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSpacing.xs),
+              Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(color: AppColors.border),
+        ],
       ),
     );
   }
