@@ -15,12 +15,12 @@ import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.domain.GroupParticipant;
 import dev.coderats.backend.domain.UserSummary;
-import dev.coderats.backend.repository.GroupParticipantRepository;
-import dev.coderats.backend.repository.GroupRepository;
-import dev.coderats.backend.repository.UserRepository;
-import dev.coderats.backend.web.dto.GroupCreateRequest;
-import dev.coderats.backend.web.dto.GroupUpdateRequest;
-import dev.coderats.backend.web.dto.GroupWithDetailsResponse;
+import dev.coderats.backend.infra.repository.GroupParticipantRepository;
+import dev.coderats.backend.infra.repository.GroupRepository;
+import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.web.dto.request.GroupCreateRequest;
+import dev.coderats.backend.web.dto.request.GroupUpdateRequest;
+import dev.coderats.backend.web.dto.response.GroupWithDetailsResponse;
 
 @Service
 public class GroupService {
