@@ -10,7 +10,7 @@ class ConnectivityService {
   ConnectivityService({Uri? probe})
       : probeUri = probe ??
             Uri.parse(
-              'https://virtserver.swaggerhub.com/pucminas-1a5/raquelCodeRats/1/users',
+              'https://virtserver.swaggerhub.com/pucminas-1a5/CodeRatsAPIFinal/1.0/feed',
             );
 
   Future<bool> isOnline() async {
