@@ -23,6 +23,7 @@ import 'package:app/features/user/presentation/screens/code_exchange.screen.dart
 import 'package:app/features/user/presentation/screens/register.screen.dart';
 import 'package:app/features/user/presentation/screens/home.screen.dart';
 import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
+import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -50,18 +51,15 @@ class App extends StatelessWidget {
       
       // Sistema de rotas nomeadas para navegação
       routes: {
-        '/started': (_) => const OnboardingStartScreen(),  // Onboarding
-        '/join-group': (_) => const JoinGroupScreen(),     // Entrar em grupo
-        '/group-ranking': (_) => GroupRankingScreen(),     // Ranking do grupo
-        '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'), // Detalhes do grupo
-        
-        // Rotas de autenticação
-        // '/register': (_) => const RegisterScreen(),
-        /* '/login': (_) => const LoginScreen(), */
-        
-        '/groups':  (_) => const GroupsPage(),             // Lista de grupos
-        '/profile': (_) => PrivateProfileScreen(),         // Perfil privado
-        '/code-exchange': (_) => const CodeExchangeScreen(), // Troca de código
+        '/join-group': (_) => const JoinGroupScreen(),
+        '/group-ranking': (_) => GroupRankingScreen(),
+        '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
+        '/register': (_) => const RegisterScreen(),
+        '/groups': (_) => const GroupsPage(),
+        '/profile': (_) => PrivateProfileScreen(),
+        '/started': (_) => const CodeExchangeScreen(),
+        '/onboarding': (_) => const OnboardingStartScreen(),
+        '/create-group': (_) => const CreateGroupScreen(),
       },
     );
   }

@@ -6,22 +6,22 @@ import java.time.ZoneOffset;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import dev.coderats.backend.config.JwtService;
 import dev.coderats.backend.domain.User;
-import dev.coderats.backend.github.GitHubOAuthService;
-import dev.coderats.backend.repository.UserRepository;
-import dev.coderats.backend.web.dto.AuthResponse;
-import dev.coderats.backend.web.dto.PrivateUserResponse;
+import dev.coderats.backend.infra.http.github.GitHubOAuthClient;
+import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.infra.security.JwtService;
+import dev.coderats.backend.web.dto.response.AuthResponse;
+import dev.coderats.backend.web.dto.response.PrivateUserResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class AuthService {
-  private final GitHubOAuthService gh;
+  private final GitHubOAuthClient gh;
   private final UserRepository users;
   private final JwtService jwt;
 
-  public AuthService(GitHubOAuthService gh, UserRepository users, JwtService jwt) {
+  public AuthService(GitHubOAuthClient gh, UserRepository users, JwtService jwt) {
     this.gh = gh; this.users = users; this.jwt = jwt;
   }
 

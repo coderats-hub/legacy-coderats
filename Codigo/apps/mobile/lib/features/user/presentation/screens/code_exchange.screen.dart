@@ -1,7 +1,8 @@
 // lib/features/user/presentation/screens/code_exchange.screen.dart
 
 import 'package:app/features/user/data/services/auth.service.dart'; 
-import 'package:app/features/user/presentation/screens/home.screen.dart'; 
+import 'package:app/features/user/presentation/screens/home.screen.dart';
+import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class _CodeExchangeScreenState extends State<CodeExchangeScreen> {
 
       if (success && mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const TelaInicio()),
+          MaterialPageRoute(builder: (context) => const OnboardingStartScreen()),
           (route) => false,
         );
       }

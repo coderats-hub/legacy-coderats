@@ -16,6 +16,7 @@ Em vez de estudar sozinho, os usuários participam de **desafios em grupo**, com
 
 ---
 
+
 ## 🛠 Stack Tecnológica
 
 | Camada         | Tecnologia                    |

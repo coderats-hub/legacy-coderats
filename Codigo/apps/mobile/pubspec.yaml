@@ -30,21 +30,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  table_calendar: ^3.0.0
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # === UI & Calendar ===
+  table_calendar: ^3.0.0
   cupertino_icons: ^1.0.2
   google_fonts: ^4.0.0
   image_picker: ^0.8.7+4
 
-  # Added for Dart 3.x compatibility (used by transitive packages)
+  # === Network & HTTP ===
+  connectivity_plus: ^6.0.3
+  http: ^1.2.1
+
+  # === Storage & Database ===
+  sqflite: ^2.3.3
+  shared_preferences: ^2.2.3
+
+  # === Utils & Tools ===
+  uuid: ^4.4.0
+  path: ^1.9.0
+  flutter_dotenv: ^5.1.0
+  url_launcher: ^6.2.6
+
+  # === Platform Compatibility (Dart 3.x) ===
   win32: ^5.5.1
   ffi: ^2.1.0
-  flutter_dotenv: ^5.1.0 
-  url_launcher: ^6.2.6
-  http: ^1.2.1
-  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
