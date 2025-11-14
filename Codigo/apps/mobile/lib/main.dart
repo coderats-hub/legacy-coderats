@@ -1,26 +1,9 @@
-/**
- * ARQUIVO PRINCIPAL DA APLICAÇÃO CODE RATS
- * 
- * Este é o ponto de entrada da aplicação Flutter.
- * Define a configuração global do app incluindo:
- * - Tema da aplicação (escuro)
- * - Roteamento entre telas
- * - Configurações do MaterialApp
- * - Tela inicial (TelaInicio)
- * 
- * Funcionalidades:
- * - Sistema de navegação por rotas nomeadas
- * - Tema customizado Code Rats
- * - Integração com todas as features do app
- */
-
 import 'package:app/features/group/presentation/screens/group.ranking.screen.dart';
 import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 import 'package:app/features/group/presentation/screens/group.join.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/user/presentation/screens/code_exchange.screen.dart';
-import 'package:app/features/user/presentation/screens/register.screen.dart';
 import 'package:app/features/user/presentation/screens/home.screen.dart';
 import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
@@ -54,7 +37,6 @@ class App extends StatelessWidget {
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
         '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
-        '/register': (_) => const RegisterScreen(),
         '/groups': (_) => const GroupsPage(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),

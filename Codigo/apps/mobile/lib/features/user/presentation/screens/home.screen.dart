@@ -1,31 +1,54 @@
-/**
- * TELA INICIAL / SPLASH SCREEN
- * 
- * Esta é a primeira tela que o usuário vê ao abrir a aplicação.
- * Funciona como uma splash screen e tela de login inicial.
- * 
- * Onde é usada:
- * - Definida como 'home' no MaterialApp (main.dart)
- * - Primeira tela carregada na inicialização da app
- * 
- * Funcionalidades:
- * - Exibe o logo do Code Rats
- * - Botão "Entrar com GitHub" para autenticação
- * - Navegação para onboarding após login
- * - Design responsivo com espaçamentos proporcionais
- * - Rodapé "Powered by Code Rats"
- * 
- * Navegação:
- * - Vai para: OnboardingStartScreen (após login GitHub)
- */
-
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'onboarding.screen.dart';
+import 'code_exchange.screen.dart';
 
 // Tela inicial da aplicação - splash/welcome screen com login GitHub
-class TelaInicio extends StatelessWidget {
+class TelaInicio extends StatefulWidget {
   const TelaInicio({super.key});
+
+  @override
+  State<TelaInicio> createState() => _TelaInicioState();
+}
+
+class _TelaInicioState extends State<TelaInicio> {
+  
+  Future<void> _launchGitHubLogin() async {
+    final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+    final String githubLoginUrl = '$baseUrl/auth/github/login';
+    final Uri uri = Uri.parse(githubLoginUrl);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CodeExchangeScreen(),
+            ),
+          );
+        }
+      } else {
+        _showErrorSnackBar('Não foi possível abrir o link.');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Erro ao tentar abrir o link: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +56,11 @@ class TelaInicio extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl), // Margens laterais
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl), 
           child: Column(
             children: [
-              // Espaço superior proporcional
               const Spacer(flex: 2),
               
-              // Logo principal do Code Rats
               Image.asset(
                 'assets/images/logo.png',
                 width: 350,
@@ -53,13 +74,8 @@ class TelaInicio extends StatelessWidget {
                 height: 56,             // Altura fixa do botão
                 child: OutlinedButton(
                   onPressed: () {
-                    // Navega para onboarding removendo todas as telas anteriores
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const OnboardingStartScreen(),
-                      ),
-                      (route) => false, // Remove todas as rotas anteriores
-                    );
+                    // Executa o login com GitHub
+                    _launchGitHubLogin();
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(

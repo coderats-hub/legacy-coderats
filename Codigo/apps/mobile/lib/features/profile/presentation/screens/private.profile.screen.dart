@@ -158,17 +158,17 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       _PrivateActions(),
-                      const SizedBox(height: 12),
-                      _CalendarCard(
-                        currentDate: _currentDate,
-                        markedDateMap: _markedDateMap,
-                      ),
-                      const SizedBox(height: 16),
-                      _BadgesRow(
-                        showSeeAll: false,
-                      ),
-                      const SizedBox(height: 16),
-                      _GroupsInCommon(),
+                      // const SizedBox(height: 12),
+                      // _CalendarCard(
+                      //   currentDate: _currentDate,
+                      //   markedDateMap: _markedDateMap,
+                      // ),
+                      // const SizedBox(height: 16),
+                      // _BadgesRow(
+                      //   showSeeAll: false,
+                      // ),
+                      // const SizedBox(height: 16),
+                      // _GroupsInCommon(),
                     ],
                   ),
                 ),

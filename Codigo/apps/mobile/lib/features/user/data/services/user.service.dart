@@ -33,34 +33,15 @@ class UserService {
         // Token inválido - remove do storage
         await _storageService.deleteToken();
         throw Exception('Token inválido');
+      } else if (response.statusCode == 404) {
+        throw Exception('Usuário não encontrado');
       } else {
         throw Exception('Erro ao buscar dados do usuário: ${response.statusCode}');
       }
     } catch (e) {
       print('Erro no UserService.getCurrentUser: $e');
-      
-      // Fallback: Retorna dados mockados se a API falhar
-      if (e.toString().contains('Token não encontrado')) {
-        rethrow; // Re-throw se não há token
-      }
-      
-      // Para outros erros (rede, etc), retorna um usuário mock
-      return _getMockUser();
+      rethrow; // Re-throw todos os erros para tratamento na UI
     }
-  }
-
-  /// Retorna dados mockados para desenvolvimento/fallback
-  User _getMockUser() {
-    return User(
-      id: 'mock-user-id',
-      name: 'Usuário de Desenvolvimento',
-      email: 'dev@coderats.com',
-      image: 'https://avatars.githubusercontent.com/u/1?v=4',
-      githubUser: 'devuser',
-      githubId: 12345,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      updatedAt: DateTime.now(),
-    );
   }
 
   /// Busca usuário por ID específico
