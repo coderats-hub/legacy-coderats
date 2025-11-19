@@ -3,16 +3,8 @@ import 'package:http/http.dart' as http;
 import 'local_database.dart';
 
 /// Serviço responsável por conversar com a API HTTP.
-///
-/// IMPORTANTE:
-/// - Mantém as mesmas funções públicas usadas pelo restante do app:
-///   * fetchGroupsForUser(String userId)
-///   * fetchGroupDetails(String groupId)
-///   * fetchUsers()
-/// - Apenas os endpoints/formatos foram adaptados para a nova API
-///   CodeRatsAPIFinal/1.0.
 const String _baseUrl =
-    'https://virtserver.swaggerhub.com/pucminas-1a5/CodeRatsAPIFinal/1.0';
+    'database-coderats-dev.c54wg8cy4hhf.us-east-2.rds.amazonaws.com';
 
 /// Lista os grupos do usuário autenticado.
 ///
