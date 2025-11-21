@@ -4,8 +4,8 @@ import 'package:app/features/profile/presentation/screens/public.profile.screen.
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
-import 'package:app/features/group/presentation/screens/group.edit.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:app/features/feed/presentation/screens/feed.list.screen.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 
@@ -256,8 +256,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         currentIndex: 1,
         onTap: (i) {
           if (i == 0) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de Início não implementada')),
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const FeedListScreen()),
             );
           } else if (i == 1) {
             // já está na tela de grupos
