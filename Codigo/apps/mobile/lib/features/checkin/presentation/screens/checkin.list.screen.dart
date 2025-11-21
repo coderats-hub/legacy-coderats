@@ -1,3 +1,20 @@
+/**
+ * TELA DE LISTA DE CHECK-INS
+ * 
+ * Esta tela exibe uma lista de check-ins (atividades) dos usuários do grupo.
+ * Mostra cards com informações de cada check-in incluindo:
+ * - Avatar e nome do usuário com pontuação
+ * - Card visual colorido representando a atividade
+ * - Título, descrição e tempo da atividade
+ * - Link para visualizar no GitHub
+ * 
+ * Funcionalidades:
+ * - Lista scrollável de check-ins
+ * - Botão para criar novo check-in
+ * - Estados de loading, erro e lista vazia
+ * - Refresh manual dos dados
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
@@ -6,8 +23,9 @@ import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/comments.modal.dart';
 
-// A tela foi convertida para StatefulWidget para gerenciar o próprio estado
+// Tela principal de lista de check-ins - StatefulWidget para gerenciar estados da UI
 class CheckinScreen extends StatefulWidget {
   const CheckinScreen({super.key});
 
@@ -15,13 +33,14 @@ class CheckinScreen extends StatefulWidget {
   State<CheckinScreen> createState() => _CheckinScreenState();
 }
 
+// Estado da tela de check-ins - controla loading, dados e erros
 class _CheckinScreenState extends State<CheckinScreen> {
-  // Variáveis para controlar o estado da UI
-  bool _isLoading = true;
-  Object? _error;
-  List<Checkin> _checkins = [];
+  // Variáveis para controlar os diferentes estados da UI
+  bool _isLoading = true;     // Estado de carregamento
+  Object? _error;             // Armazena erro caso ocorra
+  List<Checkin> _checkins = []; // Lista de check-ins carregados
 
-  // Instância direta do repositório
+  // Instância do repositório para buscar dados
   final _repository = CheckinRepository();
 
   // initState é chamado uma vez quando o widget é criado
@@ -106,8 +125,9 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
 
 
-  // Método auxiliar para decidir o que mostrar no corpo da tela
+  // Constrói o corpo da tela baseado no estado atual
   Widget _buildBody() {
+    // Mostra loading spinner durante carregamento
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -116,17 +136,21 @@ class _CheckinScreenState extends State<CheckinScreen> {
       );
     }
     
+    // Mostra tela de erro se houver problema
     if (_error != null) {
       return _buildErrorView();
     }
     
+    // Mostra tela vazia se não há check-ins
     if (_checkins.isEmpty) {
       return _buildEmptyView();
     }
     
+    // Mostra a lista de check-ins
     return _buildCheckinsList();
   }
 
+  // Constrói a tela de erro com botão para tentar novamente
   Widget _buildErrorView() {
     return Center(
       child: Padding(
@@ -161,6 +185,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
+  // Constrói a tela quando não há check-ins para mostrar
   Widget _buildEmptyView() {
     return Center(
       child: Padding(
@@ -168,23 +193,27 @@ class _CheckinScreenState extends State<CheckinScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Ícone ilustrativo
             Icon(
               Icons.check_circle_outline,
               size: 64,
               color: const Color(0xFF2BB6A5).withOpacity(0.7),
             ),
             const SizedBox(height: 16),
+            // Título da mensagem
             Text(
               'Nenhum check-in encontrado',
               style: SharedTheme.buildDarkTheme().textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
+            // Descrição explicativa
             Text(
               'Você ainda não possui check-ins registrados.',
               style: SharedTheme.buildDarkTheme().textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
+            // Botão para atualizar
             SharedStyledButton(
               text: 'Atualizar',
               onPressed: _loadCheckins,
@@ -195,6 +224,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
+  // Constrói a lista scrollável de check-ins (dados mockados por enquanto)
   Widget _buildCheckinsList() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -240,6 +270,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
 // ======== WIDGETS CUSTOMIZADOS ========
 
+// Widget para rótulos de seção (não usado atualmente, mas disponível)
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   final String text;
@@ -342,6 +373,7 @@ class _SectionLabel extends StatelessWidget {
 
 
 
+// Widget que representa um card de check-in/atividade individual
 class _PostCard extends StatelessWidget {
   const _PostCard({
     required this.username,
@@ -357,17 +389,18 @@ class _PostCard extends StatelessWidget {
     required this.githubText,
   });
 
-  final String username;
-  final String title;
-  final String description;
-  final String timeAgo;
-  final Color color;
-  final bool isGradient;
-  final List<Color>? gradientColors;
-  final int likes;
-  final int comments;
-  final int points;
-  final String githubText;
+  // Propriedades do card
+  final String username;         // Nome do usuário
+  final String title;           // Título da atividade
+  final String description;     // Descrição da atividade
+  final String timeAgo;         // Tempo relativo (ex: "Há 2 dias")
+  final Color color;           // Cor de fundo do card
+  final bool isGradient;       // Se deve usar gradiente
+  final List<Color>? gradientColors; // Cores do gradiente
+  final int likes;             // Número de likes (comentado no UI)
+  final int comments;          // Número de comentários (comentado no UI)
+  final int points;            // Pontos ganhos pela atividade
+  final String githubText;     // Texto do link do GitHub
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +421,11 @@ class _PostCard extends StatelessWidget {
               Text(
                 username,
                 style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w500),
+              ),
+              const Spacer(),
+              Text(
+                '$points pnts',
+                style: AppTextStyles.inputHint,
               ),
             ],
           ),
@@ -461,7 +499,7 @@ class _PostCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Stats (likes, comentários, pontos)
+              /*  Stats (likes, comentários, pontos)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
@@ -473,7 +511,21 @@ class _PostCard extends StatelessWidget {
                       style: AppTextStyles.inputHint,
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    IconButton(
+                      onPressed: () {
+                        final sample = [
+                          CommentItem(author: 'Gustavo', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.'),
+                          CommentItem(author: 'Você', timeAgo: '7 min', text: 'Lorem ipsum dolor sit amet.', canDelete: true),
+                        ];
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => CommentsModal(title: 'Comentários', comments: sample),
+                        );
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline, size: 24, color: AppColors.textSecondary),
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       comments.toString(),
@@ -487,7 +539,8 @@ class _PostCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm), 
+              */
               // Título e descrição lado a lado
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),

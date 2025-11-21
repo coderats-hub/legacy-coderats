@@ -1,7 +1,19 @@
+/**
+ * Widgets Compartilhados para Check-ins
+ * 
+ * Componentes reutilizáveis para telas de check-in:
+ * - SharedTheme: Tema escuro personalizado (USADO)
+ * - SharedStyledButton: Botões estilizados (USADO)
+ * - SharedHeader: Header com título e botão de voltar/refresh (NÃO USADO - comentado)
+ * - SharedBottomNav: Navegação inferior com 3 abas (NÃO USADO - comentado)
+ */
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:app/shared/theme/app_theme.dart';
 
-/// Widget compartilhado para o header das telas
+/// Widget compartilhado para o header das telas - NÃO UTILIZADO
+/* 
 class SharedHeader extends StatelessWidget {
   const SharedHeader({
     super.key,
@@ -17,14 +29,15 @@ class SharedHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      // Aumenta o espaçamento vertical para afastar o header do conteúdo
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
           _BackButton(color: Colors.white.withOpacity(0.92)),
           const SizedBox(width: 8),
           Text(
             title,
-            style: SharedTheme.buildDarkTheme().textTheme.titleLarge,
+            style: AppTextStyles.headerTitle,
           ),
           const Spacer(),
           if (showRefreshButton && onRefresh != null)
@@ -34,8 +47,10 @@ class SharedHeader extends StatelessWidget {
     );
   }
 }
+*/
 
-/// Widget compartilhado para o bottom navigation
+/// Widget compartilhado para o bottom navigation - NÃO UTILIZADO
+/* 
 class SharedBottomNav extends StatefulWidget {
   const SharedBottomNav({super.key, this.currentIndex = 0});
   
@@ -87,8 +102,9 @@ class _SharedBottomNavState extends State<SharedBottomNav> {
     );
   }
 }
+*/
 
-/// Classe utilitária para tema compartilhado
+// Classe utilitária para tema compartilhado
 class SharedTheme {
   static ThemeData buildDarkTheme() {
     return ThemeData(
@@ -131,7 +147,8 @@ class SharedTheme {
   }
 }
 
-/// Widget compartilhado para botão de voltar
+/// Widget compartilhado para botão de voltar - NÃO UTILIZADO
+/* 
 class _BackButton extends StatelessWidget {
   const _BackButton({required this.color});
   final Color color;
@@ -151,7 +168,11 @@ class _BackButton extends StatelessWidget {
   }
 }
 
-/// Widget compartilhado para botão de refresh
+}
+*/
+
+/// Widget compartilhado para botão de refresh - NÃO UTILIZADO
+/* 
 class _RefreshButton extends StatelessWidget {
   const _RefreshButton({required this.onPressed});
   final VoidCallback onPressed;
@@ -174,6 +195,7 @@ class _RefreshButton extends StatelessWidget {
     );
   }
 }
+*/
 
 /// Widget compartilhado para botões estilizados
 class SharedStyledButton extends StatelessWidget {

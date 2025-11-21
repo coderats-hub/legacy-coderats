@@ -1,6 +1,24 @@
+/**
+ * TOKENS DE DESIGN SYSTEM
+ * 
+ * Define tokens fundamentais do design system usando ThemeExtension.
+ * Permite uso via Theme.of(context).extension<Spacing>() em toda app.
+ * 
+ * Tokens incluídos:
+ * - Spacing: Espaçamentos padronizados (xs, sm, md, lg, xl, xxl)
+ * - Corners: Raios de borda consistentes (sm, md, lg, pill)
+ * - AppPalette: Paleta de cores completa do sistema
+ * 
+ * Benefícios:
+ * - Integração nativa com sistema de temas do Flutter
+ * - Transições suaves entre temas (lerp)
+ * - Tokens acessíveis via context em qualquer widget
+ */
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+// Token de espaçamentos com integração ao Flutter Theme
 @immutable
 class Spacing extends ThemeExtension<Spacing> {
   final double xs, sm, md, lg, xl, xxl;
@@ -39,6 +57,7 @@ class Spacing extends ThemeExtension<Spacing> {
   }
 }
 
+// Token de raios de borda com integração ao Flutter Theme
 @immutable
 class Corners extends ThemeExtension<Corners> {
   final double sm, md, lg, pill;
@@ -66,6 +85,7 @@ class Corners extends ThemeExtension<Corners> {
   }
 }
 
+// Paleta de cores centralizada do design system
 class AppPalette {
   static const primary   = Color(0xFFD283FF);
   static const secondary = Color(0xFF25A18E);

@@ -1,7 +1,23 @@
+/**
+ * TEMA PRINCIPAL DA APLICAÇÃO
+ * 
+ * Define ThemeData completo usando Material 3 e ColorScheme.
+ * Integra tokens da AppPalette em um esquema de cores semântico.
+ * 
+ * Recursos:
+ * - Material 3 habilitado para componentes modernos
+ * - ColorScheme escuro completo com containers
+ * - Mapeamento semântico (primary, secondary, error, etc.)
+ * - Cores de superfície e outline consistentes
+ * 
+ * Uso: MaterialApp(theme: AppTheme.dark())
+ */
+
 import 'package:flutter/material.dart';
 import 'tokens.theme.dart';   // onde está o AppPalette
 
 class AppTheme {
+  // Tema escuro principal da aplicação
   static ThemeData dark() => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
@@ -9,6 +25,7 @@ class AppTheme {
         scaffoldBackgroundColor: _darkScheme.background,
       );
 
+  // ColorScheme escuro com mapeamento semântico das cores da AppPalette
   static const ColorScheme _darkScheme = ColorScheme(
     brightness: Brightness.dark,
 

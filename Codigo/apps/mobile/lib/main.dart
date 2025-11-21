@@ -4,7 +4,6 @@ import 'package:app/features/group/presentation/screens/group.join.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/user/presentation/screens/code_exchange.screen.dart';
-import 'package:app/features/user/presentation/screens/register.screen.dart';
 import 'package:app/features/user/presentation/screens/home.screen.dart';
 import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
@@ -20,21 +19,24 @@ Future<void> main() async {
   runApp(const App()); 
 }
 
+// Widget raiz da aplicação - configura MaterialApp e roteamento
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // Configurações básicas do app
       title: 'Code Rats',
-      theme: AppTheme.dark(),
-      home: const TelaInicio(),
-      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark(), // Tema escuro personalizado
+      home: const TelaInicio(), // Tela inicial (splash/welcome)
+      debugShowCheckedModeBanner: false, // Remove banner de debug
+      
+      // Sistema de rotas nomeadas para navegação
       routes: {
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
         '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
-        '/register': (_) => const RegisterScreen(),
         '/groups': (_) => const GroupsPage(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),

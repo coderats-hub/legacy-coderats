@@ -1,6 +1,25 @@
+/**
+ * TELA DE PERFIL PRIVADO
+ * 
+ * Esta é a tela do perfil do próprio usuário logado.
+ * Mostra informações pessoais e ações que o usuário pode realizar:
+ * - Header com avatar, nome e botão "Ver GitHub"
+ * - Botões para "Criar grupo" e "Entrar via código"
+ * - Calendário de atividades (temporariamente comentado)
+ * - Badges conquistadas (temporariamente comentado)
+ * - Grupos em comum (temporariamente comentado)
+ * 
+ * Funcionalidades:
+ * - Navegação para criar grupo
+ * - Navegação para entrar em grupo via código
+ * - Bottom navigation para outras telas
+ * - Link para GitHub pessoal
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
@@ -139,17 +158,17 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       _PrivateActions(),
-                      const SizedBox(height: 12),
-                      _CalendarCard(
-                        currentDate: _currentDate,
-                        markedDateMap: _markedDateMap,
-                      ),
-                      const SizedBox(height: 16),
-                      _BadgesRow(
-                        showSeeAll: false,
-                      ),
-                      const SizedBox(height: 16),
-                      _GroupsInCommon(),
+                      // const SizedBox(height: 12),
+                      // _CalendarCard(
+                      //   currentDate: _currentDate,
+                      //   markedDateMap: _markedDateMap,
+                      // ),
+                      // const SizedBox(height: 16),
+                      // _BadgesRow(
+                      //   showSeeAll: false,
+                      // ),
+                      // const SizedBox(height: 16),
+                      // _GroupsInCommon(),
                     ],
                   ),
                 ),
@@ -282,9 +301,10 @@ class _PrivateActions extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Row(
         children: [
+          // Botão para criar novo grupo
           Expanded(
             child: _ActionCard(
-              label: "Criar um grupo",
+              label: "Criar grupo",
               icon: Icons.add_circle_outline,
               onTap: () {
                 Navigator.of(context).push(
@@ -296,6 +316,7 @@ class _PrivateActions extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
+          // Botão para entrar em grupo via código
           Expanded(
             child: _ActionCard(
               label: "Entrar via código",
@@ -311,6 +332,7 @@ class _PrivateActions extends StatelessWidget {
   }
 }
 
+// Card individual para cada ação (criar/entrar em grupo)
 class _ActionCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -321,23 +343,22 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppCorners.lg),
+      borderRadius: BorderRadius.circular(AppCorners.md),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppCorners.lg),
+        borderRadius: BorderRadius.circular(AppCorners.md),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: Colors.white, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Flexible(
+              Expanded(
                 child: Text(
                   label, 
                   style: AppTextStyles.button.copyWith(
                     color: Colors.white, 
                     fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,

@@ -1,6 +1,23 @@
+/**
+ * SISTEMA DE TIPOGRAFIA
+ * 
+ * Constrói o TextTheme baseado na fonte Inter do Google Fonts.
+ * Aplica pesos e espaçamentos otimizados para legibilidade.
+ * 
+ * Configurações:
+ * - Fonte base: Inter (via Google Fonts)
+ * - Display: peso 700 com letter-spacing negativo
+ * - Headings: peso 600 para hierarquia clara
+ * - Body: altura de linha otimizada (1.3-1.35)
+ * - Labels: peso 600 para destaque em botões
+ * 
+ * Cores aplicadas automaticamente baseadas no ColorScheme.
+ */
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Constrói TextTheme personalizado com fonte Inter e pesos otimizados
 TextTheme buildTextTheme(ColorScheme scheme) {
   final base = GoogleFonts.interTextTheme();
 
