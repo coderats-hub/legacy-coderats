@@ -30,7 +30,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
 import 'dart:typed_data';
 import 'package:app/shared/components/app_components.dart';
 import '../../../../shared/components/buttonPrimary.dart';
@@ -122,8 +122,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   }
 
   Future<void> _showImageSourceActionSheet() async {
+    // Image picker temporarily disabled to resolve Android SDK conflict
+    /*
     final picker = ImagePicker();
     final source = await showModalBottomSheet<ImageSource>(
+    */
+    final source = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) {
         return SafeArea(
@@ -133,12 +137,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
               ),
             ],
           ),
@@ -147,6 +151,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     );
 
     if (source == null) return;
+    
+    // Image picker functionality disabled - only UI works
+    /*
     try {
       final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
       if (file == null) return;
@@ -157,6 +164,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     } catch (e) {
       // ignore
     }
+    */
   }
 
   // Valida formulário e navega para próxima etapa

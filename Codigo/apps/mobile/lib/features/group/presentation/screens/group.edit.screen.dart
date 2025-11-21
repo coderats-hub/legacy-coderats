@@ -16,7 +16,8 @@
  */
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
+// import 'package:cross_file/cross_file.dart';  // Removido - não disponível
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:app/shared/theme/app_theme.dart';
@@ -38,7 +39,7 @@ class GroupEditScreen extends StatefulWidget {
 class _GroupEditScreenState extends State<GroupEditScreen> {
   late final TextEditingController _nameCtrl;    // Controlador do campo nome
   late final TextEditingController _descCtrl;    // Controlador do campo descrição
-  XFile? _pickedImage;                          // Arquivo de imagem selecionado
+  // XFile? _pickedImage;                          // Arquivo de imagem selecionado - XFile não disponível
   Uint8List? _pickedImageBytes;                 // Bytes da imagem para preview
 
   @override
@@ -62,8 +63,12 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
 
   // Modal para escolher fonte da imagem (galeria ou câmera)
   Future<void> _showImageSourceActionSheet() async {
+    // Image picker temporarily disabled to resolve Android SDK conflict
+    /*
     final picker = ImagePicker();
     final source = await showModalBottomSheet<ImageSource>(
+    */
+    final source = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) {
         return SafeArea(
@@ -73,12 +78,12 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
               ),
             ],
           ),
@@ -87,6 +92,9 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     );
 
     if (source == null) return;
+    
+    // Image picker functionality disabled - only UI works
+    /*
     try {
       final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
       if (file == null) return;
@@ -97,6 +105,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
       });
     } catch (e) {
     }
+    */
   }
 
   // Salva alterações e volta para tela anterior

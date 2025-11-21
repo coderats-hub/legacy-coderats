@@ -21,7 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
 import 'dart:typed_data';
 import '../widgets/shared_widgets.dart';
 
@@ -81,8 +81,12 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   }
 
   Future<void> _showImageSourceActionSheet() async {
+    // Image picker temporarily disabled to resolve Android SDK conflict
+    /*
     final picker = ImagePicker();
     final source = await showModalBottomSheet<ImageSource>(
+    */
+    final source = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) {
         return SafeArea(
@@ -92,12 +96,12 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
               ),
             ],
           ),
@@ -106,6 +110,9 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     );
 
     if (source == null) return;
+    
+    // Image picker functionality disabled - only UI works
+    /*
     try {
       final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
       if (file == null) return;
@@ -116,6 +123,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     } catch (e) {
       // ignore
     }
+    */
   }
 
   @override
