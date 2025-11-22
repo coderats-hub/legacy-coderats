@@ -1,37 +1,5 @@
-// ==============================
-// Arquivo: features/checkin/data/checkin.repository.dart
-// ==============================
-//
-// Pasta 'data':
-// Esta pasta é responsável por lidar com **todos os dados da feature**, ou seja:
-// - Buscar, salvar ou atualizar informações vindas de **API**, **banco local** ou **cache**.
-// - Transformar dados recebidos da API em modelos de domínio.
-// - Fornecer dados de forma consistente para o domínio ou provider, sem que eles precisem saber a origem.
-//
-// Além do repositório, a pasta 'data' pode conter:
-//
-// 1. Datasources
-//    - checkin.api.dart → comunicação com APIs externas
-//    - checkin.local.dart → leitura/escrita em banco local (SQLite, Hive, SharedPreferences)
-//    - checkin.cache.dart → cache temporário em memória ou disco
-//
-// 2. Interfaces / Abstrações
-//    - i_checkin.repository.dart → define a “promessa” do repositório
-//      permitindo trocar implementações sem impactar domínio ou UI
-//
-// 3. Mappers / Transformers
-//    - checkin.mapper.dart → converte JSON para modelo de domínio e vice-versa
-//
-// 4. Mock ou dados de teste
-//    - checkin.mock.dart → dados fictícios para demonstração ou testes sem backend
-//
-// 5. Exceções específicas da camada de dados
-//    - checkin.exceptions.dart → erros relacionados a API, banco ou cache
-//
-// Dessa forma, a pasta 'data' concentra tudo que é relacionado à **obtenção e manipulação de dados**, mantendo
-// a arquitetura limpa, desacoplada e facilitando testes.
 
-import '../domain/checkin.dart';
+import 'package:app/domain/checkin/checkin.dart';
 
 class CheckinRepository {
   // Função que simula a busca de check-ins

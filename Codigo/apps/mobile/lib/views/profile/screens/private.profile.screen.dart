@@ -16,15 +16,15 @@
  * - Link para GitHub pessoal
  */
 
+import 'package:app/domain/user/user.model.dart';
+import 'package:app/services/user/user.service.dart';
+import 'package:app/views/group/screens/group.create.screen.dart';
+import 'package:app/views/group/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:app/shared/components/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:app/group/screens/group.create.screen.dart';
-import 'package:app/group/screens/group.list.screen.dart';
-import 'package:app/user/data/services/user.service.dart';
-import 'package:app/user/domain/models/user.model.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
@@ -181,7 +181,7 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
             );
           } else if (i == 1) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const GroupsPage()),
+              MaterialPageRoute(builder: (_) => const GroupListScreen()),
             );
           } else if (i == 2) {
             // já está na tela de perfil

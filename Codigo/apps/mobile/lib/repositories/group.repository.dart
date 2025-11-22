@@ -1,10 +1,10 @@
 import 'package:app/domain/group/group.dart';
+import 'package:app/domain/group/group_details.dart';
 import 'package:app/services/group/group_remote_service.dart';
 
 import '../core/session_manager.dart';
 import '../services/connectivity_service.dart';
 import '../database/group/group.dao.dart';
-
 
 class GroupRepository {
   final GroupRemoteService remote;
@@ -21,21 +21,24 @@ class GroupRepository {
 
   Future<List<Group>> getUserGroups() async {
     final online = await net.isOnline();
-    final userId = session.userId;
+    final userId = session.currentUserId;
+
+    if (userId == null) {
+      return []; 
+    }
 
     if (online) {
       try {
         final groups = await remote.getUserGroups();
         await local.cacheGroups(groups, userId);
         return groups;
-      } catch (_) {
-      }
+      } catch (_) {}
     }
 
     return await local.getGroupsByUser(userId);
   }
 
-  Future<GroupWithDetails> getGroupDetails(String groupId) async {
+  Future<GroupDetails> getGroupDetails(String groupId) async {
     final online = await net.isOnline();
 
     if (online) {

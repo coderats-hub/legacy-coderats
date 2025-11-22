@@ -1,9 +1,8 @@
 import 'dart:convert';
-import '../core/session_manager.dart';
-import 'http_client.dart';
 
-import '../domain/models/group/group.dart';
-import '../domain/models/group/group_with_details.dart';
+import 'package:app/domain/group/group.dart';
+import 'package:app/domain/group/group_details.dart';
+import 'package:app/services/http_client.dart';
 
 class GroupRemoteService {
   final HttpClient http;
@@ -21,7 +20,7 @@ class GroupRemoteService {
     return list.map((e) => Group.fromJson(e)).toList();
   }
 
-  Future<GroupWithDetails> getGroupDetails(String id) async {
+  Future<GroupDetails> getGroupDetails(String id) async {
     final resp = await http.get('/groups/$id');
 
     if (resp.statusCode != 200) {
@@ -29,7 +28,7 @@ class GroupRemoteService {
     }
 
     final map = jsonDecode(resp.body);
-    return GroupWithDetails.fromJson(map);
+    return GroupDetails.fromJson(map);
   }
 
   Future<Group> createGroup({

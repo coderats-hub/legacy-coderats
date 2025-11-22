@@ -1,3 +1,4 @@
+import 'package:app/core/session_manager.dart';
 import 'package:app/views/group/screens/group.ranking.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
@@ -38,7 +39,7 @@ class App extends StatelessWidget {
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
         '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
-        '/groups': (_) => const GroupsPage(),
+        '/groups': (_) => const GroupListScreen(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),
         '/onboarding': (_) => const OnboardingStartScreen(),

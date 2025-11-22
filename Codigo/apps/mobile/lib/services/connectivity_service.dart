@@ -11,7 +11,7 @@ class ConnectivityService {
 
     try {
       final r = await http
-          .get(Uri.parse(Env.baseUrl))
+          .get(Uri.parse(Env.baseApiUrl))
           .timeout(const Duration(seconds: 5));
       return r.statusCode >= 200;
     } catch (_) {

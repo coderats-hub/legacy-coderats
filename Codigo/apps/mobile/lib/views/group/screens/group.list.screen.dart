@@ -1,20 +1,20 @@
+import 'package:app/domain/group/group.dart';
+import 'package:app/domain/group/group_details.dart';
+import 'package:app/repositories/group.repository.dart';
+import 'package:app/services/http_client.dart';
+import 'package:app/services/local_database.dart';
+import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:flutter/material.dart';
 
-import 'package:app/domain/models/group/group.dart';
-import 'package:app/domain/models/group/group_with_details.dart';
-import 'package:app/repositories/group.repository.dart';
+import 'package:app/core/session_manager.dart';
+import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
+
 import 'package:app/views/group/widgets/card.group.dart';
 
 class GroupListScreen extends StatefulWidget {
-  final GroupRepository groupRepository;
-  final ConnectivityService connectivity;
-
-  const GroupListScreen({
-    super.key,
-    required this.groupRepository,
-    required this.connectivity,
-  });
+  // Removemos os parâmetros obrigatórios do construtor
+  const GroupListScreen({super.key});
 
   @override
   State<GroupListScreen> createState() => _GroupListScreenState();
@@ -23,30 +23,73 @@ class GroupListScreen extends StatefulWidget {
 class _GroupListScreenState extends State<GroupListScreen> {
   Future<List<Group>>? _futureGroups;
   bool _online = true;
+  
+  // Dependências que vamos instanciar aqui dentro
+  GroupRepository? _groupRepository;
+  ConnectivityService? _connectivity;
+  bool _initializing = true;
 
   @override
   void initState() {
     super.initState();
-    _reload();
+    _initDependenciesAndLoad();
+  }
+
+  // Monta as dependências (Injeção de dependência manual)
+  Future<void> _initDependenciesAndLoad() async {
+    try {
+      final session = SessionManager.instance;
+      final localDb = await LocalDatabase.getInstance();
+      final connectivity = ConnectivityService();
+      final httpClient = HttpClient(session);
+      final remoteService = GroupRemoteService(httpClient);
+      
+      final repository = GroupRepository(
+        remote: remoteService,
+        local: localDb.groups,
+        net: connectivity,
+        session: session,
+      );
+
+      if (mounted) {
+        setState(() {
+          _groupRepository = repository;
+          _connectivity = connectivity;
+          _initializing = false;
+        });
+        // Agora que temos o repositório, carregamos os dados
+        _reload();
+      }
+    } catch (e) {
+      debugPrint('Erro ao iniciar dependências: $e');
+      if (mounted) setState(() => _initializing = false);
+    }
   }
 
   Future<void> _reload() async {
-    final isOnline = await widget.connectivity.isOnline();
+    if (_groupRepository == null || _connectivity == null) return;
+
+    final isOnline = await _connectivity!.isOnline();
     if (mounted) {
       setState(() => _online = isOnline);
     }
 
-    final groups = await widget.groupRepository.getUserGroups();
+    // Carrega grupos
+    final groupsFuture = _groupRepository!.getUserGroups();
 
     if (mounted) {
       setState(() {
-        _futureGroups = Future.value(groups);
+        _futureGroups = groupsFuture;
       });
     }
 
+    // Carrega detalhes em background
+    final groups = await groupsFuture;
     Future.microtask(() async {
       for (final g in groups) {
-        await widget.groupRepository.getGroupDetails(g.id);
+        if (_groupRepository != null) {
+          await _groupRepository!.getGroupDetails(g.id);
+        }
       }
     });
   }
@@ -57,17 +100,31 @@ class _GroupListScreenState extends State<GroupListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Se estiver inicializando as dependências, mostra loading
+    if (_initializing) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Grupos'),
+        title: const Text('Meus Grupos', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       floatingActionButton: _online
           ? FloatingActionButton(
+              backgroundColor: Colors.blue, // Ajuste para sua cor primária
               onPressed: () {
+                // Navega para criar grupo e recarrega ao voltar
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+                ).then((_) => _reload());
               },
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
       body: Column(
@@ -79,11 +136,11 @@ class _GroupListScreenState extends State<GroupListScreen> {
               color: Colors.amber.withOpacity(0.15),
               child: const Row(
                 children: [
-                  Icon(Icons.wifi_off, color: Colors.amber),
+                  Icon(Icons.wifi_off, color: Colors.amber, size: 16),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Sem conexão — exibindo dados do cache (somente leitura)',
+                      'Sem conexão — exibindo cache (somente leitura)',
                       style: TextStyle(
                         color: Colors.amber,
                         fontSize: 12,
@@ -108,6 +165,15 @@ class _GroupListScreenState extends State<GroupListScreen> {
                           );
                         }
 
+                        if (snap.hasError) {
+                           return Center(
+                             child: Text(
+                               'Erro ao carregar: ${snap.error}',
+                               style: const TextStyle(color: Colors.red),
+                             ),
+                           );
+                        }
+
                         final groups = snap.data ?? const <Group>[];
 
                         if (groups.isEmpty) {
@@ -117,7 +183,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
                               SizedBox(height: 48),
                               Center(
                                 child: Text(
-                                  'Nenhum grupo no momento.\nPuxe para atualizar ou crie um novo quando estiver online.',
+                                  'Nenhum grupo no momento.\nCrie um novo para começar!',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.white70),
                                 ),
@@ -133,9 +199,10 @@ class _GroupListScreenState extends State<GroupListScreen> {
                               const SizedBox(height: 12),
                           itemBuilder: (context, i) {
                             final g = groups[i];
+                            // Passamos o repositório que instanciamos para o card
                             return _GroupCard(
                               group: g,
-                              groupRepository: widget.groupRepository,
+                              groupRepository: _groupRepository!,
                             );
                           },
                         );
@@ -173,12 +240,17 @@ class _GroupCardState extends State<_GroupCard> {
     if (_details != null || _loading) return;
 
     setState(() => _loading = true);
-    final d = await widget.groupRepository.getGroupDetails(widget.group.id);
-    if (!mounted) return;
-    setState(() {
-      _details = d;
-      _loading = false;
-    });
+    
+    try {
+      final d = await widget.groupRepository.getGroupDetails(widget.group.id);
+      if (!mounted) return;
+      setState(() {
+        _details = d;
+        _loading = false;
+      });
+    } catch(e) {
+      if(mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -217,31 +289,33 @@ class _GroupCardState extends State<_GroupCard> {
       expanded = const Padding(
         padding: EdgeInsets.all(12),
         child: Text(
-          'Sem cache de ranking para este grupo (abra online pelo menos uma vez).',
+          'Sem cache de ranking (abra online uma vez).',
           style: TextStyle(color: Colors.white70),
         ),
       );
     }
 
+    // Supondo que você tem o widget CardGroup ou GroupCard importado
     return GroupCard(
       title: widget.group.name,
       imageUrl: widget.group.image,
-      bannerStyle: widget.group.status
-          ? BannerStyle.primary
-          : BannerStyle.tertiary,
-      status: widget.group.status
-          ? GroupStatus.ativo
-          : GroupStatus.concluido,
+      // Se não tiver BannerStyle no seu projeto, remova ou adapte
+      // bannerStyle: widget.group.status ? BannerStyle.primary : BannerStyle.tertiary,
+      // status: widget.group.status ? GroupStatus.ativo : GroupStatus.concluido,
       expanded: expanded,
       onBannerTap: () async {
-        final d =
-            _details ?? await widget.groupRepository.getGroupDetails(widget.group.id);
-        if (!mounted) return;
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => _GroupDetailsPage(details: d),
-          ),
-        );
+        try {
+          // Se ainda não carregou detalhes, carrega agora ao clicar
+          final d = _details ?? await widget.groupRepository.getGroupDetails(widget.group.id);
+          if (!mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => _GroupDetailsPage(details: d),
+            ),
+          );
+        } catch (_) {
+           // Tratar erro ou apenas não navegar
+        }
       },
       onExpandChanged: _onExpandChanged,
     );
@@ -255,24 +329,18 @@ class _RankingBlock extends StatelessWidget {
   String _ordinal(int n) {
     if (n % 100 >= 11 && n % 100 <= 13) return '${n}th';
     switch (n % 10) {
-      case 1:
-        return '${n}st';
-      case 2:
-        return '${n}nd';
-      case 3:
-        return '${n}rd';
-      default:
-        return '${n}th';
+      case 1: return '${n}st';
+      case 2: return '${n}nd';
+      case 3: return '${n}rd';
+      default: return '${n}th';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
+    // Ordena participantes
     final participants = [...details.participants]
-      ..sort((a, b) =>
-          b.participant.points.compareTo(a.participant.points));
+      ..sort((a, b) => b.points.compareTo(a.points));
 
     final leader = participants.isNotEmpty ? participants.first : null;
     final top3 = participants.take(3).toList();
@@ -286,17 +354,17 @@ class _RankingBlock extends StatelessWidget {
             child: _pill(
               context,
               labelLeft: 'Leader',
-              name: leader.user.name,
-              points: leader.participant.points,
-              color: cs.primary,
+              name: leader.name,
+              points: leader.points,
+              color: Colors.amber, // Usando cor fixa se não tiver theme
             ),
           ),
         const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'Ranking',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(height: 8),
@@ -304,27 +372,26 @@ class _RankingBlock extends StatelessWidget {
           final row = top3[i];
           final pos = i + 1;
           return Container(
-            margin:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: const Color(0xFF1E1E1E),
               borderRadius: BorderRadius.circular(12),
             ),
             child: ListTile(
-              leading: const CircleAvatar(),
+              leading: CircleAvatar(
+                 backgroundImage: row.image != null ? NetworkImage(row.image!) : null,
+                 child: row.image == null ? Text(row.name[0]) : null,
+              ),
               title: Text(
-                row.user.name,
+                row.name,
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                '${row.participant.points.toStringAsFixed(1)} pontos',
+                '${row.points.toStringAsFixed(1)} pontos',
                 style: const TextStyle(color: Colors.white70),
               ),
               trailing: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.black26,
                   borderRadius: BorderRadius.circular(8),
@@ -349,22 +416,21 @@ class _RankingBlock extends StatelessWidget {
     required double points,
     required Color color,
   }) {
-    final tt = Theme.of(context).textTheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, size: 12, color: color),
+        Icon(Icons.emoji_events, size: 14, color: color),
         const SizedBox(width: 6),
         Text(
           labelLeft,
-          style: tt.labelMedium?.copyWith(color: Colors.white70),
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
         const SizedBox(width: 8),
-        Text(name, style: tt.labelLarge),
+        Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         const SizedBox(width: 8),
         Text(
-          '${points.toStringAsFixed(1)} pontos',
-          style: tt.labelMedium?.copyWith(color: Colors.white70),
+          '${points.toStringAsFixed(1)} pts',
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
       ],
     );
@@ -378,9 +444,10 @@ class _GroupDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (details == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Sem cache disponível para este grupo.'),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Detalhes')),
+        body: const Center(
+          child: Text('Sem detalhes disponíveis.'),
         ),
       );
     }
@@ -389,7 +456,12 @@ class _GroupDetailsPage extends StatelessWidget {
     final p = details!.participants;
 
     return Scaffold(
-      appBar: AppBar(title: Text(g.name)),
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text(g.name, style: const TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: p.length,
@@ -397,14 +469,18 @@ class _GroupDetailsPage extends StatelessWidget {
           final row = p[i];
           return Card(
             color: const Color(0xFF1E1E1E),
+            margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
-              leading: CircleAvatar(child: Text('${i + 1}')),
+              leading: CircleAvatar(
+                backgroundImage: row.image != null ? NetworkImage(row.image!) : null,
+                child: row.image == null ? Text('${i + 1}') : null,
+              ),
               title: Text(
-                row.user.name,
+                row.name,
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                '${row.participant.points.toStringAsFixed(1)} pontos',
+                '${row.points.toStringAsFixed(1)} pontos',
                 style: const TextStyle(color: Colors.white70),
               ),
             ),

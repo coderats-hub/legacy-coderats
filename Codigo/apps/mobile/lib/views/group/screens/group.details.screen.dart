@@ -95,6 +95,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       final date = DateTime.now().subtract(Duration(days: dayOffset));
       list.add(
         Checkin(
+          id: "1",
           title: "Lorem ipsum dolor et siamet",
           author: (idx % 2 == 0) ? "Você" : "Alice", // Alterna autor
           points: (idx % 5) + 1, // Pontos de 1 a 5

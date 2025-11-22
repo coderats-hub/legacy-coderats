@@ -1,4 +1,5 @@
 import 'package:app/domain/group/group_details.dart';
+import 'package:app/domain/group/group_participant.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,7 +9,8 @@ import 'package:app/domain/group/group.dart';
 const _uuid = Uuid();
 
 class GroupDao {
-  Future<Database> get _db async => AppDatabase.instance.database;
+  final Database _db;
+  GroupDao(this._db);
 
   Map<String, Object?> _groupToMap(Group g) => {
         'id': g.id,
@@ -19,7 +21,7 @@ class GroupDao {
         'method': g.method,
         'status': g.status ? 1 : 0,
         'repository': g.repository,
-        'start_date': g.startDate.toIso8601String(),
+        'start_date': g.startDate?.toIso8601String(),
         'end_date': g.endDate?.toIso8601String(),
       };
 
@@ -32,21 +34,23 @@ class GroupDao {
         method: m['method'] as String?,
         status: (m['status'] ?? 1) == 1,
         repository: m['repository'] as String?,
-        startDate: DateTime.parse(m['start_date'] as String),
+        startDate: m['start_date'] != null 
+            ? DateTime.parse(m['start_date'] as String) 
+            : null, 
         endDate: m['end_date'] != null
             ? DateTime.parse(m['end_date'] as String)
             : null,
       );
 
-  Map<String, Object?> _userSummaryToMap(GroupMember m) => {
+  Map<String, Object?> _userSummaryToMap(GroupParticipant m) => {
         'id': m.id,
         'name': m.name,
         'image': m.image,
         'github_user': m.githubUser,
       };
 
-  GroupMember _memberFromJoinedRow(Map<String, Object?> row) {
-    return GroupMember(
+  GroupParticipant _memberFromJoinedRow(Map<String, Object?> row) {
+    return GroupParticipant(
       id: row['u_id'] as String,
       name: (row['u_name'] ?? '') as String,
       image: row['u_image'] as String?,
@@ -55,23 +59,52 @@ class GroupDao {
     );
   }
 
-  Future<void> upsertGroups(List<Group> groups) async {
+  Future<void> cacheGroups(List<Group> groups, String userId) async {
     if (groups.isEmpty) return;
     final db = await _db;
-    final batch = db.batch();
 
-    for (final g in groups) {
-      batch.insert(
-        'groups',
-        _groupToMap(g),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
+    await db.transaction((txn) async {
+      for (final g in groups) {
+        await txn.insert(
+          'groups',
+          _groupToMap(g),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
 
-    await batch.commit(noResult: true);
+        final linkExists = await txn.query(
+          'group_participants',
+          where: 'group_id = ? AND user_id = ?',
+          whereArgs: [g.id, userId],
+        );
+
+        if (linkExists.isEmpty) {
+          await txn.insert('group_participants', {
+            'id': _uuid.v4(),
+            'group_id': g.id,
+            'user_id': userId,
+            'role': 'member', 
+            'points': 0.0,   
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
+      }
+    });
   }
 
-  Future<void> upsertGroupDetails(GroupDetails details) async {
+  Future<List<Group>> getGroupsByUser(String userId) async {
+    final db = await _db;
+    
+    final rows = await db.rawQuery('''
+      SELECT g.* FROM groups g
+      INNER JOIN group_participants gp ON gp.group_id = g.id
+      WHERE gp.user_id = ?
+      ORDER BY g.start_date DESC
+    ''', [userId]);
+
+    return rows.map((r) => _groupFromMap(r)).toList();
+  }
+
+  Future<void> cacheGroupDetails(GroupDetails details) async {
     final db = await _db;
 
     await db.transaction((txn) async {
@@ -81,6 +114,12 @@ class GroupDao {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+      await txn.delete(
+        'group_participants',
+        where: 'group_id = ?',
+        whereArgs: [details.group.id],
+      );
+
       for (final member in details.participants) {
         await txn.insert(
           'users',
@@ -88,14 +127,13 @@ class GroupDao {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
 
-        final participantId = _uuid.v4();
         await txn.insert(
           'group_participants',
           {
-            'id': participantId,
+            'id': _uuid.v4(),
             'group_id': details.group.id,
             'user_id': member.id,
-            'role': null,
+            'role': null, 
             'points': member.points,
             'created_at': DateTime.now().toIso8601String(),
           },
@@ -103,15 +141,6 @@ class GroupDao {
         );
       }
     });
-  }
-
-  Future<List<Group>> getAllGroups() async {
-    final db = await _db;
-    final rows = await db.query(
-      'groups',
-      orderBy: 'start_date DESC',
-    );
-    return rows.map((r) => _groupFromMap(r)).toList();
   }
 
   Future<GroupDetails?> getGroupDetails(String groupId) async {

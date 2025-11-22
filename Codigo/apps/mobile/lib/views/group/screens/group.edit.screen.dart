@@ -1,30 +1,10 @@
-/**
- * TELA DE EDIÇÃO DE GRUPO
- * 
- * Permite editar informações básicas de um grupo existente.
- * Acessível via menu de 3 pontos nos detalhes do grupo.
- * 
- * Funcionalidades:
- * - Editar nome e descrição do grupo
- * - Alterar imagem de capa (galeria ou câmera)
- * - Visualizar participantes atuais
- * - Remover participantes (botão delete)
- * 
- * Navegação:
- * - Vem de: GroupDetailPage (menu > Editar)
- * - Volta para: tela anterior após salvar
- */
-
 import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
-// import 'package:cross_file/cross_file.dart';  // Removido - não disponível
+
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
-import 'package:app/group/widgets/banner.group.dart';
 
-// Tela para editar informações de grupo existente
 class GroupEditScreen extends StatefulWidget {
   final String initialName;
   final String? initialDescription;
@@ -37,15 +17,13 @@ class GroupEditScreen extends StatefulWidget {
 }
 
 class _GroupEditScreenState extends State<GroupEditScreen> {
-  late final TextEditingController _nameCtrl;    // Controlador do campo nome
-  late final TextEditingController _descCtrl;    // Controlador do campo descrição
-  // XFile? _pickedImage;                          // Arquivo de imagem selecionado - XFile não disponível
-  Uint8List? _pickedImageBytes;                 // Bytes da imagem para preview
+  late final TextEditingController _nameCtrl;  
+  late final TextEditingController _descCtrl;   
+  Uint8List? _pickedImageBytes;               
 
   @override
   void initState() {
     super.initState();
-    // Inicializa campos com valores atuais do grupo
     _nameCtrl = TextEditingController(text: widget.initialName);
     _descCtrl = TextEditingController(text: widget.initialDescription ?? '');
   }
@@ -61,13 +39,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     _showImageSourceActionSheet();
   }
 
-  // Modal para escolher fonte da imagem (galeria ou câmera)
   Future<void> _showImageSourceActionSheet() async {
-    // Image picker temporarily disabled to resolve Android SDK conflict
-    /*
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-    */
     final source = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) {
@@ -78,12 +50,12 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
+                onTap: () => Navigator.of(ctx).pop('gallery'), 
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
+                onTap: () => Navigator.of(ctx).pop('camera'), 
               ),
             ],
           ),
@@ -108,7 +80,6 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     */
   }
 
-  // Salva alterações e volta para tela anterior
   void _save() {
     // TODO: Integrar com API para persistir alterações
     Navigator.of(context).maybePop();
@@ -125,7 +96,6 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header (Cancelar | Título | OK)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                 child: Row(
@@ -145,11 +115,10 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                 ),
               ),
 
-              // Banner editável com ícone de câmera
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                 child: GestureDetector(
-                  onTap: _pickImage, // Abre seletor de imagem
+                  onTap: _pickImage, 
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

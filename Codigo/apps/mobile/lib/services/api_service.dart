@@ -27,9 +27,6 @@ class ApiService {
     return jsonDecode(resp.body);
   }
 
-  // ---------------------------
-  // POST /path body -> dynamic
-  // ---------------------------
   Future<dynamic> postJson(String path, Map<String, dynamic> body) async {
     final resp = await _http.post(path, body);
     _checkError(resp);

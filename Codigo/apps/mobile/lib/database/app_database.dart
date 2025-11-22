@@ -1,4 +1,3 @@
-// lib/database/app_database.dart
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -6,34 +5,26 @@ import 'package:sqflite/sqflite.dart';
 import 'group/group.tables.dart';
 
 class AppDatabase {
-  AppDatabase._internal();
+  static const String _dbName = 'coderats_cache.db';
+  static const int _version = 1;
 
-  static final AppDatabase instance = AppDatabase._internal();
-  static Database? _db;
-
-  Future<Database> get database async {
-    if (_db != null) return _db!;
-    _db = await _open('coderats_cache.db');
-    return _db!;
-  }
-
-  Future<Database> _open(String fileName) async {
+  static Future<Database> open() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, fileName);
+    final path = join(dbPath, _dbName);
 
-    return await openDatabase(
+    return openDatabase(
       path,
-      version: 1,
-      onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
-      onCreate: (db, version) async {
-        await _createV1(db);
-      },
+      version: _version,
+      onConfigure: _onConfigure,
+      onCreate: _onCreate,
     );
   }
 
-  Future<void> _createV1(Database db) async {
+  static Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  static Future<void> _onCreate(Database db, int version) async {
     await GroupTables.createV1(db);
   }
 }

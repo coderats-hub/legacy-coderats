@@ -1,29 +1,13 @@
-/**
- * TELA DE LISTA DE CHECK-INS
- * 
- * Esta tela exibe uma lista de check-ins (atividades) dos usuários do grupo.
- * Mostra cards com informações de cada check-in incluindo:
- * - Avatar e nome do usuário com pontuação
- * - Card visual colorido representando a atividade
- * - Título, descrição e tempo da atividade
- * - Link para visualizar no GitHub
- * 
- * Funcionalidades:
- * - Lista scrollável de check-ins
- * - Botão para criar novo check-in
- * - Estados de loading, erro e lista vazia
- * - Refresh manual dos dados
- */
 
+import 'package:app/domain/checkin/checkin.dart';
+import 'package:app/repositories/checkin.repository.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/checkin.repository.dart';
-import '../../domain/checkin.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/comments.modal.dart';
 
 // Tela principal de lista de check-ins - StatefulWidget para gerenciar estados da UI
 class CheckinScreen extends StatefulWidget {
