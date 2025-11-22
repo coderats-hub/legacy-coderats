@@ -10,7 +10,7 @@ class ConnectivityService {
   ConnectivityService({Uri? probe})
       : probeUri = probe ??
             Uri.parse(
-              'https://virtserver.swaggerhub.com/pucminas-1a5/raquelCodeRats/1/users',
+              'database-coderats-dev.c54wg8cy4hhf.us-east-2.rds.amazonaws.com',
             );
 
   Future<bool> isOnline() async {
@@ -24,7 +24,7 @@ class ConnectivityService {
     try {
       final r = await http
           .get(probeUri, headers: {'Connection': 'close'})
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 10));
       // Any HTTP response means “internet reachable”, even 404/500.
       return r.statusCode >= 200 && r.statusCode < 600;
     } on TimeoutException {
@@ -39,7 +39,7 @@ class ConnectivityService {
     final res = await Connectivity().checkConnectivity();
     print('[Connectivity] transport: $res');
     try {
-      final r = await http.get(probeUri).timeout(const Duration(seconds: 3));
+      final r = await http.get(probeUri).timeout(const Duration(seconds: 10));
       print('[Connectivity] probe status: ${r.statusCode}');
     } catch (e) {
       print('[Connectivity] probe error: $e');

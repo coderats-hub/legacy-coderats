@@ -426,7 +426,7 @@ class _GroupDetailsPage extends StatelessWidget {
 class GroupsPage extends StatelessWidget {
   const GroupsPage({super.key});
 
-  static const _mockUserId = 'a1b2c3d4-e5f6-7890-1234-56789abcdef0';
+  static const _mockUserId = 'a1b2c3d4-e5f6-7890-1234-567890abcdef';
 
   @override
   Widget build(BuildContext context) {
