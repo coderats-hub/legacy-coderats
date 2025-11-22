@@ -439,3 +439,4 @@ class GroupsPage extends StatelessWidget {
     return GroupListScreen(currentUserId: _mockUserId);
   }
 }
+

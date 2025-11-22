@@ -1,14 +1,44 @@
+/**
+ * MODAL DE COMENTÁRIOS - FUTURO
+ * 
+ * Modal reutilizável para exibir e gerenciar comentários em check-ins.
+ * Atualmente não está sendo utilizado, mas será implementado futuramente.
+ * 
+ * Funcionalidades planejadas:
+ * - Lista scrollável de comentários existentes
+ * - Campo de entrada para novos comentários
+ * - Avatares e timestamps dos autores
+ * - Opção de deletar comentários próprios
+ * - Animações de entrada/saída
+ * - Layout responsivo que se adapta ao teclado
+ * - Altura dinâmica baseada no número de comentários
+ * 
+ * Características técnicas:
+ * - Usa BackdropFilter para efeito blur
+ * - AnimationController para transições suaves
+ * - ScrollController para auto-scroll ao adicionar comentários
+ * - Keyboard-aware layout com viewInsets
+ * - Integração completa com tema da aplicação
+ * 
+ * Onde será usado:
+ * - Check-ins individuais (botão de comentários)
+ * - Posts de atividades dos usuários
+ * - Interação social entre membros do grupo
+ */
+
+/* NÃO ESTAMOS UTILIZANDO ESSE ARQUIVO NO MOMENTO, POIS AS MODAIS SERÃO IMPLEMENTADAS FUTURAMENTE
+
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 
-/// Modal de comentários reutilizável — usa o tema e componentes do app.
+// Modal de comentários com animações e layout responsivo
 class CommentsModal extends StatefulWidget {
-  final String title;
-  final List<CommentItem> comments;
-  final VoidCallback? onClose;
+  final String title;                     // Título do modal (ex: "Comentários")
+  final List<CommentItem> comments;       // Lista inicial de comentários
+  final VoidCallback? onClose;            // Callback ao fechar modal
 
   const CommentsModal({super.key, required this.title, this.comments = const [], this.onClose});
 
@@ -299,3 +329,4 @@ class CommentItem {
   final bool canDelete;
   const CommentItem({required this.author, required this.timeAgo, required this.text, this.canDelete = false});
 }
+*/

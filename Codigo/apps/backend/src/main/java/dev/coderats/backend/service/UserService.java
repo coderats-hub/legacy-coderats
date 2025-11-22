@@ -9,12 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.domain.User;
-import dev.coderats.backend.repository.GroupRepository;
-import dev.coderats.backend.repository.UserRepository;
-import dev.coderats.backend.web.dto.CommonGroupSummary;
-import dev.coderats.backend.web.dto.MyProfileResponse;
-import dev.coderats.backend.web.dto.PublicProfileResponse;
-import dev.coderats.backend.web.dto.UserUpdateRequest;
+import dev.coderats.backend.infra.repository.GroupRepository;
+import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.web.dto.response.MyProfileResponse;
+import dev.coderats.backend.web.dto.response.PublicProfileResponse;
+import dev.coderats.backend.web.dto.response.UserUpdateRequest;
+import dev.coderats.backend.web.dto.utils.CommonGroupSummary;
 
 @Service
 public class UserService {

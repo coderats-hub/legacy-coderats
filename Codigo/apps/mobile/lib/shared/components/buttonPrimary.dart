@@ -60,7 +60,15 @@ class AppButtonPrimary extends StatelessWidget {
         ),
       ),
       icon: icon != null ? Icon(icon, size: 20) : const SizedBox.shrink(),
-      label: Text(text),
+      label: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

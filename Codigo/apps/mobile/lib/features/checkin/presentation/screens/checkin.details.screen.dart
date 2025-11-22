@@ -1,9 +1,31 @@
+/**
+ * TELA DE CRIAÇÃO DE CHECK-IN
+ * 
+ * Esta tela permite ao usuário criar um novo check-in/atividade.
+ * Funcionalidades principais:
+ * - Upload de imagem da atividade
+ * - Campo obrigatório de título
+ * - Campo opcional de descrição
+ * - Seleção de commits relacionados do GitHub
+ * - Validação de campos obrigatórios
+ * - Submissão da atividade
+ * 
+ * Estados da tela:
+ * - Carregamento de commits
+ * - Validação de formulário
+ * - Feedback de sucesso/erro
+ * - Contagem de commits selecionados
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
 import 'package:google_fonts/google_fonts.dart';
+// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
+import 'dart:typed_data';
 import '../widgets/shared_widgets.dart';
 
+// Tela para criar um novo check-in de atividade
 class CommitCheckinScreen extends StatefulWidget {
   const CommitCheckinScreen({super.key});
 
@@ -11,9 +33,13 @@ class CommitCheckinScreen extends StatefulWidget {
   State<CommitCheckinScreen> createState() => _CommitCheckinScreenState();
 }
 
+// Estado da tela de criação de check-in
 class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
+  // Controladores dos campos de texto
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  
+  // Lista mockada de commits disponíveis (futuramente virá da API do GitHub)
   final List<CommitItem> _commits = [
     CommitItem(title: 'Título do commit aqui', isSelected: false),
     CommitItem(title: 'Título do commit', isSelected: false),
@@ -21,8 +47,10 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     CommitItem(title: 'Título do commit', isSelected: false),
   ];
   
-  int _selectedCommitsCount = 0;
-
+ // Variáveis de estado da tela
+  int _selectedCommitsCount = 0; // Contador de commits selecionados
+  Uint8List? _pickedImageBytes; 
+  
   @override
   void initState() {
     super.initState();
@@ -48,7 +76,55 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     });
   }
 
-  // Image upload removed: placeholder UI only (no image picker)
+  void _selectImage() {
+    _showImageSourceActionSheet();
+  }
+
+  Future<void> _showImageSourceActionSheet() async {
+    // Image picker temporarily disabled to resolve Android SDK conflict
+    /*
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+    */
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeria'),
+                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Câmera'),
+                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+    
+    // Image picker functionality disabled - only UI works
+    /*
+    try {
+      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      // ignore
+    }
+    */
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,24 +132,12 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
       data: SharedTheme.buildDarkTheme(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: AppSpacing.lg),
-              // Header compartilhado
-              const SharedHeader(
-                title: 'Code Rats',
-                showRefreshButton: false,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              // Conteúdo principal
-              Expanded(
-                child: _buildBody(),
-              ),
-            ],
-          ),
+        appBar: const AppHeader(
+          title: 'Code Rats',
         ),
-  // Removido: não deve haver navbar nesta tela
+        body: SafeArea(
+          child: _buildBody(),
+        ),
       ),
     );
   }
@@ -351,14 +415,15 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
 
 // ======== MODELS ========
 
+// Modelo para representar um commit do GitHub
 class CommitItem {
-  final String title;
-  bool isSelected;
-  final bool isUsed;
+  final String title;    // Título/mensagem do commit
+  bool isSelected;       // Se está selecionado para o check-in
+  final bool isUsed;     // Se já foi usado em outro check-in
 
   CommitItem({
     required this.title,
-    this.isSelected = false,
-    this.isUsed = false,
+    this.isSelected = false, // Por padrão não selecionado
+    this.isUsed = false,     // Por padrão não usado
   });
 }

@@ -35,7 +35,7 @@ dependencies:
   table_calendar: ^3.0.0
   cupertino_icons: ^1.0.2
   google_fonts: ^4.0.0
-  # image_picker removed: image import functionality disabled across app
+  # image_picker: ^0.8.7+4  # Removido para resolver conflito Android SDK
 
   # === Network & HTTP ===
   connectivity_plus: ^6.0.3

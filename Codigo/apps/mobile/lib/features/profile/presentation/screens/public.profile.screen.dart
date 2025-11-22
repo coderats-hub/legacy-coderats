@@ -1,116 +1,90 @@
+/**
+ * TELA DE PERFIL PÚBLICO
+ * 
+ * Exibe o perfil de outros usuários (não o próprio usuário logado).
+ * Mostra informações públicas de membros do grupo.
+ * 
+ * Onde é usada:
+ * - Navegação de GroupDetailPage (ao tocar em um membro)
+ * - Navegação de listas de usuários/rankings
+ * - Visualização de perfis de outros membros
+ * 
+ * Funcionalidades:
+ * - Header com avatar, nome e botão "Ver GitHub"
+ * - Calendário de atividades públicas (temporariamente comentado)
+ * - Badges/conquistas visíveis (temporariamente comentado)
+ * - Grupos em comum (temporariamente comentado)
+ * - Layout responsivo com scroll
+ * 
+ * Diferenças do perfil privado:
+ * - Não tem botões de ação (criar/entrar em grupo)
+ * - Não tem bottom navigation
+ * - Mostra apenas informações públicas
+ * - Foco em visualização, não em ações
+ */
+
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+// Tela de perfil público de outros usuários (não o próprio)
 class PublicProfileScreen extends StatelessWidget {
   PublicProfileScreen({super.key});
 
-  final DateTime _currentDate = DateTime.now();
-  final Map<DateTime, List<dynamic>> _markedDateMap = {};
+  final DateTime _currentDate = DateTime.now();            // Data atual para calendário
+  final Map<DateTime, List<dynamic>> _markedDateMap = {};  // Mapa de datas com atividades
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppHeader(
-        title: 'Perfil: Alice',
-        // Não exibe botão de voltar
-        onBack: null,
+        title: 'Perfil: Alice', // TODO: Nome dinâmico baseado no usuário
       ),
       body: SingleChildScrollView(
-  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ProfileHeader(
-              name: "Alice",
-              actionLabel: "Ver GitHub",
+            // Header padrão do perfil (avatar + nome + ação)
+            ProfileHeader(
+              name: "Alice",           // TODO: Nome dinâmico do usuário
+              actionLabel: "Ver GitHub", // Ação para visualizar GitHub
               actionIcon: Icons.link,
-              onAction: () {},
+              onAction: () {          // TODO: Implementar abertura do GitHub
+                // Abrir perfil GitHub do usuário
+              },
             ),
             const SizedBox(height: 12),
-            _CalendarCard(currentDate: _currentDate, markedDateMap: _markedDateMap),
-            const SizedBox(height: 16),
-            _BadgesRow(showSeeAll: true),
-            const SizedBox(height: 16),
-            _GroupsInCommon(),
+            // TODO: Calendário temporariamente comentado
+            // _CalendarCard(currentDate: _currentDate, markedDateMap: _markedDateMap),
+            // const SizedBox(height: 16),
+            // TODO: Badges temporariamente comentados
+            // _BadgesRow(showSeeAll: true),
+            // const SizedBox(height: 16),
+            // TODO: Grupos em comum temporariamente comentados
+            // _GroupsInCommon(),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  final String name;
-  final String actionLabel;
-  final IconData actionIcon;
-  final VoidCallback onAction;
-
-  const _ProfileHeader({
-    required this.name,
-    required this.actionLabel,
-    required this.actionIcon,
-    required this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: const BoxDecoration(
-                color: AppColors.surface,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(child: Icon(Icons.person, color: Colors.white, size: 48)),
-        ),
-  const SizedBox(height: AppSpacing.sm),
-        Text(
-          name,
-          style: AppTextStyles.title.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _ChipButton(
-          label: actionLabel,
-          icon: actionIcon,
-          onPressed: onAction,
-          color: AppColors.primary,
-        ),
-      ],
-    );
-  }
-}
-
-class _ChipButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color color;
-  const _ChipButton({required this.label, required this.icon, required this.onPressed, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-  borderRadius: BorderRadius.circular(AppCorners.xl),
-      child: InkWell(
-        onTap: onPressed,
-  borderRadius: BorderRadius.circular(AppCorners.xl),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: AppSpacing.xs),
-              Text(label, style: AppTextStyles.button.copyWith(color: Colors.white, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
+      // Barra de navegação inferior
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 2, // Perfil é a aba ativa
+        onTap: (i) {
+          if (i == 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tela de Início não implementada')),
+            );
+          } else if (i == 1) {
+            // Navega para lista de grupos
+            Navigator.of(context).pushReplacementNamed('/groups');
+          } else if (i == 2) {
+            // Volta para perfil privado
+            Navigator.of(context).pop();
+          }
+        },
       ),
     );
   }
@@ -144,7 +118,6 @@ class _CalendarCard extends StatelessWidget {
             ),
             leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white70),
             rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white70),
-            // header spacing handled by parent padding
           ),
           calendarStyle: CalendarStyle(
             outsideDaysVisible: false,
