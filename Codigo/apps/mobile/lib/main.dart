@@ -1,12 +1,12 @@
-import 'package:app/features/group/presentation/screens/group.ranking.screen.dart';
-import 'package:app/features/group/presentation/screens/group.details.screen.dart';
-import 'package:app/features/group/presentation/screens/group.join.screen.dart';
-import 'package:app/features/group/presentation/screens/group.list.screen.dart';
-import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
-import 'package:app/features/user/presentation/screens/code_exchange.screen.dart';
-import 'package:app/features/user/presentation/screens/home.screen.dart';
-import 'package:app/features/user/presentation/screens/onboarding.screen.dart';
-import 'package:app/features/group/presentation/screens/group.create.screen.dart';
+import 'package:app/views/group/screens/group.ranking.screen.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:app/views/group/screens/group.join.screen.dart';
+import 'package:app/views/group/screens/group.list.screen.dart';
+import 'package:app/views/profile/screens/private.profile.screen.dart';
+import 'package:app/views/user/screens/code_exchange.screen.dart';
+import 'package:app/views/user/screens/home.screen.dart';
+import 'package:app/views/user/screens/onboarding.screen.dart';
+import 'package:app/views/group/screens/group.create.screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,6 +15,7 @@ import 'shared/theme/app.theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await SessionManager.instance.loadFromStorage();
   
   runApp(const App()); 
 }
