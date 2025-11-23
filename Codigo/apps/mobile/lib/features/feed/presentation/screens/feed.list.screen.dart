@@ -1,16 +1,9 @@
-// ==============================
-// Arquivo: features/feed/presentation/screens/feed.list.screen.dart
-// ==============================
-// Tela template para listar itens do feed.
-
 import 'package:flutter/material.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import '../../domain/feed.dart';
 import '../../data/feed.repository.dart';
 import '../widgets/feed.card.dart';
-import 'package:app/features/group/presentation/screens/group.list.screen.dart';
-import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 
 class FeedListScreen extends StatefulWidget {
   const FeedListScreen({Key? key}) : super(key: key);
@@ -69,9 +62,31 @@ class _FeedListScreenState extends State<FeedListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Se está carregando inicial e não tem itens, mostra loading centralizado
+    if (_loading && _items.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppHeader(
+          title: 'Feed',
+          onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
+        ),
+        body: const AppLoading(),
+        bottomNavigationBar: AppNavbar(
+          currentIndex: 0,
+          onTap: (i) => _onNavbarTap(context, i),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: 'Feed',
+        onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
+      ),
       body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
         onRefresh: () async {
           setState(() {
             _items.clear();
@@ -82,13 +97,18 @@ class _FeedListScreenState extends State<FeedListScreen> {
         },
         child: ListView.builder(
           controller: _ctrl,
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
           itemCount: _items.length + (_loading ? 1 : 0),
           itemBuilder: (context, index) {
             if (index >= _items.length) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: Center(child: CircularProgressIndicator()),
+              return const SizedBox(
+                height: 80,
+                child: AppLoading(),
               );
             }
             final item = _items[index];
@@ -96,23 +116,19 @@ class _FeedListScreenState extends State<FeedListScreen> {
           },
         ),
       ),
-      // FAB removed as requested
       bottomNavigationBar: AppNavbar(
         currentIndex: 0,
-        onTap: (i) {
-          if (i == 0) {
-            // already here
-          } else if (i == 1) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const GroupsPage()),
-            );
-          } else if (i == 2) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
-            );
-          }
-        },
+        onTap: (i) => _onNavbarTap(context, i),
       ),
     );
+  }
+
+  void _onNavbarTap(BuildContext context, int index) {
+    if (index == 0) return; // Já está no feed
+    if (index == 1) {
+      Navigator.of(context).pushNamed('/groups');
+    } else if (index == 2) {
+      Navigator.of(context).pushNamed('/profile');
+    }
   }
 }

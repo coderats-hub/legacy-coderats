@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
 import 'package:app/features/group/presentation/screens/group.join.screen.dart';
-import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 
 /// Tela de onboarding inicial do app "coderats".
 /// Mantém a identidade visual do CadastroScreen:
@@ -75,11 +74,7 @@ class OnboardingStartScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const GroupsPage(),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed('/feed');
                   },
                   child: Text(
                     'Pular por enquanto',

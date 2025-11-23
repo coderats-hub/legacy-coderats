@@ -1,14 +1,11 @@
-import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
-import 'package:app/features/feed/presentation/screens/feed.list.screen.dart';
-import 'package:app/features/group/presentation/screens/group.details.screen.dart';
-import 'package:app/features/group/presentation/widgets/card.group.dart';
-import 'package:app/features/group/presentation/widgets/banner.group.dart' as banner;
-import 'group.create.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/services/group_repository.dart';
 import 'package:app/services/local_database.dart';
 import 'package:app/services/connectivity_service.dart';
-import 'package:app/features/group/presentation/widgets/card.group.dart';
+import 'package:app/shared/components/components.dart';
+import 'package:app/shared/theme/app_theme.dart';
+import '../widgets/card.group.dart';
+import '../widgets/banner.group.dart' as banner;
 
 /// Groups listing page wired to Online‑first + SQLite cache.
 
@@ -96,24 +93,22 @@ class _GroupListScreenState extends State<GroupListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Grupos'),
+      backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: 'Grupos',
         actions: [
           IconButton(
             tooltip: 'Switch user id (debug)',
-            icon: const Icon(Icons.switch_account),
+            icon: const Icon(Icons.switch_account, color: AppColors.textPrimary),
             onPressed: _showUserSwitchDialog,
           ),
         ],
       ),
       floatingActionButton: _online
-          ? FloatingActionButton(
+          ? AppFAB(
               onPressed: () {
-                // TODO: navegue para a tela de criação de grupo (somente online)
+                Navigator.of(context).pushNamed('/create-group');
               },
-              child: const Icon(Icons.add),
             )
           : null,
       body: Column(
@@ -121,16 +116,19 @@ class _GroupListScreenState extends State<GroupListScreen> {
           if (!_online)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: Colors.amber.withOpacity(0.15),
-        child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              color: AppColors.error.withOpacity(0.15),
+              child: Row(
                 children: [
-                  Icon(Icons.wifi_off, color: Colors.amber),
-                  SizedBox(width: 8),
+                  const Icon(Icons.wifi_off, color: AppColors.error, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-          'Sem conexão — exibindo dados do cache (somente leitura)'.toUpperCase(),
-                      style: TextStyle(color: Colors.amber, fontSize: 12, letterSpacing: 0.2),
+                      'Sem conexão — exibindo dados do cache (somente leitura)'.toUpperCase(),
+                      style: AppTextStyles.inputHint.copyWith(
+                        color: AppColors.error,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -140,34 +138,39 @@ class _GroupListScreenState extends State<GroupListScreen> {
             child: RefreshIndicator(
               onRefresh: _pullToRefresh,
               child: _futureGroups == null
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoading()
                   : FutureBuilder<List<Group>>(
                       future: _futureGroups!,
                       builder: (context, snap) {
                         if (snap.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const AppLoading();
                         }
                         final groups = snap.data ?? const <Group>[];
-                  if (groups.isEmpty) {
-                    return ListView(
-                      padding: const EdgeInsets.all(24),
-                      children: const [
-                        SizedBox(height: 48),
-                        Center(
-                          child: Text(
-                            'Nenhum grupo no momento.\nPuxe para atualizar ou crie um novo quando estiver online.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
+                        if (groups.isEmpty) {
+                          return ListView(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            children: [
+                              const SizedBox(height: AppSpacing.xxl),
+                              Center(
+                                child: Text(
+                                  'Nenhum grupo no momento.\nPuxe para atualizar ou crie um novo quando estiver online.',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
 
                         return ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            96,
+                          ),
                           itemCount: groups.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, i) {
                             final g = groups[i];
                             final currentUserId = _overrideUserId ?? widget.currentUserId;
@@ -175,13 +178,23 @@ class _GroupListScreenState extends State<GroupListScreen> {
                               group: g,
                               currentUserId: currentUserId,
                             );
-                          }
+                          },
                         );
                       },
                     ),
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 1,
+        onTap: (i) {
+          if (i == 0) {
+            Navigator.of(context).pushNamed('/feed');
+          } else if (i == 2) {
+            Navigator.of(context).pushNamed('/profile');
+          }
+        },
       ),
     );
   }
@@ -221,13 +234,16 @@ class _GroupCardState extends State<_GroupCard> {
     // Expanded area content
     Widget? expanded;
     if (_loading) {
-      expanded = const Padding(
-        padding: EdgeInsets.all(12),
+      expanded = Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-            SizedBox(width: 8),
-            Text('Carregando ranking...', style: TextStyle(color: Colors.white70)),
+            const AppLoading(size: 18, strokeWidth: 2),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Carregando ranking...',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+            ),
           ],
         ),
       );
@@ -236,18 +252,18 @@ class _GroupCardState extends State<_GroupCard> {
     } else if ((widget.group.description ?? '').isNotEmpty) {
       // Before first load, show the description as a placeholder
       expanded = Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Text(
           widget.group.description!,
-          style: const TextStyle(color: Colors.white70),
+          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
         ),
       );
     } else if (_openedOnce) {
-      expanded = const Padding(
-        padding: EdgeInsets.all(12),
+      expanded = Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Text(
           'Sem cache de ranking para este grupo (abra online pelo menos uma vez).',
-          style: TextStyle(color: Colors.white70),
+          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
         ),
       );
     }
@@ -289,8 +305,6 @@ class _RankingBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     // Ensure sorted by points desc
     final participants = [...details.participants]
       ..sort((a, b) => b.participant.points.compareTo(a.participant.points));
@@ -307,82 +321,85 @@ class _RankingBlock extends StatelessWidget {
       children: [
         // Row: Leader & Você
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
           child: Row(
             children: [
               if (leader != null) _pill(
-                context,
                 labelLeft: 'Leader',
                 name: leader.user.name,
                 points: leader.participant.points,
-                color: cs.primary,
+                color: AppColors.primary,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               if (me != null) _pill(
-                context,
                 labelLeft: 'Você',
                 name: me.user.name,
                 points: me.participant.points,
-                color: cs.tertiary,
+                color: AppColors.accent,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
 
         // Title: Ranking
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text('Ranking', style: Theme.of(context).textTheme.titleMedium),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Text('Ranking', style: AppTextStyles.title),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
 
         // Top 3
         ...List.generate(top3.length, (i) {
           final row = top3[i];
           final pos = i + 1;
           return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(color: AppColors.border),
             ),
             child: ListTile(
-              leading: const CircleAvatar(),
-              title: Text(row.user.name, style: const TextStyle(color: Colors.white)),
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.primary,
+                child: Icon(Icons.person, color: AppColors.textPrimary, size: 20),
+              ),
+              title: Text(row.user.name, style: AppTextStyles.inputLabel),
               subtitle: Text(
                 '${row.participant.points.toStringAsFixed(1)} pontos',
-                style: const TextStyle(color: Colors.white70),
+                style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
               ),
               trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppCorners.sm),
                 ),
-                child: Text(_ordinal(pos), style: const TextStyle(color: Colors.white)),
+                child: Text(_ordinal(pos), style: AppTextStyles.inputHint.copyWith(color: AppColors.textPrimary)),
               ),
             ),
           );
         }),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
       ],
     );
   }
 
-  Widget _pill(BuildContext context,
-      {required String labelLeft, required String name, required double points, required Color color}) {
-    final tt = Theme.of(context).textTheme;
+  Widget _pill({required String labelLeft, required String name, required double points, required Color color}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, size: 12, color: color),
-        const SizedBox(width: 6),
-        Text(labelLeft, style: tt.labelMedium?.copyWith(color: Colors.white70)),
-        const SizedBox(width: 8),
-        Text(name, style: tt.labelLarge),
-        const SizedBox(width: 8),
-        Text('${points.toStringAsFixed(1)} pontos', style: tt.labelMedium?.copyWith(color: Colors.white70)),
+        Icon(Icons.circle, size: 10, color: color),
+        const SizedBox(width: AppSpacing.xs),
+        Text(labelLeft, style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary)),
+        const SizedBox(width: AppSpacing.sm),
+        Text(name, style: AppTextStyles.button.copyWith(fontSize: 13)),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          '${points.toStringAsFixed(1)} pts',
+          style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -397,27 +414,49 @@ class _GroupDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (details == null) {
-      return const Scaffold(
-        body: Center(child: Text('Sem cache disponível para este grupo.')),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: const AppHeader(title: 'Detalhes do Grupo'),
+        body: Center(
+          child: Text(
+            'Sem cache disponível para este grupo.',
+            style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+          ),
+        ),
       );
     }
     final g = details!.group;
     final p = details!.participants;
     return Scaffold(
-      appBar: AppBar(title: Text(g.name)),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: AppColors.background,
+      appBar: AppHeader(
+        title: g.name,
+        onBack: () => Navigator.of(context).pop(),
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(AppSpacing.md),
         itemCount: p.length,
+        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
         itemBuilder: (context, i) {
           final row = p[i];
-          return Card(
-            color: const Color(0xFF1E1E1E),
+          return Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(color: AppColors.border),
+            ),
             child: ListTile(
-              leading: CircleAvatar(child: Text('${i + 1}')),
-              title: Text(row.user.name, style: const TextStyle(color: Colors.white)),
+              leading: CircleAvatar(
+                backgroundColor: AppColors.primary,
+                child: Text(
+                  '${i + 1}',
+                  style: AppTextStyles.button.copyWith(color: AppColors.textPrimary, fontSize: 16),
+                ),
+              ),
+              title: Text(row.user.name, style: AppTextStyles.inputLabel),
               subtitle: Text(
                 '${row.participant.points.toStringAsFixed(1)} pontos',
-                style: const TextStyle(color: Colors.white70),
+                style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
               ),
             ),
           );

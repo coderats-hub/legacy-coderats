@@ -32,8 +32,7 @@ import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
 // import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
 import 'dart:typed_data';
-import 'package:app/shared/components/app_components.dart';
-import '../../../../shared/components/buttonPrimary.dart';
+import 'package:app/shared/components/components.dart';
 import 'group.scoring.screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -85,7 +84,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: isStartDate ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
-      firstDate: DateTime.now(), // Não permite datas passadas
+      firstDate: isStartDate ? DateTime.now() : (_startDate ?? DateTime.now()), // Data de fim não pode ser menor que data de início
       lastDate: DateTime.now().add(const Duration(days: 365)), // Limite de 1 ano
       builder: (context, child) {
         // Aplica tema customizado ao date picker
@@ -116,46 +115,21 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
-  // Placeholder para seleção de imagem de capa
-  void _selectCoverImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    // Image picker temporarily disabled to resolve Android SDK conflict
-    /*
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-    */
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
+  // Seleção de imagem de capa usando modal compartilhado
+  void _selectImage() async {
+    final source = await ImageSourceModal.show(context);
+    
     if (source == null) return;
     
     // Image picker functionality disabled - only UI works
     /*
     try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1280,
+      );
       if (file == null) return;
       final bytes = await file.readAsBytes();
       setState(() {
@@ -322,46 +296,49 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          height: 120,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppCorners.md),
-            border: Border.all(
-              color: AppColors.border,
-              style: BorderStyle.solid,
+        GestureDetector(
+          onTap: _selectImage,
+          child: Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(
+                color: AppColors.border,
+                style: BorderStyle.solid,
+              ),
             ),
-          ),
-          child: _pickedImageBytes != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(AppCorners.md),
-                    child: Image.memory(
-                      _pickedImageBytes!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.image_outlined,
-                        color: AppColors.textSecondary,
-                        size: 32,
+            child: _pickedImageBytes != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppCorners.md),
+                      child: Image.memory(
+                        _pickedImageBytes!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Toque para adicionar imagem',
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 16,
-                          color: Color(0xFFACACAC),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.image_outlined,
+                          color: AppColors.textSecondary,
+                          size: 32,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Toque para adicionar imagem',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            color: Color(0xFFACACAC),
+                          ),
+                        ),
+                      ],
+                    ),
+          ),
         ),
       ],
     );

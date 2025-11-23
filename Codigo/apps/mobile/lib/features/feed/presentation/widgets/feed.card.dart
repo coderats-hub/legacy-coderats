@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/feed.dart';
 import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/components.dart';
 
 class FeedCard extends StatelessWidget {
   final FeedItem item;
@@ -25,25 +26,20 @@ class _GithubCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              const CircleAvatar(radius: 16, backgroundColor: AppColors.border),
-              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-          Text(item.groupName, style: AppTextStyles.title.copyWith(fontSize: 14)),
-        const SizedBox(height: 2),
-        Text(item.userName, style: AppTextStyles.subtitle.copyWith(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
+                child: UserAvatarInfo(
+                  label: item.groupName,
+                  subtitle: item.userName,
+                  avatarRadius: 16,
                 ),
               ),
-              Text('${item.points} pts', style: AppTextStyles.subtitle),
+              Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -87,20 +83,6 @@ class _GithubCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Icon(Icons.favorite_border, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-              const SizedBox(width: AppSpacing.md),
-              Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-              const Spacer(),
-              Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
           // show title + description in one line (like regular check-ins)
           Text.rich(
             TextSpan(
@@ -128,25 +110,20 @@ class _RegularCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              const CircleAvatar(radius: 16, backgroundColor: AppColors.border),
-              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                            Text(item.groupName, style: AppTextStyles.title.copyWith(fontSize: 14)),
-                            const SizedBox(height: 2),
-                            Text(item.userName, style: AppTextStyles.subtitle.copyWith(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
+                child: UserAvatarInfo(
+                  label: item.groupName,
+                  subtitle: item.userName,
+                  avatarRadius: 16,
                 ),
               ),
-              Text('${item.points} pts', style: AppTextStyles.subtitle),
+              Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -158,18 +135,6 @@ class _RegularCard extends StatelessWidget {
                 TextSpan(text: item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Icon(Icons.favorite_border, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text('${item.likes}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-              const SizedBox(width: AppSpacing.md),
-              Icon(Icons.chat_bubble_outline, color: AppColors.textSecondary, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text('${item.comments}', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-            ],
           ),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),

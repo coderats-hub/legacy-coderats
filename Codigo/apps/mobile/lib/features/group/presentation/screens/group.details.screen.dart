@@ -31,16 +31,15 @@
 
 import 'dart:async';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
-import 'package:app/features/group/presentation/screens/group.edit.screen.dart';
 import 'package:app/features/profile/presentation/screens/public.profile.screen.dart';
-import 'package:app/features/profile/presentation/screens/private.profile.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.details.screen.dart';
 import 'package:app/features/checkin/presentation/screens/checkin.list.screen.dart';
-import 'package:app/features/feed/presentation/screens/feed.list.screen.dart';
+import 'package:app/features/group/presentation/screens/group.edit.screen.dart';
+import 'package:app/features/group/presentation/screens/group.ranking.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupName;
@@ -150,7 +149,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       // Header com nome do grupo e menu de opções
       appBar: AppHeader(
         title: widget.groupName,
-        onBack: () => Navigator.of(context).maybePop(),
+        onBack: () => Navigator.of(context).pop(),
         actions: [
           // Menu de 3 pontos com opções
           PopupMenuButton<String>(
@@ -310,7 +309,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               // Loader no final quando carregando mais itens
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: Center(child: CircularProgressIndicator()),
+                child: AppLoading(),
               );
             }
           }).toList(),
@@ -332,20 +331,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       ),
       // Barra de navegação inferior - grupos permanece ativo
       bottomNavigationBar: AppNavbar(
-        currentIndex: 1, // Mantém grupos como aba ativa
+        currentIndex: 1,
         onTap: (i) {
           if (i == 0) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const FeedListScreen()),
-            );
-          } else if (i == 1) {
-            // Volta para lista de grupos (tela pai)
-            Navigator.of(context).maybePop();
+            Navigator.of(context).pushNamed('/feed');
           } else if (i == 2) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => PrivateProfileScreen()),
-            );
+            Navigator.of(context).pushNamed('/profile');
           }
+          // i == 1 é grupos, já está nessa tela
         },
       ),
     );

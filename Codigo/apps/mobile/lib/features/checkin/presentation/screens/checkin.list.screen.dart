@@ -17,7 +17,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/checkin.repository.dart';
 import '../../domain/checkin.dart';
@@ -129,11 +129,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
   Widget _buildBody() {
     // Mostra loading spinner durante carregamento
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF2BB6A5),
-        ),
-      );
+      return const AppLoading();
     }
     
     // Mostra tela de erro se houver problema

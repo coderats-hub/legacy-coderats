@@ -24,7 +24,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
+import 'package:app/features/group/presentation/screens/group.details.screen.dart';
 
 // Tela para entrar em grupo usando código de convite
 class JoinGroupScreen extends StatefulWidget {
@@ -131,7 +132,12 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              Navigator.pushNamed(context, '/group-details');
+                              // TODO: Integrar com API para validar código e obter dados do grupo
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const GroupDetailPage(groupName: 'Grupo Teste'),
+                                ),
+                              );
                             }
                           },
                           child: const Text(

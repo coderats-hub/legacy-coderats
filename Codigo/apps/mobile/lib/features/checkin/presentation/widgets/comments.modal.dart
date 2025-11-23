@@ -32,7 +32,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 
 // Modal de comentários com animações e layout responsivo
 class CommentsModal extends StatefulWidget {
