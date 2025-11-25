@@ -162,7 +162,7 @@ jobs:
     steps:
       # Credenciais Conta 1 — usadas em development
       - name: Configure AWS credentials (Conta 1 - staging)
-        if: github.ref_name == 'development'
+        if: github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
