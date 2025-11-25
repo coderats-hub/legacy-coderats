@@ -1,1 +1,1 @@
-ALTER TABLE users DELETE COLUMN github_access_tokens;
+ALTER TABLE users DROP COLUMN github_access_tokens;
