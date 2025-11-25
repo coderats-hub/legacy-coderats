@@ -18,11 +18,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
-import 'package:app/shared/components/profile_components.dart';
+import 'package:app/features/group/presentation/screens/group.join.screen.dart';
+import 'package:app/shared/components/components.dart';
+import '../widgets/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:app/features/group/presentation/screens/group.create.screen.dart';
-import 'package:app/features/group/presentation/screens/group.list.screen.dart';
+// Imports removidos - usando rotas nomeadas agora
 import 'package:app/features/user/data/services/user.service.dart';
 import 'package:app/features/user/domain/models/user.model.dart';
 
@@ -71,53 +72,27 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: const AppHeader(title: 'Perfil'),
+        body: const AppLoading(),
+        bottomNavigationBar: AppNavbar(
+          currentIndex: 2,
+          onTap: (i) => _onNavbarTap(context, i),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          color: AppColors.background,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: SafeArea(
-            bottom: false,
-            child: SizedBox(
-              height: kToolbarHeight,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _isLoading 
-                          ? 'Perfil: Carregando...' 
-                          : _currentUser != null 
-                              ? 'Perfil: ${_currentUser!.name}'
-                              : 'Perfil: Usuário',
-                      style: AppTextStyles.title,
-                    ),
-                  ),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      appBar: AppHeader(
+        title: _currentUser != null 
+            ? 'Perfil: ${_currentUser!.name}'
+            : 'Perfil',
       ),
-      body: _isLoading 
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            )
-          : _error != null
-              ? Center(
+      body: _error != null
+          ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -174,21 +149,18 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                 ),
       bottomNavigationBar: AppNavbar(
         currentIndex: 2,
-        onTap: (i) {
-          if (i == 0) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de Início não implementada')),
-            );
-          } else if (i == 1) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const GroupsPage()),
-            );
-          } else if (i == 2) {
-            // já está na tela de perfil
-          }
-        },
+        onTap: (i) => _onNavbarTap(context, i),
       ),
     );
+  }
+
+  void _onNavbarTap(BuildContext context, int index) {
+    if (index == 2) return; // Já está no perfil
+    if (index == 0) {
+      Navigator.of(context).pushReplacementNamed('/feed');
+    } else if (index == 1) {
+      Navigator.of(context).pushReplacementNamed('/groups');
+    }
   }
 }
 
@@ -226,12 +198,7 @@ class _ProfileHeader extends StatelessWidget {
                     },
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        ),
-                      );
+                      return const AppLoading(size: 48, strokeWidth: 2);
                     },
                   )
                 : const Center(
@@ -322,13 +289,26 @@ class _PrivateActions extends StatelessWidget {
               label: "Entrar via código",
               icon: Icons.group_add_outlined,
               onTap: () {
-                Navigator.of(context).pushNamed('/join-group');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const JoinGroupScreen(),
+                  ),
+                );
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _onNavbarTap(BuildContext context, int index) {
+    if (index == 2) return; // Já está no perfil
+    if (index == 0) {
+      Navigator.of(context).pushReplacementNamed('/feed');
+    } else if (index == 1) {
+      Navigator.of(context).pushReplacementNamed('/groups');
+    }
   }
 }
 

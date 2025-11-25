@@ -32,8 +32,7 @@
 import 'package:app/features/group/presentation/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
-import '../../../../shared/components/buttonPrimary.dart';
+import 'package:app/shared/components/components.dart';
 
 // Enum para métodos de avaliação disponíveis
 enum EvaluationMethod {

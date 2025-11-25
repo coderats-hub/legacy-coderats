@@ -21,7 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
 
 // Tela para editar informações de grupo existente
@@ -57,46 +57,21 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     super.dispose();
   }
 
-  void _pickImage() {
-    _showImageSourceActionSheet();
-  }
-
-  // Modal para escolher fonte da imagem (galeria ou câmera)
-  Future<void> _showImageSourceActionSheet() async {
-    // Image picker temporarily disabled to resolve Android SDK conflict
-    /*
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-    */
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
+  // Seleção de imagem usando modal compartilhado
+  void _selectImage() async {
+    final source = await ImageSourceModal.show(context);
+    
     if (source == null) return;
     
     // Image picker functionality disabled - only UI works
     /*
     try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1280,
+      );
       if (file == null) return;
       final bytes = await file.readAsBytes();
       setState(() {
@@ -104,6 +79,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
         _pickedImageBytes = bytes;
       });
     } catch (e) {
+      // ignore
     }
     */
   }
@@ -149,7 +125,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                 child: GestureDetector(
-                  onTap: _pickImage, // Abre seletor de imagem
+                  onTap: _selectImage, // Abre seletor de imagem
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
                     child: Container(

@@ -25,8 +25,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
-import 'package:app/shared/components/profile_components.dart';
+import 'package:app/shared/components/components.dart';
+import '../widgets/profile_components.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 // Tela de perfil público de outros usuários (não o próprio)
@@ -71,19 +71,14 @@ class PublicProfileScreen extends StatelessWidget {
       ),
       // Barra de navegação inferior
       bottomNavigationBar: AppNavbar(
-        currentIndex: 2, // Perfil é a aba ativa
+        currentIndex: 2,
         onTap: (i) {
           if (i == 0) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de Início não implementada')),
-            );
+            Navigator.of(context).pushNamed('/feed');
           } else if (i == 1) {
-            // Navega para lista de grupos
-            Navigator.of(context).pushReplacementNamed('/groups');
-          } else if (i == 2) {
-            // Volta para perfil privado
-            Navigator.of(context).pop();
+            Navigator.of(context).pushNamed('/groups');
           }
+          // i == 2 é perfil, já está nessa tela
         },
       ),
     );

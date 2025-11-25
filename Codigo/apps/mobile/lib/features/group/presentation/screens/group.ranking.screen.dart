@@ -28,7 +28,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 
 // Tela que exibe o ranking completo de membros do grupo
 class GroupRankingScreen extends StatelessWidget {

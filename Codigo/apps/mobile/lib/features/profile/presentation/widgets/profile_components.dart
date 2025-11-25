@@ -17,7 +17,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/theme/app_theme_extended.dart';
-import 'package:app/shared/components/app_avatar.dart';
+import 'package:app/shared/components/components.dart';
 
 // Cabeçalho padrão para telas de perfil (público e privado)
 class ProfileHeader extends StatelessWidget {
