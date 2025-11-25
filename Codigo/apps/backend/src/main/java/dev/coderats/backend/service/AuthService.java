@@ -43,6 +43,7 @@ public class AuthService {
     user.setName(name);
     user.setEmail(ghUser.email());
     user.setImage(ghUser.avatar_url());
+    user.setGithubAccessToken(accessToken);
 
     if (user.getCreatedAt() == null) user.setCreatedAt(now);
     user.setUpdatedAt(now);

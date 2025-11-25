@@ -46,6 +46,9 @@ public class GitHubCommitService {
         if (!StringUtils.hasText(user.getGithubUser())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não possui GitHub vinculado");
         }
+        if (!StringUtils.hasText(user.getGithubAccessToken())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token do GitHub indisponível. Faça login novamente.");
+        }
 
         int normalizedPage = Math.max(page, 1);
         int normalizedSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
@@ -61,6 +64,7 @@ public class GitHubCommitService {
         try {
             events = http.get()
                     .uri(uri)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + user.getGithubAccessToken())
                     .retrieve()
                     .body(new org.springframework.core.ParameterizedTypeReference<List<GithubEvent>>() {});
         } catch (RestClientException ex) {
