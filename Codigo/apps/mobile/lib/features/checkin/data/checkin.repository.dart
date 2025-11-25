@@ -1,72 +1,103 @@
-// ==============================
-// Arquivo: features/checkin/data/checkin.repository.dart
-// ==============================
-//
-// Pasta 'data':
-// Esta pasta é responsável por lidar com **todos os dados da feature**, ou seja:
-// - Buscar, salvar ou atualizar informações vindas de **API**, **banco local** ou **cache**.
-// - Transformar dados recebidos da API em modelos de domínio.
-// - Fornecer dados de forma consistente para o domínio ou provider, sem que eles precisem saber a origem.
-//
-// Além do repositório, a pasta 'data' pode conter:
-//
-// 1. Datasources
-//    - checkin.api.dart → comunicação com APIs externas
-//    - checkin.local.dart → leitura/escrita em banco local (SQLite, Hive, SharedPreferences)
-//    - checkin.cache.dart → cache temporário em memória ou disco
-//
-// 2. Interfaces / Abstrações
-//    - i_checkin.repository.dart → define a “promessa” do repositório
-//      permitindo trocar implementações sem impactar domínio ou UI
-//
-// 3. Mappers / Transformers
-//    - checkin.mapper.dart → converte JSON para modelo de domínio e vice-versa
-//
-// 4. Mock ou dados de teste
-//    - checkin.mock.dart → dados fictícios para demonstração ou testes sem backend
-//
-// 5. Exceções específicas da camada de dados
-//    - checkin.exceptions.dart → erros relacionados a API, banco ou cache
-//
-// Dessa forma, a pasta 'data' concentra tudo que é relacionado à **obtenção e manipulação de dados**, mantendo
-// a arquitetura limpa, desacoplada e facilitando testes.
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin.dart';
+import 'package:app/shared/services/storage.service.dart';
 
 class CheckinRepository {
-  // Função que simula a busca de check-ins
-  // Retorna uma lista de Checkin após 1 segundo de delay
-  Future<List<Checkin>> fetchCheckins() async {
-    // Simula tempo de resposta da API ou do banco de dados
-    await Future.delayed(const Duration(seconds: 1));
+  final StorageService _storage = StorageService();
+  final String _baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
 
-    // Retorna dados fixos apenas para exemplo
-    return [
-      Checkin(id: '1', title: 'Check-in 1', date: DateTime.now()),
-      Checkin(id: '2', title: 'Check-in 2', date: DateTime.now()),
-    ];
+  Future<List<Checkin>> fetchFeed({int limit = 20, int offset = 0}) async {
+    final token = await _storage.getToken();
+    if (token == null) throw Exception('Token n\u00e3o encontrado');
+
+    final uri = Uri.parse('$_baseUrl/feed').replace(queryParameters: {
+      'limit': '$limit',
+      'offset': '$offset',
+    });
+
+    final resp = await http.get(uri, headers: _headers(token));
+    _ensureSuccess(resp, uri);
+
+    final List<dynamic> data = json.decode(resp.body) as List<dynamic>;
+    return data
+        .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<List<Checkin>> fetchGroupCheckins(
+    String groupId, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final token = await _storage.getToken();
+    if (token == null) throw Exception('Token n\u00e3o encontrado');
+
+    final uri = Uri.parse('$_baseUrl/groups/$groupId/checkins').replace(
+      queryParameters: {
+        'limit': '$limit',
+        'offset': '$offset',
+      },
+    );
+
+    final resp = await http.get(uri, headers: _headers(token));
+    _ensureSuccess(resp, uri);
+
+    final List<dynamic> data = json.decode(resp.body) as List<dynamic>;
+    return data
+        .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<Checkin> createCheckin({
+    required String groupId,
+    required String title,
+    String? description,
+    String? image,
+    String? summaryAi,
+  }) async {
+    final token = await _storage.getToken();
+    if (token == null) throw Exception('Token n\u00e3o encontrado');
+
+    final uri = Uri.parse('$_baseUrl/groups/$groupId/checkins');
+
+    final payload = <String, dynamic>{
+      'title': title,
+    };
+    if (description != null && description.isNotEmpty) {
+      payload['description'] = description;
+    }
+    if (image != null && image.isNotEmpty) {
+      payload['image'] = image;
+    }
+    if (summaryAi != null && summaryAi.isNotEmpty) {
+      payload['summary_ai'] = summaryAi;
+    }
+
+    final resp = await http.post(
+      uri,
+      headers: _headers(token),
+      body: json.encode(payload),
+    );
+    _ensureSuccess(resp, uri);
+
+    final Map<String, dynamic> data =
+        json.decode(resp.body) as Map<String, dynamic>;
+    return Checkin.fromJson(data);
+  }
+
+  Map<String, String> _headers(String token) => {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      };
+
+  void _ensureSuccess(http.Response resp, Uri uri) {
+    if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      return;
+    }
+    throw Exception(
+        'Request to ${uri.path} failed with status ${resp.statusCode}');
   }
 }
-
-// ==============================
-// Como usar esse repositório:
-//
-// Exemplo dentro de um Use Case ou Provider:
-// final repository = CheckinRepository();
-// final checkins = await repository.fetchCheckins();
-//
-// Observações:
-//
-// 1. Em um app real, você substituiria os dados fixos por:
-//    - Chamadas HTTP para a API
-//    - Leitura/escrita em SQLite ou SharedPreferences
-//
-// 2. O repositório **não deve conter lógica de UI** ou estado da tela.
-//    Ele só entrega os dados prontos para a camada de domínio ou provider.
-//
-// 3. Caso a fonte de dados mude, só precisamos alterar este arquivo,
-//    sem impactar as outras camadas.
-//
-// 4. Lembre-se: a pasta 'data' pode crescer e conter múltiplos arquivos
-//    para gerenciar diferentes fontes de dados, mappers, mocks e exceções,
-//    mantendo sempre a separação de responsabilidades.
