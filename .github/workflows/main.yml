@@ -189,5 +189,6 @@ jobs:
           fi
 
           aws autoscaling start-instance-refresh \
+            --region ${{ vars.AWS_REGION }} \
             --auto-scaling-group-name "$ASG_NAME" \
             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
