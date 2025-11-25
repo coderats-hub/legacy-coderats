@@ -13,6 +13,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'shared/theme/app.theme.dart';
 
+import 'package:app/core/session_manager.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -21,29 +24,40 @@ Future<void> main() async {
   runApp(const App()); 
 }
 
-// Widget raiz da aplicação - configura MaterialApp e roteamento
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Configurações básicas do app
       title: 'Code Rats',
-      theme: AppTheme.dark(), // Tema escuro personalizado
-      home: const TelaInicio(), // Tela inicial (splash/welcome)
-      debugShowCheckedModeBanner: false, // Remove banner de debug
+      theme: AppTheme.dark(),
+      home: const TelaInicio(),
+      debugShowCheckedModeBanner: false,
       
-      // Sistema de rotas nomeadas para navegação
       routes: {
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
-        '/group-details': (_) => GroupDetailPage(groupName: 'Nome do Grupo'),
         '/groups': (_) => const GroupListScreen(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),
         '/onboarding': (_) => const OnboardingStartScreen(),
         '/create-group': (_) => const CreateGroupScreen(),
+        '/group-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+          if (args == null || args['groupId'] == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text("Erro")),
+              body: const Center(child: Text("ID do grupo não fornecido")),
+            );
+          }
+          return GroupDetailPage(
+            groupId: args['groupId'], 
+            groupNamePreview: args['groupNamePreview'],
+            imageUrlPreview: args['imageUrlPreview'],  
+          );
+        },
       },
     );
   }

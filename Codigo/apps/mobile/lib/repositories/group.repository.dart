@@ -1,41 +1,47 @@
 import 'package:app/domain/group/group.dart';
 import 'package:app/domain/group/group_details.dart';
 import 'package:app/services/group/group_remote_service.dart';
-
-import '../core/session_manager.dart';
-import '../services/connectivity_service.dart';
-import '../database/group/group.dao.dart';
+import 'package:app/database/group/group.dao.dart';
+import 'package:app/services/connectivity_service.dart';
+import 'package:app/core/session_manager.dart';
 
 class GroupRepository {
   final GroupRemoteService remote;
-  final GroupDao local;
+  final GroupDao? local; // <--- AGORA É OPCIONAL (NULLABLE)
   final ConnectivityService net;
   final SessionManager session;
 
   GroupRepository({
     required this.remote,
-    required this.local,
+    this.local,          // <--- REMOVIDO 'required'
     required this.net,
     required this.session,
   });
 
   Future<List<Group>> getUserGroups() async {
-    final online = await net.isOnline();
     final userId = session.currentUserId;
+    if (userId == null) return [];
 
-    if (userId == null) {
-      return []; 
-    }
+    final online = await net.isOnline();
 
     if (online) {
       try {
         final groups = await remote.getUserGroups();
-        await local.cacheGroups(groups, userId);
+        // Só salva no cache se o banco local existir (Mobile)
+        if (local != null) {
+          await local!.cacheGroups(groups, userId);
+        }
         return groups;
-      } catch (_) {}
+      } catch (e) {
+        // Se der erro na API, tenta o cache
+      }
     }
 
-    return await local.getGroupsByUser(userId);
+    // Se tiver banco local, busca dele. Se não (Web offline), retorna vazio.
+    if (local != null) {
+      return await local!.getGroupsByUser(userId);
+    }
+    return []; 
   }
 
   Future<GroupDetails> getGroupDetails(String groupId) async {
@@ -44,18 +50,22 @@ class GroupRepository {
     if (online) {
       try {
         final details = await remote.getGroupDetails(groupId);
-        await local.cacheGroupDetails(details);
+        if (local != null) {
+          await local!.cacheGroupDetails(details);
+        }
         return details;
-      } catch (_) {}
+      } catch (e) {}
     }
 
-    final cached = await local.getGroupDetails(groupId);
-    if (cached == null) {
-      throw Exception("Sem cache disponível para este grupo.");
+    if (local != null) {
+      final cached = await local!.getGroupDetails(groupId);
+      if (cached != null) return cached;
     }
-    return cached;
+    
+    throw Exception("Dados não disponíveis offline.");
   }
 
+  // Métodos de escrita (create, update) continuam iguais pois só usam 'remote'
   Future<Group> createGroup({
     required String name,
     String? description,
@@ -74,25 +84,5 @@ class GroupRepository {
       startDate: startDate,
       endDate: endDate,
     );
-  }
-
-  Future<Group> updateGroup(
-    String id, {
-    String? name,
-    String? description,
-    String? image,
-    List<String>? participantsRemove,
-  }) async {
-    return remote.updateGroup(
-      id,
-      name: name,
-      description: description,
-      image: image,
-      participantsRemove: participantsRemove,
-    );
-  }
-
-  Future<Group> joinGroup(String code) async {
-    return remote.joinGroup(code);
   }
 }

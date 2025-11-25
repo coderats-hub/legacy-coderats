@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.domain.GroupParticipant;
+import dev.coderats.backend.domain.User;
 import dev.coderats.backend.domain.UserSummary;
 import dev.coderats.backend.infra.repository.GroupParticipantRepository;
 import dev.coderats.backend.infra.repository.GroupRepository;
@@ -42,7 +43,6 @@ public class GroupService {
     }
 
     // REMOVIDO: O método findCommonGroups foi movido para o GroupRepository
-
     @Transactional
     public Group createGroup(GroupCreateRequest request, UUID creatorUserId) {
         // Criar o grupo
@@ -65,8 +65,14 @@ public class GroupService {
 
         Group savedGroup = groupRepository.save(group);
 
-        // Adicionar o criador como administrador do grupo
-        GroupParticipant creator = new GroupParticipant(creatorUserId, savedGroup.getId(), "admin");
+        User user = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new RuntimeException("Usuário criador não encontrado"));
+
+        GroupParticipant creator = new GroupParticipant();
+        creator.setUser(user);       
+        creator.setGroup(savedGroup); 
+        creator.setRole("admin");
+
         participantRepository.save(creator);
 
         return savedGroup;
