@@ -23,7 +23,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import dev.coderats.backend.domain.User;
 import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.service.dto.GitHubCommitDetailPayload;
+import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
 import dev.coderats.backend.web.dto.response.GitHubCommitFileResponse;
 import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
 
@@ -46,15 +49,7 @@ public class GitHubCommitService {
     }
 
     public List<GitHubCommitResponse> fetchRecentCommits(UUID userId, int page, int size) {
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-
-        if (!StringUtils.hasText(user.getGithubUser())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não possui GitHub vinculado");
-        }
-        if (!StringUtils.hasText(user.getGithubAccessToken())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token do GitHub indisponível. Faça login novamente.");
-        }
+        var user = requireGithubUser(userId);
 
         int normalizedPage = Math.max(page, 1);
         int normalizedSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
@@ -123,6 +118,25 @@ public class GitHubCommitService {
         return new ArrayList<>(commits.values());
     }
 
+    public List<GitHubCommitDetailPayload> fetchCommitDetails(UUID userId, List<CommitSelectionRequest> commits) {
+        var user = requireGithubUser(userId);
+        if (commits == null || commits.isEmpty()) {
+            return List.of();
+        }
+
+        List<GitHubCommitDetailPayload> results = new ArrayList<>();
+        for (CommitSelectionRequest commit : commits) {
+            if (commit == null || !StringUtils.hasText(commit.repository()) || !StringUtils.hasText(commit.sha())) {
+                continue;
+            }
+            GithubCommitDetail detail = fetchCommitDetail(commit.repository(), commit.sha(), user.getGithubAccessToken());
+            if (detail != null) {
+                results.add(toPayload(commit.repository(), commit.sha(), detail));
+            }
+        }
+        return results;
+    }
+
     private List<GithubCommit> extractCommits(GithubEvent event) {
         if (event.payload() == null) {
             return List.of();
@@ -141,6 +155,19 @@ public class GitHubCommitService {
             return null;
         }
         return "https://github.com/" + repository + "/commit/" + sha;
+    }
+
+    private User requireGithubUser(UUID userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        if (!StringUtils.hasText(user.getGithubUser())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário não possui GitHub vinculado");
+        }
+        if (!StringUtils.hasText(user.getGithubAccessToken())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Token do GitHub indisponível. Faça login novamente.");
+        }
+        return user;
     }
 
     private GithubCommitDetail fetchCommitDetail(String repository, String sha, String token) {
@@ -198,6 +225,48 @@ public class GitHubCommitService {
                 .collect(Collectors.toList());
     }
 
+    private GitHubCommitDetailPayload toPayload(String repository, String sha, GithubCommitDetail detail) {
+        var author = detail.commit() != null && detail.commit().author() != null
+                ? new GitHubCommitDetailPayload.Author(
+                        detail.commit().author().name(),
+                        detail.commit().author().email(),
+                        detail.commit().author().date())
+                : null;
+        var stats = detail.stats() != null
+                ? new GitHubCommitDetailPayload.Stats(
+                        detail.stats().additions(),
+                        detail.stats().deletions(),
+                        detail.stats().total())
+                : null;
+
+        return new GitHubCommitDetailPayload(
+                repository,
+                sha,
+                detail.commit() != null ? detail.commit().message() : null,
+                detail.htmlUrl(),
+                detail.commit() != null && detail.commit().author() != null ? detail.commit().author().date() : null,
+                author,
+                stats,
+                mapPayloadFiles(detail));
+    }
+
+    private List<GitHubCommitDetailPayload.File> mapPayloadFiles(GithubCommitDetail detail) {
+        if (detail == null || detail.files() == null || detail.files().isEmpty()) {
+            return List.of();
+        }
+        return detail.files().stream()
+                .map(f -> new GitHubCommitDetailPayload.File(
+                        f.filename(),
+                        f.status(),
+                        f.additions(),
+                        f.deletions(),
+                        f.changes(),
+                        f.patch(),
+                        f.rawUrl(),
+                        f.blobUrl()))
+                .collect(Collectors.toList());
+    }
+
     private record GithubEvent(
             String type,
             GithubRepo repo,
@@ -217,6 +286,7 @@ public class GitHubCommitService {
     private record GithubCommitDetail(
             @JsonProperty("html_url") String htmlUrl,
             GithubCommitInfo commit,
+            GithubCommitStats stats,
             List<GithubCommitFile> files) {
     }
 
@@ -225,7 +295,16 @@ public class GitHubCommitService {
             GithubCommitAuthor author) {
     }
 
-    private record GithubCommitAuthor(OffsetDateTime date) {
+    private record GithubCommitAuthor(
+            String name,
+            String email,
+            OffsetDateTime date) {
+    }
+
+    private record GithubCommitStats(
+            int additions,
+            int deletions,
+            int total) {
     }
 
     private record GithubCommitFile(
