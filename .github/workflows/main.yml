@@ -184,16 +184,16 @@ jobs:
             ASG_NAME="${{ vars.ASG_NAME_PROD_ACCOUNT2 }}"
             echo "🚀 Atualizando ambiente de PRODUÇÃO (Conta 2): $ASG_NAME"
             aws autoscaling start-instance-refresh \
-            --region ${{ vars.AWS_REGION_ACCOUNT2}} \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
+             --region ${{ vars.AWS_REGION_ACCOUNT2}} \
+             --auto-scaling-group-name "$ASG_NAME" \
+             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
           else
             ASG_NAME="${{ vars.ASG_NAME_STAGING }}"
             echo "🚧 Atualizando ambiente de STAGING (Conta 1): $ASG_NAME"
             aws autoscaling start-instance-refresh \
-            --region ${{ vars.AWS_REGION }} \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
+             --region ${{ vars.AWS_REGION }} \
+             --auto-scaling-group-name "$ASG_NAME" \
+             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
           fi
 
           
