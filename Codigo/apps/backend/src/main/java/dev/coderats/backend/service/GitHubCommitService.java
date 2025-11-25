@@ -1,6 +1,5 @@
 package dev.coderats.backend.service;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -83,19 +82,24 @@ public class GitHubCommitService {
         }
 
         Map<String, GitHubCommitResponse> commits = new LinkedHashMap<>();
-        LocalDate today = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
+        OffsetDateTime threshold = OffsetDateTime.now(ZoneOffset.UTC).minusHours(48);
 
         outer: for (GithubEvent event : events) {
-            if (!"PushEvent".equals(event.type()) || event.payload() == null || event.payload().commits() == null) {
+            if (!"PushEvent".equals(event.type()) || event.payload() == null) {
                 continue;
             }
             String repoName = event.repo() != null ? event.repo().name() : null;
             OffsetDateTime createdAt = event.createdAt();
-            if (createdAt == null || !createdAt.toLocalDate().equals(today) || !StringUtils.hasText(repoName)) {
+            if (createdAt == null || createdAt.isBefore(threshold) || !StringUtils.hasText(repoName)) {
                 continue;
             }
 
-            for (GithubCommit commit : event.payload().commits()) {
+            List<GithubCommit> eventCommits = extractCommits(event);
+            if (eventCommits.isEmpty()) {
+                continue;
+            }
+
+            for (GithubCommit commit : eventCommits) {
                 if (!StringUtils.hasText(commit.sha())) {
                     continue;
                 }
@@ -117,6 +121,19 @@ public class GitHubCommitService {
         }
 
         return new ArrayList<>(commits.values());
+    }
+
+    private List<GithubCommit> extractCommits(GithubEvent event) {
+        if (event.payload() == null) {
+            return List.of();
+        }
+        if (event.payload().commits() != null && !event.payload().commits().isEmpty()) {
+            return event.payload().commits();
+        }
+        if (StringUtils.hasText(event.payload().head())) {
+            return List.of(new GithubCommit(event.payload().head(), null));
+        }
+        return List.of();
     }
 
     private String buildHtmlUrl(String repository, String sha) {
@@ -191,7 +208,7 @@ public class GitHubCommitService {
     private record GithubRepo(String name) {
     }
 
-    private record GithubPayload(List<GithubCommit> commits) {
+    private record GithubPayload(List<GithubCommit> commits, String head) {
     }
 
     private record GithubCommit(String sha, String message) {
