@@ -1,0 +1,1 @@
+ALTER TABLE users DELETE COLUMN github_access_tokens;
