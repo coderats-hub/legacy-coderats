@@ -7,10 +7,9 @@ on:
       - development
       - 'feature/**'
 
-
 jobs:
   # ------------------------------------------------------------
-  # 1. Backend — Build & Push Docker Image
+  # 1. Backend — Build & Push Docker Image (sempre Conta 1)
   # ------------------------------------------------------------
   backend:
     runs-on: ubuntu-latest
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (Conta 1 - ECR)
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -49,7 +48,7 @@ jobs:
           docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
           docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
 
-   # ------------------------------------------------------------
+  # ------------------------------------------------------------
   # 2. Mobile — Build APK (depende do backend)
   # ------------------------------------------------------------
   mobile:
@@ -91,7 +90,9 @@ jobs:
           path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
 
   # ------------------------------------------------------------
-  # 3. Web — Build (com Flutter) e Deploy no S3
+  # 3. Web — Build (Flutter) e Deploy no S3
+  #    - main      -> Conta 2 (prod)
+  #    - dev/feat  -> Conta 1 (dev/staging)
   # ------------------------------------------------------------
   web:
     runs-on: ubuntu-latest
@@ -113,54 +114,78 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build web --release
 
-      - name: Configure AWS credentials
+      # Credenciais Conta 1 — usadas em development + feature/**
+      - name: Configure AWS credentials (Conta 1 - dev/staging)
+        if: github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      # Credenciais Conta 2 — usadas em main
+      - name: Configure AWS credentials (Conta 2 - prod)
+        if: github.ref_name == 'main'
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS2_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION_ACCOUNT2 }}
 
-      - name: Deploy Web to S3 (main)
+      - name: Deploy Web to S3 (main - Conta 2)
         if: github.ref_name == 'main'
         run: |
-          echo "🚀 Publicando versão WEB em PRODUÇÃO (S3_BUCKET_WEB_PROD)"
-          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_PROD }} --delete
+          echo "🚀 Publicando versão WEB em PRODUÇÃO (Conta 2 - S3_BUCKET_WEB_PROD_ACCOUNT2)"
+          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_PROD_ACCOUNT2 }} --delete
 
-      - name: Deploy Web to S3 (development)
+      - name: Deploy Web to S3 (development - Conta 1)
         if: github.ref_name == 'development'
         run: |
-          echo "🚧 Publicando versão WEB em DEVELOPMENT (S3_BUCKET_WEB_DEVELOP)"
+          echo "🚧 Publicando versão WEB em DEVELOPMENT (Conta 1 - S3_BUCKET_WEB_DEVELOP)"
           aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_DEVELOP }} --delete
 
-      - name: Deploy Web to S3 (feature to staging)
+      - name: Deploy Web to S3 (feature to staging - Conta 1)
         if: startsWith(github.ref, 'refs/heads/feature/')
         run: |
-          echo "🚧 Publicando versão WEB em STAGING (S3_BUCKET_WEB_STAGING)"
+          echo "🚧 Publicando versão WEB em STAGING (Conta 1 - S3_BUCKET_WEB_STAGING)"
           aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_STAGING }} --delete
- # ------------------------------------------------------------
+
+  # ------------------------------------------------------------
   # 4. Deploy Backend to EC2 (ASG)
+  #    - main       -> Conta 2 (prod)
+  #    - development-> Conta 1 (staging)
   # ------------------------------------------------------------
   deploy-backend:
     runs-on: ubuntu-latest
     needs: backend
     if: github.ref_name == 'main' || github.ref_name == 'development'
     steps:
-      - name: Configure AWS credentials
+      # Credenciais Conta 1 — usadas em development
+      - name: Configure AWS credentials (Conta 1 - staging)
+        if: github.ref_name == 'development'
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ vars.AWS_REGION }}
 
+      # Credenciais Conta 2 — usadas em main
+      - name: Configure AWS credentials (Conta 2 - prod)
+        if: github.ref_name == 'main'
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id:     ${{ secrets.AWS2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS2_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ vars.AWS_REGION_ACCOUNT2 }}
+
       - name: Trigger ASG refresh
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
-            ASG_NAME="${{ vars.ASG_NAME_PROD }}"
-            echo "🚀 Atualizando ambiente de PRODUÇÃO: $ASG_NAME"
+            ASG_NAME="${{ vars.ASG_NAME_PROD_ACCOUNT2 }}"
+            echo "🚀 Atualizando ambiente de PRODUÇÃO (Conta 2): $ASG_NAME"
           else
             ASG_NAME="${{ vars.ASG_NAME_STAGING }}"
-            echo "🚧 Atualizando ambiente de STAGING: $ASG_NAME"
+            echo "🚧 Atualizando ambiente de STAGING (Conta 1): $ASG_NAME"
           fi
 
           aws autoscaling start-instance-refresh \
