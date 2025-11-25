@@ -331,7 +331,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       ),
       // Barra de navegação inferior - grupos permanece ativo
       bottomNavigationBar: AppNavbar(
-        currentIndex: 1,
+        currentIndex: 1, // Mantém grupos como aba ativa
         onTap: (i) {
           if (i == 0) {
             Navigator.of(context).pushNamed('/feed');
