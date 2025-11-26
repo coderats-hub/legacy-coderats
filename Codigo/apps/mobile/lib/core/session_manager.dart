@@ -38,7 +38,7 @@ class SessionManager {
 
   Future<void> setSession({
     required String token,
-    required domain.User user,
+    domain.User? user,
   }) async {
     _state = SessionState(user: user, token: token);
     await _storage.saveToken(token);
