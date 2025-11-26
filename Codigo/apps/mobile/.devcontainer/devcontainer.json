@@ -1,0 +1,32 @@
+{
+  "name": "CodeRats Mobile (Flutter)",
+  "image": "ghcr.io/cirruslabs/flutter:3.24.3",
+
+  "customizations": {
+    "vscode": {
+      // Instala as extensões essenciais automaticamente
+      "extensions": [
+        "Dart-Code.flutter",
+        "Dart-Code.dart-code",
+        "nash.awesome-flutter-snippets"
+      ],
+      // Configura o VS Code para achar o Flutter dentro do Docker
+      "settings": {
+        "dart.flutterSdkPath": "/sdks/flutter",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Libera a porta do servidor Web e do DevTools
+  "forwardPorts": [8080, 9100, 9101],
+
+  // Roda estes comandos automaticamente na primeira vez que criar o container
+  // 1. Marca o diretório como seguro pro Git
+  // 2. Garante que o suporte Web está ativo
+  // 3. Baixa as dependências
+  "postCreateCommand": "git config --global --add safe.directory '*' && flutter config --enable-web && flutter pub get",
+
+  // Usa o usuário root para evitar problemas de permissão ao criar/deletar arquivos na pasta build
+  "remoteUser": "root"
+}

@@ -1,58 +1,60 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'local_database.dart';
 
-//comentário só pra dar push
+import 'http_client.dart';
 
+class ApiException implements Exception {
+  final int statusCode;
+  final String body;
+  final String? message;
 
-const String _baseUrl = 'https://virtserver.swaggerhub.com/pucminas-1a5/raquelCodeRats/2';
+  ApiException(this.statusCode, this.body, {this.message});
 
-
-Future<List<Group>> fetchGroupsForUser(String userId) async {
-  final resp = await http.get(Uri.parse('$_baseUrl/users/$userId/groups'));
-  if (resp.statusCode != 200) {
-    throw Exception('GET /users/$userId/groups failed: ${resp.statusCode}');
-  }
-  final List<dynamic> data = json.decode(resp.body) as List<dynamic>;
-  return data.map((e) => Group.fromMap(Map<String, Object?>.from(e as Map))).toList();
+  @override
+  String toString() =>
+      'ApiException(statusCode: $statusCode, message: $message, body: $body)';
 }
 
+class ApiService {
+  final HttpClient _http;
 
-Future<GroupDetails> fetchGroupDetails(String id) async {
+  ApiService(this._http);
 
-  final resp = await http.get(Uri.parse('$_baseUrl/groups/$id'));
-
-  if (resp.statusCode != 200) {
-    throw Exception('GET /groups/$id failed: ${resp.statusCode}');
+  Future<dynamic> getJson(String path) async {
+    final resp = await _http.get(path);
+    _checkError(resp);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
   }
 
-  final Map<String, dynamic> data = json.decode(resp.body) as Map<String, dynamic>;
-
-
-  final group = Group.fromMap(Map<String, Object?>.from(data['group'] as Map));
-  final List<dynamic> parts = (data['participants'] as List<dynamic>? ) ?? [];
-
-
-  // Fetch all users (mock provides /users). We'll match by user_id.
-  final users = await fetchUsers();
-  final Map<String, User> usersById = {for (var u in users) u.id: u};
-
-  final enriched = parts.map((raw) {
-    final m = Map<String, Object?>.from(raw as Map);
-    final gp = GroupParticipant.fromMap(m);
-    final user = usersById[gp.userId] ?? User(id: gp.userId, name: 'Unknown', githubUser: '', githubId: 0);
-    return GroupParticipantWithUser(gp, user);
-  }).toList();
-
-  return GroupDetails(group: group, participants: enriched);
-}
-
-
-Future<List<User>> fetchUsers() async {
-  final resp = await http.get(Uri.parse('$_baseUrl/users'));
-  if (resp.statusCode != 200) {
-    throw Exception('GET /users failed: ${resp.statusCode}');
+  Future<dynamic> postJson(String path, Map<String, dynamic> body) async {
+    final resp = await _http.post(path, body);
+    _checkError(resp);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
   }
-  final List<dynamic> data = json.decode(resp.body) as List<dynamic>;
-  return data.map((e) => User.fromMap(Map<String, Object?>.from(e as Map))).toList();
+
+  Future<dynamic> patchJson(String path, Map<String, dynamic> body) async {
+    final resp = await _http.patch(path, body);
+    _checkError(resp);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
+  }
+
+  Future<dynamic> deleteJson(String path) async {
+    final resp = await _http.delete(path);
+    _checkError(resp);
+    if (resp.body.isEmpty) return null;
+    return jsonDecode(resp.body);
+  }
+
+  void _checkError(http.Response resp) {
+    if (resp.statusCode >= 200 && resp.statusCode < 300) return;
+
+    throw ApiException(
+      resp.statusCode,
+      resp.body,
+      message: 'Erro HTTP ${resp.statusCode}',
+    );
+  }
 }

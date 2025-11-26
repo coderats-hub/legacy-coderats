@@ -11,8 +11,9 @@ import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.domain.User;
 import dev.coderats.backend.infra.repository.GroupRepository;
 import dev.coderats.backend.infra.repository.UserRepository;
-import dev.coderats.backend.web.dto.response.MyProfileResponse;
+import dev.coderats.backend.web.dto.mapper.UserMapper;
 import dev.coderats.backend.web.dto.response.PublicProfileResponse;
+import dev.coderats.backend.web.dto.response.UserDTO;
 import dev.coderats.backend.web.dto.response.UserUpdateRequest;
 import dev.coderats.backend.web.dto.utils.CommonGroupSummary;
 
@@ -30,27 +31,18 @@ public class UserService {
     /**
      * Busca o perfil privado e completo de um usuário.
      */
-    public MyProfileResponse getUserProfile(UUID userId) {
+    public UserDTO getUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         
-        // Mapeia a entidade User para o DTO de resposta
-        return new MyProfileResponse(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            user.getImage(),
-            user.getGithubId().toString(), // Corrigido: Converte Long/Number para String
-            user.getCreatedAt()
-            // Corrigido: Campo 'bio' removido
-        );
+        return UserMapper.toDTO(user);
     }
 
     /**
      * Atualiza o perfil de um usuário.
      */
     @Transactional
-    public MyProfileResponse updateUserProfile(UUID userId, UserUpdateRequest request) {
+    public UserDTO updateUserProfile(UUID userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -61,20 +53,9 @@ public class UserService {
         if (request.image() != null) {
             user.setImage(request.image());
         }
-        // Corrigido: Campo 'bio' removido
 
         User updatedUser = userRepository.save(user);
-
-        // Retorna o perfil atualizado
-        return new MyProfileResponse(
-            updatedUser.getId(),
-            updatedUser.getName(),
-            updatedUser.getEmail(),
-            updatedUser.getImage(),
-            updatedUser.getGithubId().toString(), // Corrigido: Converte Long/Number para String
-            updatedUser.getCreatedAt()
-            // Corrigido: Campo 'bio' removido
-        );
+        return UserMapper.toDTO(updatedUser);
     }
 
     /**

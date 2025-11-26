@@ -10,10 +10,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.domain.GroupParticipant;
+import dev.coderats.backend.domain.User;
 import dev.coderats.backend.domain.UserSummary;
 import dev.coderats.backend.infra.repository.GroupParticipantRepository;
 import dev.coderats.backend.infra.repository.GroupRepository;
@@ -42,7 +44,6 @@ public class GroupService {
     }
 
     // REMOVIDO: O método findCommonGroups foi movido para o GroupRepository
-
     @Transactional
     public Group createGroup(GroupCreateRequest request, UUID creatorUserId) {
         // Criar o grupo
@@ -65,8 +66,13 @@ public class GroupService {
 
         Group savedGroup = groupRepository.save(group);
 
-        // Adicionar o criador como administrador do grupo
-        GroupParticipant creator = new GroupParticipant(creatorUserId, savedGroup.getId(), "admin");
+        User user = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new RuntimeException("Usuário criador não encontrado"));
+
+        GroupParticipant creator = new GroupParticipant(user.getId(), savedGroup.getId(), "admin");
+        creator.setUser(user);
+        creator.setGroup(savedGroup);
+
         participantRepository.save(creator);
 
         return savedGroup;
@@ -74,6 +80,30 @@ public class GroupService {
 
     public Optional<Group> getGroupById(UUID groupId) {
         return groupRepository.findById(groupId);
+    }
+
+    @Transactional
+    public GroupJoinResult joinGroupByCode(String code, UUID targetUserId) {
+        if (!StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("Código do grupo é obrigatório");
+        }
+
+        Group group = groupRepository.findByCode(code.trim())
+                .orElseThrow(() -> new RuntimeException("Grupo não encontrado para o código informado"));
+
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        GroupParticipant participant = participantRepository
+                .findByIdUserIdAndIdGroupId(user.getId(), group.getId())
+                .orElseGet(() -> {
+                    GroupParticipant gp = new GroupParticipant(user.getId(), group.getId(), "member");
+                    gp.setUser(user);
+                    gp.setGroup(group);
+                    return participantRepository.save(gp);
+                });
+
+        return new GroupJoinResult(group, participant);
     }
 
     public GroupWithDetailsResponse getGroupWithDetails(UUID groupId) {
@@ -194,4 +224,6 @@ public class GroupService {
         } while (groupRepository.findByCode(code).isPresent());
         return code;
     }
+
+    public record GroupJoinResult(Group group, GroupParticipant participant) {}
 }

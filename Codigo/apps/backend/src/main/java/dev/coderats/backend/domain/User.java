@@ -7,6 +7,8 @@ import java.util.UUID; // Importar List
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,6 +59,7 @@ public class User {
     // "mappedBy = 'user'" diz ao Hibernate que o campo 'user'
     // na classe GroupParticipant é o dono deste relacionamento.
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupParticipant> participants;
     
