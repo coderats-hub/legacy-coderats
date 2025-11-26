@@ -19,12 +19,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String title;              // Título exibido no header
   final VoidCallback? onBack;      // Função chamada ao tocar "voltar" (opcional)
   final List<Widget>? actions;     // Botões de ação no lado direito (opcional)
+  final bool showBackButton;       // Controla se exibe botão de voltar (padrão: true)
   
   const AppHeader({
     super.key,
     required this.title,
     this.onBack,
     this.actions,
+    this.showBackButton = true,
   });
 
   @override
@@ -32,6 +34,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
+      automaticallyImplyLeading: showBackButton,
       // Desce bastante o título dentro do AppBar para ficar bem mais baixo
       toolbarHeight: 120,
       bottom: const PreferredSize(
@@ -39,23 +42,25 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
         child: SizedBox(height: AppSpacing.sm),
       ),
       // Aproxima o título do ícone sem cortar o botão
-      leadingWidth: 44,
+      leadingWidth: showBackButton ? 44 : 0,
       titleSpacing: 0,
-      leading: onBack == null
-          ? (Navigator.of(context).canPop()
-              ? IconButton(
+      leading: !showBackButton
+          ? null
+          : (onBack == null
+              ? (Navigator.of(context).canPop()
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                      padding: const EdgeInsets.all(8),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    )
+                  : null)
+              : IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
                   padding: const EdgeInsets.all(8),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                )
-              : null)
-          : IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-              padding: const EdgeInsets.all(8),
-              onPressed: onBack,
-            ),
+                  onPressed: onBack,
+                )),
       title: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 20, 0, 20),
+        padding: EdgeInsets.fromLTRB(showBackButton ? 8 : AppSpacing.lg, 20, 0, 20),
         child: Text(title, style: AppTextStyles.headerTitle),
       ),
       actions: actions,

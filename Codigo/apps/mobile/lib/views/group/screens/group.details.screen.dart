@@ -59,6 +59,9 @@ import 'package:app/services/local_database.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 
+// Shared Utils
+import 'package:app/shared/utils/string_utils.dart';
+
 // Views - Widgets & Screens
 import 'package:app/views/checkin/screens/checkin.details.screen.dart';
 import 'package:app/views/checkin/screens/checkin.list.screen.dart';
@@ -346,7 +349,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   final index = entry.key;
                   final member = entry.value;
                   return _RankingTile(
-                    name: member.name,
+                    name: StringUtils.truncateName(member.name),
                     points: '${member.points.toStringAsFixed(0)} pontos', // Arredonda
                     pos: '${index + 1}º',
                     imageUrl: member.image,

@@ -9,6 +9,7 @@ import 'package:app/views/group/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:app/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
@@ -60,7 +61,7 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const AppHeader(title: 'Perfil'),
+        appBar: const AppHeader(title: 'Perfil', showBackButton: false),
         body: const AppLoading(),
         bottomNavigationBar: AppNavbar(
           currentIndex: 2,
@@ -71,10 +72,9 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppHeader(
-        title: _currentUser != null 
-            ? 'Perfil: ${_currentUser!.name}'
-            : 'Perfil',
+      appBar: const AppHeader(
+        title: 'Perfil',
+        showBackButton: false,
       ),
       body: _error != null
           ? _buildErrorView()
@@ -206,7 +206,7 @@ class _ProfileHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          user?.name ?? 'Usuário',
+          user?.name != null ? StringUtils.truncateName(user!.name) : 'Usuário',
           style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
         ),
         if (user?.githubUser != null) ...[

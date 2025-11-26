@@ -1,8 +1,12 @@
 package dev.coderats.backend.web.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import dev.coderats.backend.domain.User;
 import dev.coderats.backend.infra.repository.UserRepository;
 import dev.coderats.backend.web.dto.mapper.UserMapper;
@@ -40,35 +44,24 @@ public class UserController {
   }
 
   /**
-   * GET /users/me - Busca dados do usuário atual (mockado por enquanto)
-   * TODO: Implementar autenticação JWT para pegar usuário do token
+   * GET /users/me - Busca dados do usuário autenticado via JWT
    */
   @GetMapping("/me")
   public ResponseEntity<UserDTO> getCurrentUser() {
-    // Por enquanto, retorna o primeiro usuário encontrado
-    // TODO: Implementar lógica para pegar usuário do JWT token
-    List<User> users = userRepository.findAll();
-    if (users.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-    User user = users.get(0);
+    UUID userId = getCurrentUserId();
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     return ResponseEntity.ok(UserMapper.toDTO(user));
   }
 
   /**
-   * PUT /users/me - Atualiza dados do usuário atual
-   * TODO: Implementar autenticação JWT para pegar usuário do token
+   * PUT /users/me - Atualiza dados do usuário autenticado via JWT
    */
   @PutMapping("/me")
   public ResponseEntity<UserDTO> updateCurrentUser(@RequestBody User userUpdate) {
-    // Por enquanto, atualiza o primeiro usuário encontrado
-    // TODO: Implementar lógica para pegar usuário do JWT token e atualizar
-    List<User> users = userRepository.findAll();
-    if (users.isEmpty()) {
-      return ResponseEntity.notFound().build();
-    }
-
-    User currentUser = users.get(0);
+    UUID userId = getCurrentUserId();
+    User currentUser = userRepository.findById(userId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
     // Atualiza apenas campos não nulos
     if (userUpdate.getName() != null) {
@@ -104,5 +97,24 @@ public class UserController {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.notFound().build();
+  }
+
+  /**
+   * Método auxiliar para extrair o ID do usuário autenticado do contexto de segurança
+   */
+  private UUID getCurrentUserId() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Object principal = authentication.getPrincipal();
+
+    if (principal == null || "anonymousUser".equals(principal.toString())) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não autenticado");
+    }
+
+    String userIdString = principal.toString();
+    try {
+      return UUID.fromString(userIdString);
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Formato de ID de usuário inválido: " + userIdString, e);
+    }
   }
 }

@@ -3,6 +3,8 @@ package dev.coderats.backend.web.dto.response;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * DTO unificado para retornar dados do usuário sem coleções LAZY.
  * Usado para evitar LazyInitializationException ao serializar entidades.
@@ -21,8 +23,8 @@ public record UserDTO(
     String name,
     String email,
     String image,
-    String githubUser,
-    Long githubId,
-    OffsetDateTime createdAt,
-    OffsetDateTime updatedAt
+    @JsonProperty("github_user") String githubUser,
+    @JsonProperty("github_id") Long githubId,
+    @JsonProperty("created_at") OffsetDateTime createdAt,
+    @JsonProperty("updated_at") OffsetDateTime updatedAt
 ) {}

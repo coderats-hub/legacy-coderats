@@ -66,8 +66,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppHeader(
-        title: 'Perfil: Alice', // TODO: Nome dinâmico baseado no usuário
+      appBar: const AppHeader(
+        title: 'Perfil',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
