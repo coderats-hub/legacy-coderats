@@ -3,7 +3,6 @@ import 'package:app/views/group/screens/group.join.screen.dart';
 import 'package:app/views/group/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
 
 class OnboardingStartScreen extends StatelessWidget {
   const OnboardingStartScreen({super.key});
@@ -69,11 +68,7 @@ class OnboardingStartScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const GroupListScreen(),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed('/feed');
                   },
                   child: Text(
                     'Pular por enquanto',

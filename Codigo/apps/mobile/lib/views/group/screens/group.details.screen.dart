@@ -7,6 +7,7 @@ import 'package:app/services/checkin/checkin_remote_service.dart';
 import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,7 +21,6 @@ import 'package:app/services/connectivity_service.dart';
 
 // --- IMPORTS VISUAIS ---
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
 import 'package:app/views/group/widgets/card.group.dart' hide BannerStyle;
 import 'package:app/views/group/widgets/banner.group.dart';
 

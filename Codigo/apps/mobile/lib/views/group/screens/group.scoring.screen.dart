@@ -3,7 +3,7 @@ import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 
 import 'package:app/domain/group/group.dart';
 import 'package:app/database/group/group.dao.dart';

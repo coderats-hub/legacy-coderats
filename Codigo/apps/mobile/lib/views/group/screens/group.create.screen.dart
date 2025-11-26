@@ -1,10 +1,9 @@
+import 'package:app/shared/components/components.dart';
 import 'package:app/views/group/screens/group.scoring.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
-import 'package:app/shared/components/app_components.dart';
-
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -46,11 +45,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate 
-          ? (_startDate ?? DateTime.now()) 
-          : (_endDate ?? (_startDate ?? DateTime.now())),
-      firstDate: DateTime.now().subtract(const Duration(days: 1)), // Permite o dia de hoje
-      lastDate: DateTime.now().add(const Duration(days: 365 * 5)), // 5 anos no futuro
+      initialDate: isStartDate ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
+      firstDate: isStartDate ? DateTime.now() : (_startDate ?? DateTime.now()),
+      lastDate: DateTime.now().add(const Duration(days: 365)), 
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -80,41 +77,30 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
-  void _selectCoverImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    // Mantendo a lógica visual, mesmo com o Picker desativado temporariamente
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop('gallery'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop('camera'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
+  // Seleção de imagem de capa usando modal compartilhado
+  void _selectImage() async {
+    final source = await ImageSourceModal.show(context);
+    
     if (source == null) return;
     
-    // Aqui você implementaria a lógica real do ImagePicker quando resolver o conflito do SDK
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Seleção de imagem temporariamente desativada')),
-    );
+    // Image picker functionality disabled - only UI works
+    /*
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1280,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      // ignore
+    }
+    */
   }
 
   // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
@@ -284,7 +270,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         GestureDetector(
-          onTap: _selectCoverImage,
+          onTap: _selectImage,
           child: Container(
             height: 120,
             width: double.infinity,
@@ -297,34 +283,35 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               ),
             ),
             child: _pickedImageBytes != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(AppCorners.md),
-                    child: Image.memory(
-                      _pickedImageBytes!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
-                  )
-                : const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.image_outlined,
-                        color: AppColors.textSecondary,
-                        size: 32,
+
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppCorners.md),
+                      child: Image.memory(
+                        _pickedImageBytes!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
                       ),
-                      SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Toque para adicionar imagem',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 16,
-                          color: Color(0xFFACACAC),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.image_outlined,
+                          color: AppColors.textSecondary,
+                          size: 32,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Toque para adicionar imagem',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            color: Color(0xFFACACAC),
+                          ),
+                        ),
+                      ],
+                    ),
           ),
         ),
       ],

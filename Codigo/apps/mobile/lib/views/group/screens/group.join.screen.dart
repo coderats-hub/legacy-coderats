@@ -1,32 +1,14 @@
-/**
- * TELA DE ENTRAR EM GRUPO VIA CÓDIGO
- * 
- * Permite ao usuário entrar em um grupo existente usando
- * um código de convite fornecido pelo administrador do grupo.
- * 
- * Onde é usada:
- * - Navegação do perfil privado (botão "Entrar via código")
- * - Navegação do onboarding (ação "Entrar em grupo via código")
- * - Rota '/join-group' no main.dart
- * 
- * Funcionalidades:
- * - Campo de entrada para código do grupo
- * - Validação de formulário
- * - Ilustração dos mascotes programando
- * - Botão de confirmação para entrar no grupo
- * - Layout responsivo com scroll
- * - Feedback de sucesso/erro
- * 
- * Navegação:
- * - Vem de: PrivateProfileScreen, OnboardingScreen
- * - Volta para: tela anterior após sucesso/erro
- */
-
+import 'package:app/repositories/group.repository.dart'; // Importe seu repo
+import 'package:app/services/group/group_remote_service.dart';
+import 'package:app/services/http_client.dart';
+import 'package:app/services/local_database.dart';
+import 'package:app/services/connectivity_service.dart';
+import 'package:app/core/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
 
-// Tela para entrar em grupo usando código de convite
 class JoinGroupScreen extends StatefulWidget {
   const JoinGroupScreen({super.key});
 
@@ -34,40 +16,83 @@ class JoinGroupScreen extends StatefulWidget {
   State<JoinGroupScreen> createState() => _JoinGroupScreenState();
 }
 
-// Estado da tela de entrada em grupo
 class _JoinGroupScreenState extends State<JoinGroupScreen> {
-  final _formKey = GlobalKey<FormState>();        // Chave para validação do formulário
-  final _codeController = TextEditingController(); // Controlador do campo de código
+  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+  
+  // Estado para controlar o loading do botão
+  bool _isLoading = false; 
 
   @override
   void dispose() {
-    _codeController.dispose(); // Limpa o controlador para evitar memory leaks
+    _codeController.dispose();
     super.dispose();
+  }
+
+  // Função para processar a entrada no grupo
+  Future<void> _handleJoinGroup() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Montar as dependências (Igual fizemos na tela anterior)
+      final session = SessionManager.instance;
+      final localDb = await LocalDatabase.getInstance();
+      final httpClient = HttpClient(session);
+      
+      final repository = GroupRepository(
+        remote: GroupRemoteService(httpClient),
+        local: localDb.groups,
+        net: ConnectivityService(),
+        session: session,
+      );
+
+      // 2. Chamar o método de entrar no grupo (Você precisará criar esse método no Repo se não existir)
+      // Supondo que o backend retorne o ID do grupo ao entrar com sucesso
+      final groupId = await repository.joinGroup(_codeController.text.trim());
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        // 3. Navegar passando o ID recebido da API
+        Navigator.of(context).pushReplacement( // Use pushReplacement para ele não voltar para a tela de código
+          MaterialPageRoute(
+            builder: (context) => GroupDetailPage(
+              groupId: groupId, // <--- AQUI ESTAVA O ERRO, AGORA PASSAMOS O ID
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao entrar no grupo: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // Header padrão com título e botão voltar
-      appBar: const AppHeader(
-        title: 'Entrar em um grupo',
-      ),
+      appBar: const AppHeader(title: 'Entrar em um grupo'),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return SingleChildScrollView( // Permite scroll se necessário
+            return SingleChildScrollView(
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight), // Altura mínima da tela
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl), // Margens laterais
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: AppSpacing.sm),
-                      
-                      // Ilustração dos mascotes programando em grupo
                       Center(
                         child: Image.asset(
                           'images/ratsgroupcoding.png',
@@ -79,10 +104,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                       const SizedBox(height: AppSpacing.xl),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Código',
-                          style: AppTextStyles.inputLabel,
-                        ),
+                        child: Text('Código', style: AppTextStyles.inputLabel),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Form(
@@ -90,6 +112,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                         child: TextFormField(
                           controller: _codeController,
                           style: AppTextStyles.inputLabel,
+                          // Desabilita campo se estiver carregando
+                          enabled: !_isLoading, 
                           decoration: InputDecoration(
                             hintText: 'Insira o código do grupo',
                             hintStyle: AppTextStyles.inputHint,
@@ -129,15 +153,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                             ),
                             elevation: 0,
                           ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              Navigator.pushNamed(context, '/group-details');
-                            }
-                          },
-                          child: const Text(
-                            'Juntar-se',
-                            style: AppTextStyles.headlineBold16White,
-                          ),
+                          // Chama a função assíncrona
+                          onPressed: _isLoading ? null : _handleJoinGroup, 
+                          child: _isLoading 
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'Juntar-se',
+                                style: AppTextStyles.headlineBold16White,
+                              ),
                         ),
                       ),
                     ],

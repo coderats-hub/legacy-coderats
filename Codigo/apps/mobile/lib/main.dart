@@ -1,4 +1,5 @@
 import 'package:app/core/session_manager.dart';
+import 'package:app/views/feed/presentation/screens/feed.list.screen.dart';
 import 'package:app/views/group/screens/group.ranking.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
@@ -36,6 +37,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       
       routes: {
+        '/feed': (_) => const FeedListScreen(),
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
         '/groups': (_) => const GroupListScreen(),

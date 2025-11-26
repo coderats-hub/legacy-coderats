@@ -1,15 +1,20 @@
 
+import 'package:app/core/session_manager.dart';
+import 'package:app/database/checkin/checkin.dao.dart';
 import 'package:app/domain/checkin/checkin.dart';
 import 'package:app/repositories/checkin.repository.dart';
+import 'package:app/services/checkin/checkin_remote_service.dart';
+import 'package:app/services/connectivity_service.dart';
+import 'package:app/services/http_client.dart';
+import 'package:app/services/local_database.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
 
-// Tela principal de lista de check-ins - StatefulWidget para gerenciar estados da UI
 class CheckinScreen extends StatefulWidget {
   const CheckinScreen({super.key});
 
@@ -17,44 +22,42 @@ class CheckinScreen extends StatefulWidget {
   State<CheckinScreen> createState() => _CheckinScreenState();
 }
 
-// Estado da tela de check-ins - controla loading, dados e erros
 class _CheckinScreenState extends State<CheckinScreen> {
-  // Variáveis para controlar os diferentes estados da UI
-  bool _isLoading = true;     // Estado de carregamento
-  Object? _error;             // Armazena erro caso ocorra
-  List<Checkin> _checkins = []; // Lista de check-ins carregados
+  bool _isLoading = true;     
+  Object? _error;            
+  List<Checkin> _checkins = []; 
 
-  // Instância do repositório para buscar dados
-  final _repository = CheckinRepository();
-
-  // initState é chamado uma vez quando o widget é criado
   @override
   void initState() {
     super.initState();
-    // A busca de dados é iniciada aqui
     _loadCheckins();
   }
 
-  // Função para buscar os dados e atualizar o estado da tela
   Future<void> _loadCheckins() async {
-    // Atualiza a UI para mostrar o estado de carregamento
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      final data = await _repository.fetchCheckins();
-      // Em caso de sucesso, atualiza a UI com os dados
-      if (mounted) { // Garante que o widget ainda está na árvore
+        final database = await LocalDatabase.getInstance();
+        final session = SessionManager.instance;
+        final httpClient = HttpClient(session);
+        
+        final _repository = CheckinRepository(
+          remote: CheckinRemoteService(httpClient),
+          local: CheckinDao(database.raw),
+          net: ConnectivityService(),
+        );
+      final data = await _repository.getFeed();
+      if (mounted) {
         setState(() {
           _checkins = data;
           _isLoading = false;
         });
       }
     } catch (e) {
-      // Em caso de erro, atualiza a UI com a mensagem de erro
-       if (mounted) { // Garante que o widget ainda está na árvore
+       if (mounted) { 
         setState(() {
           _error = e;
           _isLoading = false;
@@ -84,7 +87,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // Conteúdo principal
               Expanded(
                 child: _buildBody(),
               ),
@@ -109,32 +111,22 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
 
 
-  // Constrói o corpo da tela baseado no estado atual
   Widget _buildBody() {
-    // Mostra loading spinner durante carregamento
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF2BB6A5),
-        ),
-      );
+      return const AppLoading();
     }
     
-    // Mostra tela de erro se houver problema
     if (_error != null) {
       return _buildErrorView();
     }
     
-    // Mostra tela vazia se não há check-ins
     if (_checkins.isEmpty) {
       return _buildEmptyView();
     }
     
-    // Mostra a lista de check-ins
     return _buildCheckinsList();
   }
 
-  // Constrói a tela de erro com botão para tentar novamente
   Widget _buildErrorView() {
     return Center(
       child: Padding(
@@ -169,7 +161,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
-  // Constrói a tela quando não há check-ins para mostrar
   Widget _buildEmptyView() {
     return Center(
       child: Padding(
@@ -197,7 +188,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            // Botão para atualizar
             SharedStyledButton(
               text: 'Atualizar',
               onPressed: _loadCheckins,
@@ -208,14 +198,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
     );
   }
 
-  // Constrói a lista scrollável de check-ins (dados mockados por enquanto)
   Widget _buildCheckinsList() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Posts estáticos baseados na imagem
           _PostCard(
             username: 'Nome Pessoa',
             title: 'Título da Atividade',
@@ -252,10 +240,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
 
 }
 
-// ======== WIDGETS CUSTOMIZADOS ========
-
-// Widget para rótulos de seção (não usado atualmente, mas disponível)
-class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   final String text;
   

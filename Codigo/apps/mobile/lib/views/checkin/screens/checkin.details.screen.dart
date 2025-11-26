@@ -19,7 +19,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/app_components.dart';
+import 'package:app/shared/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 // import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
 import 'dart:typed_data';
@@ -49,7 +49,8 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   
  // Variáveis de estado da tela
   int _selectedCommitsCount = 0; // Contador de commits selecionados
-  Uint8List? _pickedImageBytes; 
+  Uint8List? _pickedImageBytes;
+  bool _showTitleError = false; // Controla exibição do erro de título 
   
   @override
   void initState() {
@@ -76,45 +77,21 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     });
   }
 
-  void _selectImage() {
-    _showImageSourceActionSheet();
-  }
-
-  Future<void> _showImageSourceActionSheet() async {
-    // Image picker temporarily disabled to resolve Android SDK conflict
-    /*
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-    */
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galeria'),
-                onTap: () => Navigator.of(ctx).pop('gallery'), // ImageSource.gallery
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Câmera'),
-                onTap: () => Navigator.of(ctx).pop('camera'), // ImageSource.camera
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
+  // Seleção de imagem usando modal compartilhado
+  void _selectImage() async {
+    final source = await ImageSourceModal.show(context);
+    
     if (source == null) return;
     
     // Image picker functionality disabled - only UI works
     /*
     try {
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 1280);
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 1280,
+      );
       if (file == null) return;
       final bytes = await file.readAsBytes();
       setState(() {
@@ -226,17 +203,31 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          text: TextSpan(
-            text: 'Título',
-            style: AppTextStyles.inputLabel,
-            children: const [
-              TextSpan(
-                text: ' *',
-                style: TextStyle(color: AppColors.error),
+        Row(
+          children: [
+            RichText(
+              text: TextSpan(
+                text: 'Título',
+                style: AppTextStyles.inputLabel,
+                children: const [
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: AppColors.error),
+                  ),
+                ],
+              ),
+            ),
+            if (_showTitleError) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Título é obrigatório',
+                style: AppTextStyles.inputHint.copyWith(
+                  color: AppColors.error,
+                  fontSize: 12,
+                ),
               ),
             ],
-          ),
+          ],
         ),
         const SizedBox(height: AppSpacing.sm),
         SharedTextField(
@@ -244,6 +235,13 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
           placeholder: 'Insira o título da sua atividade',
           label: null,
           enabled: true,
+          onChanged: (value) {
+            if (_showTitleError && value.isNotEmpty) {
+              setState(() {
+                _showTitleError = false;
+              });
+            }
+          },
         ),
       ],
     );
@@ -386,7 +384,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
         height: 48,
         child: AppButton(
           text: 'Fazer Check-in',
-          onPressed: canSubmit ? _submitCheckin : () {},
+          onPressed: _submitCheckin, // Sempre permite clicar para mostrar validações
         ),
       ),
     );
@@ -394,12 +392,9 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
 
   void _submitCheckin() {
     if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, insira um título para a atividade'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      setState(() {
+        _showTitleError = true;
+      });
       return;
     }
 
