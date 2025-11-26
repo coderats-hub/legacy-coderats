@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.service.GroupService;
@@ -144,16 +145,15 @@ public class GroupController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
-        // Check if user is authenticated (not anonymous)
         if (principal == null || "anonymousUser".equals(principal.toString())) {
-            throw new RuntimeException("User not authenticated");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
         String userIdString = principal.toString();
         try {
             return UUID.fromString(userIdString);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid user ID format: " + userIdString);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid user ID format: " + userIdString, e);
         }
     }
 

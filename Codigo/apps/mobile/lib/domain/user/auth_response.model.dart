@@ -1,15 +1,23 @@
+import 'package:app/domain/user/user.model.dart';
+
 class AuthResponse {
   final String token;
+  final User user;
 
-  AuthResponse({required this.token});
+  AuthResponse({
+    required this.token,
+    required this.user,
+  });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
-    if (json.containsKey('token')) {
-      return AuthResponse(
-        token: json['token'] as String,
-      );
-    } else {
-      throw FormatException('Formato de resposta de token inválido.');
+    final token = json['token'];
+    final userJson = json['user'];
+    if (token is! String || userJson is! Map<String, dynamic>) {
+      throw const FormatException('Formato de resposta de token inválido.');
     }
+    return AuthResponse(
+      token: token,
+      user: User.fromJson(userJson),
+    );
   }
 }

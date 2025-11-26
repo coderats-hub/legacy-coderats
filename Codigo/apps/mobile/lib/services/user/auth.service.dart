@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'package:app/domain/user/auth_response.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:app/core/session_manager.dart';
 
 class AuthService {
-  final StorageService _storageService = StorageService();
-
   Future<bool> exchangeCodeForToken(String code) async {
     final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
     final Uri uri = Uri.parse('$baseUrl/auth/exchange');
@@ -27,8 +25,10 @@ class AuthService {
         
         final authResponse = AuthResponse.fromJson(responseBody);
 
-        await _storageService.saveToken(authResponse.token);
-        
+        await SessionManager.instance.setSession(
+          token: authResponse.token,
+          user: authResponse.user,
+        );
         return true;
       } else {
         throw Exception('Falha ao trocar o código: ${response.statusCode}');
