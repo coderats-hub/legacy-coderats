@@ -2,7 +2,9 @@ package dev.coderats.backend.web.dto.request;
 
 import java.util.List;
 
-public record CheckinPreviewRequest(
-        List<CommitSelectionRequest> commits
-) {}
+import java.util.UUID;
 
+public record CheckinPreviewRequest(
+        List<CommitSelectionRequest> commits,
+        UUID userId
+) {}

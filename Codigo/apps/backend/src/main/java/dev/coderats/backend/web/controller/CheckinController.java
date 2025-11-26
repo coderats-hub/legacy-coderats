@@ -71,9 +71,16 @@ public class CheckinController {
     @PostMapping("/checkins/preview")
     public ResponseEntity<CheckinPreviewResponse> preview(
             @RequestBody CheckinPreviewRequest request) {
-        UUID userId = getCurrentUserId();
+        UUID userId = resolveUserId(request.userId());
         var result = checkinService.previewCheckin(userId, request.commits());
         return ResponseEntity.ok(new CheckinPreviewResponse(result.summary(), result.points()));
+    }
+
+    private UUID resolveUserId(UUID userId) {
+        if (userId != null) {
+            return userId;
+        }
+        return getCurrentUserId();
     }
 
     private UUID getCurrentUserId() {
