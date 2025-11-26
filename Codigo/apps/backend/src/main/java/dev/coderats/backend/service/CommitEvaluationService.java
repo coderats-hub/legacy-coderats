@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -19,6 +21,8 @@ import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
 
 @Service
 public class CommitEvaluationService {
+
+    private static final Logger log = LoggerFactory.getLogger(CommitEvaluationService.class);
 
     private final GitHubCommitService gitHubCommitService;
     private final BedrockAgentService bedrockAgentService;
@@ -35,14 +39,17 @@ public class CommitEvaluationService {
 
     public EvaluationResult evaluate(UUID userId, List<CommitSelectionRequest> commits) {
         if (CollectionUtils.isEmpty(commits)) {
+            log.debug("[CheckinPreview] Nenhum commit foi enviado para avaliacao do usuario {}", userId);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nenhum commit selecionado.");
         }
 
         List<GitHubCommitDetailPayload> details = gitHubCommitService.fetchCommitDetails(userId, commits);
         if (details.isEmpty()) {
+            log.debug("[CheckinPreview] Falha ao carregar detalhes dos commits {} para o usuario {}", commits, userId);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não foi possível carregar os commits informados.");
         }
 
+        log.debug("[CheckinPreview] Iniciando avaliacao de {} commits para o usuario {}", details.size(), userId);
         String payload = serialize(details);
         var agentResult = bedrockAgentService.evaluate(payload);
         String summary = StringUtils.hasText(agentResult.summary())
