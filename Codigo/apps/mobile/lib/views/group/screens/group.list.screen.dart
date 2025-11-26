@@ -15,8 +15,12 @@ import 'package:app/services/connectivity_service.dart';
 
 // --- IMPORTS DE UI/TELAS ---
 import 'package:app/views/group/screens/group.create.screen.dart';
-import 'package:app/views/group/screens/group.details.screen.dart'; // A tela completa com Feed
-import 'package:app/views/group/widgets/card.group.dart'; // O widget visual do Card
+import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:app/views/group/widgets/card.group.dart';
+
+// --- IMPORTS DO TEMA E COMPONENTES PADRÃO ---
+import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/components/components.dart';
 
 class GroupListScreen extends StatefulWidget {
   const GroupListScreen({super.key});
@@ -108,44 +112,31 @@ class _GroupListScreenState extends State<GroupListScreen> {
   Widget build(BuildContext context) {
     if (_initializing) {
       return const Scaffold(
-        backgroundColor: Color(0xFF121212),
-        body: Center(child: CircularProgressIndicator(color: Colors.blue)),
+        backgroundColor: AppColors.background,
+        body: Center(child: AppLoading()),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Meus Grupos', style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+      backgroundColor: AppColors.background,
+      appBar: const AppHeader(
+        title: 'Meus Grupos',
       ),
-      floatingActionButton: _online
-          ? FloatingActionButton(
-              backgroundColor: Colors.blue,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
-                ).then((_) => _reload());
-              },
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
       body: Column(
         children: [
           if (!_online)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: Colors.amber.withOpacity(0.15),
-              child: const Row(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              color: AppColors.skip.withOpacity(0.15),
+              child: Row(
                 children: [
-                  Icon(Icons.wifi_off, color: Colors.amber, size: 16),
-                  SizedBox(width: 8),
+                  Icon(Icons.wifi_off, color: AppColors.skip, size: 16),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       'Sem conexão — exibindo cache (somente leitura)',
-                      style: TextStyle(color: Colors.amber, fontSize: 12),
+                      style: AppTextStyles.subtitle.copyWith(color: AppColors.skip, fontSize: 12),
                     ),
                   ),
                 ],
@@ -153,20 +144,26 @@ class _GroupListScreenState extends State<GroupListScreen> {
             ),
           Expanded(
             child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
               onRefresh: _pullToRefresh,
               child: _futureGroups == null
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: AppLoading())
                   : FutureBuilder<List<Group>>(
                       future: _futureGroups!,
                       builder: (context, snap) {
                         if (snap.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(child: AppLoading());
                         }
                         if (snap.hasError) {
                            return Center(
-                             child: Text(
-                               'Erro ao carregar: ${snap.error}',
-                               style: const TextStyle(color: Colors.red),
+                             child: Padding(
+                               padding: const EdgeInsets.all(AppSpacing.xl),
+                               child: Text(
+                                 'Erro ao carregar: ${snap.error}',
+                                 textAlign: TextAlign.center,
+                                 style: AppTextStyles.subtitle.copyWith(color: AppColors.error),
+                               ),
                              ),
                            );
                         }
@@ -175,14 +172,16 @@ class _GroupListScreenState extends State<GroupListScreen> {
 
                         if (groups.isEmpty) {
                           return ListView(
-                            padding: const EdgeInsets.all(24),
-                            children: const [
-                              SizedBox(height: 48),
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            children: [
+                              const SizedBox(height: AppSpacing.xxl),
+                              Icon(Icons.group_outlined, size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
+                              const SizedBox(height: AppSpacing.lg),
                               Center(
                                 child: Text(
                                   'Nenhum grupo no momento.\nCrie um novo para começar!',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.white70),
+                                  style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
                                 ),
                               ),
                             ],
@@ -190,12 +189,11 @@ class _GroupListScreenState extends State<GroupListScreen> {
                         }
 
                         return ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 96),
                           itemCount: groups.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, i) {
                             final g = groups[i];
-                            // Passa o repositório instanciado para o card
                             return _GroupCard(
                               group: g,
                               groupRepository: _groupRepository!,
@@ -207,6 +205,29 @@ class _GroupListScreenState extends State<GroupListScreen> {
             ),
           ),
         ],
+      ),
+      // Botão flutuante para criar novo grupo
+      floatingActionButton: _online
+          ? AppFAB(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+                ).then((_) => _reload());
+              },
+              icon: Icons.add,
+              tooltip: 'Criar grupo',
+            )
+          : null,
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 1, // Grupos é o índice 1
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.of(context).pushReplacementNamed('/feed');
+          } else if (index == 2) {
+            Navigator.of(context).pushReplacementNamed('/profile');
+          }
+          // Se index == 1, já está na tela de grupos
+        },
       ),
     );
   }
@@ -254,13 +275,13 @@ class _GroupCardState extends State<_GroupCard> {
     Widget? expanded;
 
     if (_loading) {
-      expanded = const Padding(
-        padding: EdgeInsets.all(12),
+      expanded = Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-            SizedBox(width: 8),
-            Text('Carregando ranking...', style: TextStyle(color: Colors.white70)),
+            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+            const SizedBox(width: AppSpacing.sm),
+            Text('Carregando ranking...', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
           ],
         ),
       );
@@ -268,13 +289,13 @@ class _GroupCardState extends State<_GroupCard> {
       expanded = _RankingBlock(details: _details!);
     } else if ((widget.group.description ?? '').isNotEmpty) {
       expanded = Padding(
-        padding: const EdgeInsets.all(12),
-        child: Text(widget.group.description!, style: const TextStyle(color: Colors.white70)),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text(widget.group.description!, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
       );
     } else if (_openedOnce) {
-      expanded = const Padding(
-        padding: EdgeInsets.all(12),
-        child: Text('Sem cache de ranking.', style: TextStyle(color: Colors.white70)),
+      expanded = Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text('Sem cache de ranking.', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
       );
     }
 
@@ -328,46 +349,66 @@ class _RankingBlock extends StatelessWidget {
       children: [
         if (leader != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
             child: _pill(
               context,
-              labelLeft: 'Leader',
+              labelLeft: 'Líder',
               name: leader.name,
               points: leader.points,
-              color: Colors.amber,
+              color: AppColors.skip,
             ),
           ),
-        const SizedBox(height: 8),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12),
-          child: Text('Ranking', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        const SizedBox(height: AppSpacing.sm),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Text('Ranking', style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.bold)),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         ...List.generate(top3.length, (i) {
           final row = top3[i];
           final pos = i + 1;
           return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surface.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(color: AppColors.border.withOpacity(0.3)),
             ),
-            child: ListTile(
-              leading: CircleAvatar(
-                 backgroundImage: row.image != null ? NetworkImage(row.image!) : null,
-                 child: row.image == null ? Text(row.name[0]) : null,
-              ),
-              title: Text(row.name, style: const TextStyle(color: Colors.white)),
-              subtitle: Text('${row.points.toStringAsFixed(1)} pontos', style: const TextStyle(color: Colors.white70)),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
-                child: Text(_ordinal(pos), style: const TextStyle(color: Colors.white)),
-              ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: row.image != null ? NetworkImage(row.image!) : null,
+                  backgroundColor: AppColors.border,
+                  child: row.image == null 
+                    ? Text(row.name[0], style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)) 
+                    : null,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(row.name, style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text('${row.points.toStringAsFixed(1)} pontos', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.2), 
+                    borderRadius: BorderRadius.circular(AppCorners.sm),
+                  ),
+                  child: Text(_ordinal(pos), style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
             ),
           );
         }),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
       ],
     );
   }
@@ -376,13 +417,13 @@ class _RankingBlock extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.emoji_events, size: 14, color: color),
-        const SizedBox(width: 6),
-        Text(labelLeft, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-        const SizedBox(width: 8),
-        Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        const SizedBox(width: 8),
-        Text('${points.toStringAsFixed(1)} pts', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Icon(Icons.emoji_events, size: 16, color: color),
+        const SizedBox(width: AppSpacing.xs),
+        Text(labelLeft, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
+        const SizedBox(width: AppSpacing.sm),
+        Text(name, style: AppTextStyles.title.copyWith(fontSize: 13, fontWeight: FontWeight.bold)),
+        const SizedBox(width: AppSpacing.sm),
+        Text('${points.toStringAsFixed(1)} pts', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
       ],
     );
   }

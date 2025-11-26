@@ -45,9 +45,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
-      firstDate: isStartDate ? DateTime.now() : (_startDate ?? DateTime.now()),
-      lastDate: DateTime.now().add(const Duration(days: 365)), 
+      initialDate: isStartDate 
+          ? (_startDate ?? DateTime.now()) 
+          : (_endDate ?? _startDate ?? DateTime.now()),
+      firstDate: isStartDate 
+          ? DateTime.now() 
+          : (_startDate ?? DateTime.now()),
+      lastDate: isStartDate
+          ? (_endDate ?? DateTime.now().add(const Duration(days: 365)))
+          : DateTime.now().add(const Duration(days: 365)), 
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -71,6 +77,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           }
         } else {
           _endDate = picked;
+          // Se a data de início for maior que a de fim, limpa a data de início
+          if (_startDate != null && _startDate!.isAfter(picked)) {
+            _startDate = null;
+          }
         }
       });
       _calculateDuration();

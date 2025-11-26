@@ -237,9 +237,9 @@ class _CheckinScreenState extends State<CheckinScreen> {
       ),
     );
   }
-
 }
 
+class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   final String text;
   

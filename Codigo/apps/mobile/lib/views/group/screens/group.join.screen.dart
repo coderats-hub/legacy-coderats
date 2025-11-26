@@ -48,29 +48,55 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         session: session,
       );
 
-      // 2. Chamar o método de entrar no grupo (Você precisará criar esse método no Repo se não existir)
-      // Supondo que o backend retorne o ID do grupo ao entrar com sucesso
-      final groupId = await repository.joinGroup(_codeController.text.trim());
+      // 2. Chamar o método de entrar no grupo
+      final groupId = await repository.joinGroup(_codeController.text.trim().toUpperCase());
 
       if (mounted) {
         setState(() => _isLoading = false);
 
-        // 3. Navegar passando o ID recebido da API
-        Navigator.of(context).pushReplacement( // Use pushReplacement para ele não voltar para a tela de código
-          MaterialPageRoute(
-            builder: (context) => GroupDetailPage(
-              groupId: groupId, // <--- AQUI ESTAVA O ERRO, AGORA PASSAMOS O ID
-            ),
+        // 3. Mostrar mensagem de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Você entrou no grupo com sucesso!'),
+            backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 2),
           ),
         );
+
+        // 4. Aguardar um frame antes de navegar (melhora transição visual)
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        if (mounted) {
+          // 5. Navegar para os detalhes do grupo
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => GroupDetailPage(
+                groupId: groupId,
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        
+        // Tratamento de erro mais detalhado
+        String errorMessage = 'Erro ao entrar no grupo';
+        
+        if (e.toString().contains('404')) {
+          errorMessage = 'Código inválido. Verifique e tente novamente.';
+        } else if (e.toString().contains('internet') || e.toString().contains('Conexao')) {
+          errorMessage = 'Sem conexão com a internet.';
+        } else if (e.toString().contains('401') || e.toString().contains('403')) {
+          errorMessage = 'Você não tem permissão para entrar neste grupo.';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao entrar no grupo: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 3),
           ),
         );
       }

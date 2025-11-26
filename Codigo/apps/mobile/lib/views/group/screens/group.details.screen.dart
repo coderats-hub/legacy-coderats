@@ -1,33 +1,69 @@
+/**
+ * Tela de Detalhes do Grupo (GroupDetailPage)
+ * 
+ * NAVEGAÇÃO: Acessível via tap nos cards da lista de grupos
+ * 
+ * FUNÇÃO:
+ * - Exibe informações completas de um grupo específico
+ * - Mostra banner customizável, descrição expansível e ranking de membros
+ * - Lista check-ins do grupo com paginação infinita por data
+ * - Permite criação de novos check-ins e navegação para ranking completo
+ * 
+ * COMPONENTES PRINCIPAIS:
+ * - BannerHero: Banner do grupo com imagem ou style personalizado
+ * - _DescriptionAccordion: Descrição expansível do grupo
+ * - _RankingTile: Membros do top 3 ranking
+ * - _CheckinTile: Cards de check-ins agrupados por dia
+ * - AppFAB: Botão para criar novo check-in
+ * 
+ * RECURSOS:
+ * - Scroll infinito para carregar mais check-ins
+ * - Agrupamento de check-ins por data
+ * - Código do grupo copiável
+ * - Navegação contextual para ranking e detalhes de check-in
+ * 
+ * FLUXOS DE NAVEGAÇÃO:
+ * - Para ranking completo → group.ranking.screen.dart
+ * - Para lista de check-ins → checkin.list.screen.dart  
+ * - Para criar check-in → checkin.details.screen.dart
+ * - Para perfil de membro → public.profile.screen.dart
+ */
+
 import 'dart:async';
 
-import 'package:app/domain/checkin/checkin_author.dart';
-import 'package:app/repositories/checkin.repository.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/services/checkin/checkin_remote_service.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
-import 'package:app/shared/components/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// --- IMPORTS DE DOMÍNIO E DADOS (A "Cola" que faltava) ---
-import 'package:app/domain/checkin/checkin.dart'; // O modelo real
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/domain/group/group.dart';
+// Core & Database
 import 'package:app/core/session_manager.dart';
 import 'package:app/database/checkin/checkin.dao.dart';
+
+// Domain Models
+import 'package:app/domain/checkin/checkin.dart';
+import 'package:app/domain/checkin/checkin_author.dart';
+import 'package:app/domain/group/group.dart';
+import 'package:app/domain/group/group_details.dart';
+
+// Repositories
+import 'package:app/repositories/checkin.repository.dart';
+import 'package:app/repositories/group.repository.dart';
+
+// Services
+import 'package:app/services/checkin/checkin_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
+import 'package:app/services/group/group_remote_service.dart';
+import 'package:app/services/http_client.dart';
+import 'package:app/services/local_database.dart';
 
-// --- IMPORTS VISUAIS ---
+// Shared Components & Theme
+import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/views/group/widgets/card.group.dart' hide BannerStyle;
-import 'package:app/views/group/widgets/banner.group.dart';
 
-// Telas de navegação
-import 'package:app/views/checkin/screens/checkin.details.screen.dart'; // Supondo que exista
-// import 'package:app/views/checkin/screens/create_checkin_screen.dart'; // Tela de criar checkin
+// Views - Widgets & Screens
+import 'package:app/views/checkin/screens/checkin.details.screen.dart';
+import 'package:app/views/checkin/screens/checkin.list.screen.dart';
 import 'package:app/views/group/screens/group.edit.screen.dart';
+import 'package:app/views/group/widgets/banner.group.dart';
 import 'package:app/views/profile/screens/public.profile.screen.dart';
 
 
@@ -321,19 +357,36 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
           const SizedBox(height: AppSpacing.lg),
 
-          // Check-ins Header
+          // Seção de check-ins com header e link para visualização detalhada
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Check-ins Recentes", style: AppTextStyles.title.copyWith(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                Text("Check-ins", style: AppTextStyles.title.copyWith(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                TextButton(
+                  onPressed: () {
+                    // Navega para lista completa de check-ins
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CheckinScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Visualizar com detalhes',
+                    style: TextStyle(
+                      color: Color(0xFF7DCDC1),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
 
-          // Lista de Check-ins
+          // Lista de check-ins agrupados por data com paginação infinita
           if (_items.isEmpty && !_loadingCheckins)
             const Padding(
               padding: EdgeInsets.all(32.0),
@@ -346,9 +399,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             } else if (r.type == _RowType.item) {
               return _CheckinTile(c: r.item!);
             } else {
+              // Loader no final quando carregando mais itens
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                child: AppLoading(),
               );
             }
           }).toList(),
@@ -356,13 +410,30 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         ],
       ),
       
+      // Botão flutuante para criar novo check-in neste grupo
       floatingActionButton: AppFAB(
         onPressed: () {
-          // Navigator.of(context).push(...) -> Tela Criar Checkin
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Criar Check-in")));
+          // Navega para tela de criação de check-in
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CommitCheckinScreen(),
+            ),
+          );
         },
-        icon: Icons.add_a_photo,
+        icon: Icons.add,
         tooltip: 'Novo check-in',
+      ),
+      // Barra de navegação inferior - grupos permanece ativo
+      bottomNavigationBar: AppNavbar(
+        currentIndex: 1, // Mantém grupos como aba ativa
+        onTap: (i) {
+          if (i == 0) {
+            Navigator.of(context).pushNamed('/feed');
+          } else if (i == 2) {
+            Navigator.of(context).pushNamed('/profile');
+          }
+          // i == 1 é grupos, já está nessa tela
+        },
       ),
     );
   }
