@@ -29,6 +29,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:app/shared/utils/string_utils.dart';
 
 // Tela que exibe o ranking completo de membros do grupo
 class GroupRankingScreen extends StatelessWidget {
@@ -81,7 +82,7 @@ class GroupRankingScreen extends StatelessWidget {
                   // Informações do usuário (nome e pontos)
                   Expanded(
                     child: UserAvatarInfo(
-                      label: user.name,                      // Nome do usuário
+                      label: StringUtils.truncateName(user.name),  // Nome truncado
                       subtitle: '${user.points} pontos',     // Pontuação
                       showAvatar: false,                     // Não mostra avatar extra
                     ),

@@ -9,7 +9,8 @@ import 'package:app/domain/group/group.dart';
 import 'package:app/database/group/group.dao.dart';
 import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/core/session_manager.dart';
-import 'package:app/services/connectivity_service.dart'; 
+import 'package:app/services/connectivity_service.dart';
+import 'package:app/views/group/screens/group.list.screen.dart'; 
 
 enum EvaluationMethod {
   photoStreak,
@@ -330,14 +331,11 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
         ),
       );
 
-      // Limpa a pilha e volta para a Home/Lista
-      // Navigator.of(context).pushAndRemoveUntil(
-      //   MaterialPageRoute(builder: (context) => const GroupListScreen()),
-      //   (route) => false,
-      // );
-      
-      // Ou apenas fecha o fluxo de criação:
-       Navigator.of(context).popUntil((route) => route.isFirst);
+      // Redireciona para a tela de Meus Grupos
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => GroupListScreen()),
+        (route) => false,
+      );
 
     } catch (e) {
       if (!mounted) return;

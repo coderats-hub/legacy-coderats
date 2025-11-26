@@ -17,6 +17,7 @@ import 'package:app/services/connectivity_service.dart';
 import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:app/views/group/widgets/card.group.dart';
+import 'package:app/shared/utils/string_utils.dart';
 
 // --- IMPORTS DO TEMA E COMPONENTES PADRÃO ---
 import 'package:app/shared/theme/app_theme.dart';
@@ -121,6 +122,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
       backgroundColor: AppColors.background,
       appBar: const AppHeader(
         title: 'Meus Grupos',
+        showBackButton: false,
       ),
       body: Column(
         children: [
@@ -353,7 +355,7 @@ class _RankingBlock extends StatelessWidget {
             child: _pill(
               context,
               labelLeft: 'Líder',
-              name: leader.name,
+              name: StringUtils.truncateName(leader.name),
               points: leader.points,
               color: AppColors.skip,
             ),
@@ -390,7 +392,7 @@ class _RankingBlock extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(row.name, style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
+                      Text(StringUtils.truncateName(row.name), style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 2),
                       Text('${row.points.toStringAsFixed(1)} pontos', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
                     ],
