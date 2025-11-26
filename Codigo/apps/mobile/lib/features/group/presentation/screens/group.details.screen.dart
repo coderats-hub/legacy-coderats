@@ -27,7 +27,7 @@
  * - Para lista de check-ins → checkin.list.screen.dart  
  * - Para criar check-in → checkin.details.screen.dart
  * - Para perfil de membro → public.profile.screen.dart
- */
+ 
 
 import 'dart:async';
 import 'package:app/features/group/presentation/widgets/banner.group.dart';
@@ -677,4 +677,4 @@ class _GroupCodeWidgetState extends State<_GroupCodeWidget> {
       ),
     );
   }
-}
+}**/

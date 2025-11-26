@@ -1,48 +1,65 @@
+import 'package:app/core/session_manager.dart';
+import 'package:app/views/feed/presentation/screens/feed.list.screen.dart';
+import 'package:app/views/group/screens/group.ranking.screen.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:app/views/group/screens/group.join.screen.dart';
+import 'package:app/views/group/screens/group.list.screen.dart';
+import 'package:app/views/profile/screens/private.profile.screen.dart';
+import 'package:app/views/user/screens/code_exchange.screen.dart';
+import 'package:app/views/user/screens/home.screen.dart';
+import 'package:app/views/user/screens/onboarding.screen.dart';
+import 'package:app/views/group/screens/group.create.screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'shared/theme/app.theme.dart';
-import 'features/user/presentation/screens/home.screen.dart';
-import 'features/user/presentation/screens/code_exchange.screen.dart';
-import 'features/user/presentation/screens/onboarding.screen.dart';
-import 'features/group/presentation/screens/group.join.screen.dart';
-import 'features/group/presentation/screens/group.create.screen.dart';
-import 'features/group/presentation/screens/group.list.screen.dart';
-import 'features/group/presentation/screens/group.details.screen.dart';
-import 'features/group/presentation/screens/group.ranking.screen.dart';
-import 'features/profile/presentation/screens/private.profile.screen.dart';
-import 'features/feed/presentation/screens/feed.list.screen.dart';
+
+import 'package:app/core/session_manager.dart';
+import 'package:app/views/group/screens/group.details.screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await SessionManager.instance.loadFromStorage();
   
   runApp(const App()); 
 }
 
-// Widget raiz da aplicação - configura MaterialApp e roteamento
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // Configurações básicas do app
       title: 'Code Rats',
-      theme: AppTheme.dark(), // Tema escuro personalizado
-      home: const TelaInicio(), // Tela inicial (splash/welcome)
-      debugShowCheckedModeBanner: false, // Remove banner de debug
+      theme: AppTheme.dark(),
+      home: const TelaInicio(),
+      debugShowCheckedModeBanner: false,
       
-      // Sistema de rotas nomeadas para navegação
       routes: {
         '/feed': (_) => const FeedListScreen(),
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (_) => GroupRankingScreen(),
-        '/group-details': (_) => const GroupDetailPage(groupName: 'Nome do Grupo'),
-        '/groups': (_) => const GroupListScreen(currentUserId: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'),
+        '/groups': (_) => const GroupListScreen(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),
         '/onboarding': (_) => const OnboardingStartScreen(),
         '/create-group': (_) => const CreateGroupScreen(),
+        '/group-details': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+          if (args == null || args['groupId'] == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text("Erro")),
+              body: const Center(child: Text("ID do grupo não fornecido")),
+            );
+          }
+          return GroupDetailPage(
+            groupId: args['groupId'], 
+            groupNamePreview: args['groupNamePreview'],
+            imageUrlPreview: args['imageUrlPreview'],  
+          );
+        },
       },
     );
   }

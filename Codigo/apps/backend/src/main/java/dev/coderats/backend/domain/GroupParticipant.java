@@ -19,7 +19,7 @@ import jakarta.persistence.Table;
 public class GroupParticipant {
 
     @EmbeddedId
-    private GroupParticipantId id;
+    private GroupParticipantId id = new GroupParticipantId();
 
     // --- Relacionamentos (O "Muitos" de volta para o "Um") ---
 
