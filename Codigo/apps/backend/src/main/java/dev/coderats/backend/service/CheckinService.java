@@ -13,6 +13,7 @@ import dev.coderats.backend.infra.repository.CheckinRepository;
 import dev.coderats.backend.infra.repository.GroupParticipantRepository;
 import dev.coderats.backend.infra.repository.UserRepository;
 import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
+import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
 import dev.coderats.backend.service.CommitEvaluationService;
 
@@ -34,6 +35,10 @@ public class CheckinService {
         this.participantRepository = participantRepository;
         this.userRepository = userRepository;
         this.commitEvaluationService = commitEvaluationService;
+    }
+    
+    public CommitEvaluationService.EvaluationResult previewCheckin(UUID userId, List<CommitSelectionRequest> commits) {
+        return commitEvaluationService.evaluate(userId, commits);
     }
 
     public CheckinResponse createCheckin(UUID userId, UUID groupId, CheckinCreateRequest request) {

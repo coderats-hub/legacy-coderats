@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.coderats.backend.service.CheckinService;
 import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
+import dev.coderats.backend.web.dto.request.CheckinPreviewRequest;
+import dev.coderats.backend.web.dto.response.CheckinPreviewResponse;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
 
 @RestController
@@ -64,6 +66,14 @@ public class CheckinController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+    }
+
+    @PostMapping("/checkins/preview")
+    public ResponseEntity<CheckinPreviewResponse> preview(
+            @RequestBody CheckinPreviewRequest request) {
+        UUID userId = getCurrentUserId();
+        var result = checkinService.previewCheckin(userId, request.commits());
+        return ResponseEntity.ok(new CheckinPreviewResponse(result.summary(), result.points()));
     }
 
     private UUID getCurrentUserId() {
