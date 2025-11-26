@@ -304,8 +304,8 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
 
       // 3. Conversão do Enum para String da API
       final methodString = _selectedMethod == EvaluationMethod.commitStreak 
-          ? 'commit_streak' 
-          : 'photo_streak';
+          ? 'streak_commits' 
+          : 'streak_images';
 
       // 4. Chamada ao Repositório
       await repository.createGroup(

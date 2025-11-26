@@ -95,7 +95,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       Center(
                         child: Image.asset(
-                          'images/ratsgroupcoding.png',
+                          'assets/images/ratsgroupcoding.png',
                           width: 400,
                           height: 240,
                           fit: BoxFit.contain,

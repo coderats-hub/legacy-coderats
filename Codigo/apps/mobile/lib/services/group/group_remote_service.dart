@@ -13,7 +13,7 @@ class GroupRemoteService {
     final resp = await http.get('/users/me/groups');
 
     if (resp.statusCode != 200) {
-      throw Exception('Erro ao buscar grupos: ${resp.statusCode}');
+      _throwHttp('Erro ao buscar grupos', resp);
     }
 
     final list = jsonDecode(resp.body) as List;
@@ -24,7 +24,7 @@ class GroupRemoteService {
     final resp = await http.get('/groups/$id');
 
     if (resp.statusCode != 200) {
-      throw Exception('Erro ao buscar detalhes: ${resp.statusCode}');
+      _throwHttp('Erro ao buscar detalhes', resp);
     }
 
     final map = jsonDecode(resp.body);
@@ -46,14 +46,14 @@ class GroupRemoteService {
       'image': image,
       'method': method,
       'repository': repository,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
+      'start_date': _formatDate(startDate),
+      'end_date': _formatDate(endDate),
     };
 
     final resp = await http.post('/groups', body);
 
     if (resp.statusCode != 201) {
-      throw Exception('Erro ao criar grupo: ${resp.statusCode}');
+      _throwHttp('Erro ao criar grupo', resp);
     }
 
     return Group.fromJson(jsonDecode(resp.body));
@@ -77,7 +77,7 @@ class GroupRemoteService {
     final resp = await http.patch('/groups/$id', body);
 
     if (resp.statusCode != 200) {
-      throw Exception('Erro ao atualizar grupo: ${resp.statusCode}');
+      _throwHttp('Erro ao atualizar grupo', resp);
     }
 
     return Group.fromJson(jsonDecode(resp.body));
@@ -86,11 +86,29 @@ class GroupRemoteService {
   Future<Group> joinGroup(String code) async {
     final resp = await http.post('/groups/join', {'code': code});
 
-    if (resp.statusCode != 201) {
-      throw Exception('Erro ao entrar no grupo: ${resp.statusCode}');
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      _throwHttp('Erro ao entrar no grupo', resp);
     }
 
     final map = jsonDecode(resp.body);
     return Group.fromJson(map['group']);
+  }
+
+  String _formatDate(DateTime date) => date.toUtc().toIso8601String();
+
+  Never _throwHttp(String fallback, dynamic resp) {
+    String message = '$fallback: HTTP ${resp.statusCode}';
+    try {
+      final Map<String, dynamic> body =
+          jsonDecode(resp.body) as Map<String, dynamic>;
+      final details = body['message'] ??
+          body['error'] ??
+          body['detail'] ??
+          body['errors'];
+      if (details != null) {
+        message = '$fallback: $details';
+      }
+    } catch (_) {}
+    throw Exception(message);
   }
 }

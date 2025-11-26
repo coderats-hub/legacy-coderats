@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.coderats.backend.domain.Group;
 import dev.coderats.backend.service.GroupService;
 import dev.coderats.backend.web.dto.request.GroupCreateRequest;
+import dev.coderats.backend.web.dto.request.GroupJoinRequest;
 import dev.coderats.backend.web.dto.request.GroupUpdateRequest;
 import dev.coderats.backend.web.dto.response.GroupResponse;
+import dev.coderats.backend.web.dto.response.GroupJoinResponse;
 import dev.coderats.backend.web.dto.response.GroupWithDetailsResponse;
 
 @RestController
@@ -30,6 +32,32 @@ public class GroupController {
 
     public GroupController(GroupService groupService) {
         this.groupService = groupService;
+    }
+
+    // POST /groups/join - Entrar em um grupo por código
+    @PostMapping("/groups/join")
+    public ResponseEntity<GroupJoinResponse> joinGroup(@RequestBody GroupJoinRequest request) {
+        try {
+            UUID requesterId = getCurrentUserId();
+            UUID targetUserId = resolveTargetUser(request.userId(), requesterId);
+
+            var result = groupService.joinGroupByCode(request.code(), targetUserId);
+            var membership = new GroupJoinResponse.GroupJoinResponseMembership(
+                    result.participant().getRole(),
+                    result.participant().getJoinedAt() != null
+                            ? result.participant().getJoinedAt().toInstant()
+                            : null);
+
+            var response = new GroupJoinResponse(toResponse(result.group()), membership);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // GET /users/me/groups - Listar meus grupos
@@ -139,5 +167,16 @@ public class GroupController {
                 group.getStartDate() != null ? group.getStartDate().toInstant() : null,
                 group.getEndDate() != null ? group.getEndDate().toInstant() : null
         );
+    }
+
+    private UUID resolveTargetUser(String requestedUserId, UUID fallback) {
+        if (!org.springframework.util.StringUtils.hasText(requestedUserId)) {
+            return fallback;
+        }
+        try {
+            return UUID.fromString(requestedUserId);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Formato de userId inválido: " + requestedUserId, e);
+        }
     }
 }
