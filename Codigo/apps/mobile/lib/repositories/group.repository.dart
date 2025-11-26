@@ -20,15 +20,13 @@ class GroupRepository {
 
   Future<List<Group>> getUserGroups() async {
     final userId = session.currentUserId;
-    if (userId == null) return [];
-
     final online = await net.isOnline();
 
     if (online) {
       try {
         final groups = await remote.getUserGroups();
-        // Só salva no cache se o banco local existir (Mobile)
-        if (local != null) {
+        // Só salva no cache se o banco local existir (Mobile) e tivermos um usuário
+        if (local != null && userId != null) {
           await local!.cacheGroups(groups, userId);
         }
         return groups;
@@ -37,8 +35,8 @@ class GroupRepository {
       }
     }
 
-    // Se tiver banco local, busca dele. Se não (Web offline), retorna vazio.
-    if (local != null) {
+    // Se tiver banco local e usuário conhecido, busca dele. Se não (Web/offline), retorna vazio.
+    if (local != null && userId != null) {
       return await local!.getGroupsByUser(userId);
     }
     return []; 
