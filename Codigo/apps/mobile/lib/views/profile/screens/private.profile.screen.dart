@@ -1,5 +1,6 @@
 import 'package:app/domain/user/user.model.dart';
 import 'package:app/services/user/user.service.dart';
+import 'package:app/views/checkin/widgets/shared_widgets.dart';
 import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
 import 'package:app/views/group/screens/group.list.screen.dart';
@@ -73,33 +74,8 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
             : 'Perfil',
       ),
       body: _error != null
-          ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: AppTextStyles.inputLabel.copyWith(color: AppColors.error),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadUserData,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                        ),
-                        child: const Text('Tentar Novamente'),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
+          ? _buildErrorView()
+          : SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -142,6 +118,46 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
     } else if (index == 1) {
       Navigator.of(context).pushReplacementNamed('/groups');
     }
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.withOpacity(0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar perfil',
+              style: SharedTheme.buildDarkTheme().textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Erro: $_error',
+              style: SharedTheme.buildDarkTheme().textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SharedStyledButton(
+              text: 'Tentar novamente',
+              onPressed: () {
+                setState(() {
+                  _error = null;
+                  _isLoading = true;
+                });
+                _loadUserData();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

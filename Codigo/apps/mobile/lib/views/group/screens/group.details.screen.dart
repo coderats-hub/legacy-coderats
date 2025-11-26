@@ -63,6 +63,7 @@ import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/views/checkin/screens/checkin.details.screen.dart';
 import 'package:app/views/checkin/screens/checkin.list.screen.dart';
 import 'package:app/views/group/screens/group.edit.screen.dart';
+import 'package:app/views/group/screens/group.ranking.screen.dart';
 import 'package:app/views/group/widgets/banner.group.dart';
 import 'package:app/views/profile/screens/public.profile.screen.dart';
 
@@ -252,12 +253,27 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     ),
                   ),
                 );
+              } else if(value == 'delete' && _details != null) {
+                  // TODO: Implementar exclusão de grupo
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Funcionalidade de exclusão será implementada')),
+                  );
               }
             },
             itemBuilder: (BuildContext context) => [
               const PopupMenuItem(
                 value: 'edit',
                 child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Editar grupo')]),
+              ),
+              const PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 20, color: AppColors.textPrimary),
+                    SizedBox(width: 8),
+                    Text('Excluir grupo'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -347,8 +363,11 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                 child: _RankingChip(
                   label: 'Ver Todo Ranking',
                   onTap: () {
-                    // Navigator.of(context).pushNamed('/group-ranking', arguments: _details);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Ranking completo em breve")));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => GroupRankingScreen(),
+                      ),
+                    );
                   },
                 ),
               ),

@@ -24,20 +24,46 @@
  */
 
 import 'package:app/views/profile/widgets/profile_components.dart';
+import 'package:app/views/checkin/widgets/shared_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 // Tela de perfil público de outros usuários (não o próprio)
-class PublicProfileScreen extends StatelessWidget {
-  PublicProfileScreen({super.key});
+class PublicProfileScreen extends StatefulWidget {
+  const PublicProfileScreen({super.key});
 
+  @override
+  State<PublicProfileScreen> createState() => _PublicProfileScreenState();
+}
+
+class _PublicProfileScreenState extends State<PublicProfileScreen> {
   final DateTime _currentDate = DateTime.now();            // Data atual para calendário
   final Map<DateTime, List<dynamic>> _markedDateMap = {};  // Mapa de datas com atividades
+  bool _isLoading = false;
+  Object? _error;
 
   @override
   Widget build(BuildContext context) {
+    // Exibe erro formatado se houver
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppHeader(
+          title: 'Perfil',
+        ),
+        body: _buildErrorView(),
+        bottomNavigationBar: AppNavbar(
+          currentIndex: 2,
+          onTap: (i) {
+            if (i == 0) Navigator.of(context).pushNamed('/feed');
+            else if (i == 1) Navigator.of(context).pushNamed('/groups');
+          },
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppHeader(
@@ -80,6 +106,46 @@ class PublicProfileScreen extends StatelessWidget {
           }
           // i == 2 é perfil, já está nessa tela
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.withOpacity(0.7),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar perfil',
+              style: SharedTheme.buildDarkTheme().textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Erro: $_error',
+              style: SharedTheme.buildDarkTheme().textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SharedStyledButton(
+              text: 'Tentar novamente',
+              onPressed: () {
+                setState(() {
+                  _error = null;
+                  _isLoading = true;
+                });
+                // TODO: Adicionar lógica de reload
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

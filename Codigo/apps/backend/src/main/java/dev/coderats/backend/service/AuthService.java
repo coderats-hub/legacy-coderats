@@ -11,7 +11,7 @@ import dev.coderats.backend.infra.http.github.GitHubOAuthClient;
 import dev.coderats.backend.infra.repository.UserRepository;
 import dev.coderats.backend.infra.security.JwtService;
 import dev.coderats.backend.web.dto.response.AuthResponse;
-import dev.coderats.backend.web.dto.response.PrivateUserResponse;
+import dev.coderats.backend.web.dto.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -50,10 +50,7 @@ public class AuthService {
     user = users.save(user);
 
     String jwtToken = jwt.generate(user.getId(), user.getGithubUser());
-    var dto = new PrivateUserResponse(
-        user.getId(), user.getName(), user.getEmail(), user.getImage(),
-        user.getGithubUser(), user.getGithubId()
-    );
+    var dto = UserMapper.toDTO(user);
 
     return new AuthResponse(dto, jwtToken);
   }

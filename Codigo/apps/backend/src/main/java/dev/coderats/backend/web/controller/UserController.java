@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import dev.coderats.backend.domain.User;
 import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.web.dto.mapper.UserMapper;
+import dev.coderats.backend.web.dto.response.UserDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,14 +44,15 @@ public class UserController {
    * TODO: Implementar autenticação JWT para pegar usuário do token
    */
   @GetMapping("/me")
-  public ResponseEntity<User> getCurrentUser() {
+  public ResponseEntity<UserDTO> getCurrentUser() {
     // Por enquanto, retorna o primeiro usuário encontrado
     // TODO: Implementar lógica para pegar usuário do JWT token
     List<User> users = userRepository.findAll();
     if (users.isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-    return ResponseEntity.ok(users.get(0));
+    User user = users.get(0);
+    return ResponseEntity.ok(UserMapper.toDTO(user));
   }
 
   /**
@@ -57,7 +60,7 @@ public class UserController {
    * TODO: Implementar autenticação JWT para pegar usuário do token
    */
   @PutMapping("/me")
-  public ResponseEntity<User> updateCurrentUser(@RequestBody User userUpdate) {
+  public ResponseEntity<UserDTO> updateCurrentUser(@RequestBody User userUpdate) {
     // Por enquanto, atualiza o primeiro usuário encontrado
     // TODO: Implementar lógica para pegar usuário do JWT token e atualizar
     List<User> users = userRepository.findAll();
@@ -79,7 +82,7 @@ public class UserController {
     }
 
     User savedUser = userRepository.save(currentUser);
-    return ResponseEntity.ok(savedUser);
+    return ResponseEntity.ok(UserMapper.toDTO(savedUser));
   }
 
   /**

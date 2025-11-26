@@ -1,7 +1,7 @@
 class User {
   final String id;
   final String name;
-  final String email;
+  final String? email;
   final String? image;
   final String githubUser;
   final int githubId;
@@ -12,7 +12,7 @@ class User {
   const User({
     required this.id,
     required this.name,
-    required this.email,
+    this.email,
     this.image,
     required this.githubUser,
     required this.githubId,
@@ -25,7 +25,7 @@ class User {
     return User(
       id: json['id'] as String,
       name: json['name'] as String,
-      email: json['email'] as String,
+      email: json['email'] as String?,
       image: json['image'] as String?,
       githubUser: json['github_user'] as String,
       githubId: json['github_id'] as int,
