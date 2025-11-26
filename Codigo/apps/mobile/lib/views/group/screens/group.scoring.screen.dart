@@ -287,7 +287,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
       // 2. Montagem de Dependências (Idealmente usar Injeção de Dependência como GetIt/Modular)
       // Aqui estamos montando manualmente baseado nos seus códigos anteriores:
       final session = SessionManager.instance;
-      final localDb = await LocalDatabase.getInstance();
+      final localDb = await LocalDatabase.maybeGetInstance();
       
       // Assume que você tem uma classe ConnectivityService simples
       final connectivity = ConnectivityService(); 
@@ -297,7 +297,7 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
       
       final repository = GroupRepository(
         remote: remoteService,
-        local: localDb.groups, // Usa o getter do LocalDatabase
+        local: localDb?.groups,
         net: connectivity,
         session: session,
       );

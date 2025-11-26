@@ -30,6 +30,16 @@ class LocalDatabase {
     return _instance!;
   }
 
+  static Future<LocalDatabase?> maybeGetInstance() async {
+    if (kIsWeb) return null;
+    return getInstance();
+  }
+
+  static Future<GroupDao?> maybeGetGroupDao() async {
+    final instance = await maybeGetInstance();
+    return instance?.groups;
+  }
+
   Database get raw => _db;
 
   Future<void> close() async {

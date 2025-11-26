@@ -84,7 +84,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   // 1. Inicializa Repositórios
   Future<void> _initDependencies() async {
     final session = SessionManager.instance;
-    final localDb = await LocalDatabase.getInstance();
+    final localDb = await LocalDatabase.maybeGetInstance();
     final connectivity = ConnectivityService();
     final httpClient = HttpClient(session);
     
@@ -92,7 +92,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     final groupRemote = GroupRemoteService(httpClient);
     final groupRepo = GroupRepository(
       remote: groupRemote,
-      local: localDb.groups,
+      local: localDb?.groups,
       net: connectivity,
       session: session,
     );
@@ -101,7 +101,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     final checkinRemote = CheckinRemoteService(httpClient);
     // Nota: Precisamos instanciar o CheckinDao. 
     // Assumindo que localDb expõe o database raw ou criamos um getter lá.
-    final checkinDao = CheckinDao(localDb.raw); 
+    final checkinDao = localDb != null ? CheckinDao(localDb.raw) : null; 
     
     final checkinRepo = CheckinRepository(
       remote: checkinRemote,

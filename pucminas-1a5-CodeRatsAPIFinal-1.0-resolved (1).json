@@ -1,0 +1,1551 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API final do CodeRats",
+    "description": "",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://virtserver.swaggerhub.com/pucminas-1a5/CodeRatsAPIFinal/1.0",
+      "description": "SwaggerHub API Auto Mocking"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/github/callback": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Realizar login ou registro via GitHub",
+        "description": "Recebe o código temporário 'code' fornecido pelo GitHub OAuth.\nO backend troca esse código por um token de acesso do GitHub,\nautentica ou cria o usuário na plataforma Code Rats,\ne retorna o perfil do usuário e um token JWT da sessão.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/github_callback_body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticação bem-sucedida. Retorna o objeto do usuário e o token JWT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                },
+                "example": {
+                  "user": {
+                    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                    "name": "Ana Coder",
+                    "email": "ana.coder@email.com",
+                    "image": "https://avatars.githubusercontent.com/u/12345",
+                    "github_user": "anacoder"
+                  },
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código 'code' inválido ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "statusCode": 400,
+                  "message": "Código OAuth inválido."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Obter meu perfil",
+        "responses": {
+          "200": {
+            "description": "Perfil do usuário autenticado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateUserResponse"
+                },
+                "example": {
+                  "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                  "name": "Ana Coder",
+                  "email": "ana.coder@email.com",
+                  "image": "https://example.com/path/to/image.png",
+                  "github_user": "anacoder"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me/groups": {
+      "get": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Listar meus grupos com detalhes",
+        "description": "Retorna uma lista paginada dos grupos que eu participo, incluindo uma prévia dos participantes e dos check-ins recentes.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de itens a serem retornados.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Número de itens a serem pulados para paginação.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de grupos do usuário com detalhes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupWithDetails"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "group-uuid-abc",
+                    "name": "Desafio 30 Dias de Testes",
+                    "description": "Grupo para focar em TDD e testes unitários.",
+                    "image": "https://coderats.com/image.jpg",
+                    "status": true,
+                    "participants": [
+                      {
+                        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                        "name": "Ana Coder",
+                        "image": "https://example.com/path/to/ana_image.png",
+                        "points": "10"
+                      },
+                      {
+                        "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+                        "name": "Beto Debugger",
+                        "image": "https://example.com/path/to/beto_image.png",
+                        "points": "23"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me/badges": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Listar minhas badges",
+        "responses": {
+          "200": {
+            "description": "Lista de badges que eu conquistei.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Badge"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "badge-uuid-01",
+                    "name": "Rato Iniciante",
+                    "image": "https://cdn.coderats.com/badges/rato-iniciante.svg",
+                    "description": "Realizou seu primeiro check-in!"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Obter perfil público de um usuário e grupos em comum",
+        "description": "Retorna os detalhes públicos de um usuário específico, além de uma lista dos grupos que vocês dois participam.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "O ID do usuário a ser consultado.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil público do usuário com a lista de grupos em comum.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicUserProfileWithGroups"
+                },
+                "example": {
+                  "profile": {
+                    "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+                    "name": "Beto Debugger",
+                    "image": "https://example.com/path/to/beto_image.png",
+                    "github_user": "betodebugger"
+                  },
+                  "common_groups": [
+                    {
+                      "id": "group-uuid-abc",
+                      "name": "Desafio 30 Dias de Testes",
+                      "image": "https://coderats.com/image.jpg"
+                    },
+                    {
+                      "id": "group-uuid-xyz",
+                      "name": "Estudantes de Arquitetura de Software"
+                    },
+                    {
+                      "image": "https://coderats.com/image.jpg"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/feed": {
+      "get": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Obter meu feed principal",
+        "description": "Retorna uma lista paginada de check-ins de todos os grupos que eu participo.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de itens a serem retornados.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Número de itens a serem pulados para paginação.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de check-ins do feed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Checkin"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "checkin-uuid-123",
+                    "title": "Dia 15: Refatorando a API de pagamentos",
+                    "description": "Apliquei o padrão Strategy para os gateways de pagamento. O código ficou bem mais limpo e fácil de manter, separando cada lógica de pagamento em sua própria classe. O próximo passo é adicionar testes de integração.",
+                    "image": "https://example.com/screenshots/refactoring.png",
+                    "summary_ai": "Excelente aplicação do padrão Strategy! Separar as responsabilidades torna o código mais escalável e manutenível, o que é uma prática de um desenvolvedor sênior. Adicionar testes de integração é o caminho certo para garantir a robustez da solução. Continue assim!",
+                    "points": 150,
+                    "createdAt": "2025-09-25T22:10:00Z",
+                    "author": {
+                      "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+                      "name": "Beto Debugger",
+                      "image": "https://example.com/path/to/beto_image.png"
+                    },
+                    "likes_count": 25,
+                    "liked_by_me": true,
+                    "comments": [
+                      {
+                        "id": "comment-uuid-xyz",
+                        "content": "Belo trabalho! O padrão Strategy é perfeito para isso. Você pensou em usar o padrão Factory para instanciar os gateways?",
+                        "author": {
+                          "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                          "name": "Ana Coder",
+                          "image": "https://example.com/path/to/ana_image.png"
+                        }
+                      },
+                      {
+                        "id": "comment-uuid-abc",
+                        "content": "Muito bom! Isso vai facilitar muito a adição de novos métodos de pagamento no futuro.",
+                        "author": {
+                          "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+                          "name": "Carla Scripter",
+                          "image": "https://example.com/path/to/carla_image.png"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/groups": {
+      "post": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Criar um novo grupo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Grupo criado com sucesso.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "Estudando Elixir e Phoenix"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/groups/{groupId}": {
+      "get": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Detalhes de um grupo",
+        "description": "Retorna todas as informações de um grupo específico, incluindo a lista de seus participantes e os check-ins mais recentes.",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes do grupo com participantes e check-ins.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupWithDetails"
+                },
+                "example": {
+                  "id": "group-uuid-abc",
+                  "name": "Desafio 30 Dias de Testes",
+                  "description": "Grupo para focar em TDD e testes unitários.",
+                  "image": "https://coderats.com/image.jpg",
+                  "code": "123",
+                  "method": "streak_images",
+                  "status": true,
+                  "participants": [
+                    {
+                      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                      "name": "Ana Coder",
+                      "image": "https://example.com/path/to/ana_image.png",
+                      "points": "10"
+                    },
+                    {
+                      "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+                      "name": "Beto Debugger",
+                      "image": "https://example.com/path/to/beto_image.png",
+                      "points": "12"
+                    },
+                    {
+                      "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+                      "name": "Carla Scripter",
+                      "image": "https://example.com/path/to/carla_image.png",
+                      "points": "14"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Excluir um grupo",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Grupo excluído com sucesso."
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Atualizar um grupo",
+        "description": "Permite a Atualizar do name, descrição e image de um grupo.\nAdicionalmente, permite remover um ou mais participantes através de uma lista de IDs. O usuário deve ser o administrador do grupo para realizar esta ação.",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Grupo atualizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupWithDetails"
+                },
+                "example": {
+                  "id": "group-uuid-abc",
+                  "name": "Desafio 30 Dias de Testes (Avançado)",
+                  "description": "Foco em TDD, BDD e testes de integração.",
+                  "code": "123",
+                  "image": "https://cdn.coderats.com/groups/new_cover.png",
+                  "repository": "https://github.com/coderats/desafio-testes",
+                  "method": "streak_images",
+                  "status": true,
+                  "start_date": "2025-09-01T00:00:00Z",
+                  "end_date": "2025-09-30T23:59:59Z",
+                  "participants": [
+                    {
+                      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                      "name": "Ana Coder",
+                      "image": "https://example.com/path/to/ana_image.png"
+                    },
+                    {
+                      "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+                      "name": "Beto Debugger",
+                      "image": "https://example.com/path/to/beto_image.png"
+                    }
+                  ],
+                  "recent_checkins": []
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/groups/join": {
+      "post": {
+        "tags": [
+          "Grupos"
+        ],
+        "summary": "Entrar em um grupo usando código",
+        "description": "Adiciona o usuário ao grupo correspondente ao `code`.\nPor padrão, o usuário é identificado pelo JWT em `Authorization: Bearer <token>`.\nOpcionalmente, `userId` pode ser enviado no corpo para fluxos administrativos (requer permissão).\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupJoinRequest"
+              },
+              "example": {
+                "code": "123",
+                "userId": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Entrada realizada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupJoinResponse"
+                },
+                "example": {
+                  "group": {
+                    "id": "group-uuid-abc",
+                    "name": "Desafio 30 Dias de Testes",
+                    "image": "https://coderats.com/image.jpg",
+                    "status": true
+                  },
+                  "membership": {
+                    "role": "member",
+                    "joined_at": "2025-11-05T22:15:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Acesso negado (grupo inativo, privado sem código válido, ou tentativa de usar `userId` sem permissão administrativa).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "statusCode": 403,
+                  "message": "Acesso Negado",
+                  "details": "Permissão insuficiente para especificar userId."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Código de grupo não encontrado ou expirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "statusCode": 404,
+                  "message": "Recurso Não Encontrado",
+                  "details": "Código de grupo inválido."
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Usuário já é participante do grupo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "statusCode": 409,
+                  "message": "Conflito",
+                  "details": "Usuário já participa deste grupo."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/groups/{groupId}/checkins": {
+      "post": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Criar um novo check-in em um grupo",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckinCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Check-in criado com sucesso.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "title": "Finalizei o módulo de GenServer em Elixir",
+                  "points": 150
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/checkins/{checkinId}/like": {
+      "post": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Curtir um check-in",
+        "description": "Adiciona a curtida do usuário autenticado a um check-in.",
+        "parameters": [
+          {
+            "name": "checkinId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Check-in curtido com sucesso. Retorna o objeto da curtida criada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Like"
+                },
+                "example": {
+                  "id": "like-uuid-2",
+                  "author": {
+                    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                    "name": "Ana Coder",
+                    "image": "https://example.com/path/to/image.png"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito. O usuário já curtiu este check-in.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "statusCode": 409,
+                  "message": "Usuário já curtiu este check-in."
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Descurtir um check-in",
+        "description": "Remove a curtida do usuário autenticado de um check-in.",
+        "parameters": [
+          {
+            "name": "checkinId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Curtida removida com sucesso."
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/checkins/{checkinId}/comments": {
+      "post": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Adicionar um comentário a um check-in",
+        "parameters": [
+          {
+            "name": "checkinId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/checkinId_comments_body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Comentário adicionado."
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/checkins/{checkinId}/comments/{commentId}": {
+      "delete": {
+        "tags": [
+          "Check-ins"
+        ],
+        "summary": "Excluir um comentário de um check-in",
+        "parameters": [
+          {
+            "name": "checkinId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Comentário excluído."
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/badges": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Listar todas as badges disponíveis",
+        "responses": {
+          "200": {
+            "description": "Lista de todas as badges.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Badge"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "badge-uuid-01",
+                    "name": "Rato Iniciante",
+                    "image": "https://cdn.coderats.com/badges/rato-iniciante.svg",
+                    "description": "Realizou seu primeiro check-in!"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "github_user": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicUserProfile": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserBase"
+          }
+        ]
+      },
+      "PrivateUserResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          }
+        ]
+      },
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "repository": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "GroupCreate": {
+        "required": [
+          "end_date",
+          "name",
+          "start_date"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Desafio 30 Dias de Testes"
+          },
+          "image": {
+            "type": "string",
+            "example": "https://cdn.coderats.com/group/rato-iniciante.svg"
+          },
+          "description": {
+            "type": "string",
+            "example": "Grupo para focar em TDD e testes unitários."
+          },
+          "method": {
+            "type": "string",
+            "example": "streak_images"
+          },
+          "repository": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://github.com/coderats/desafio-testes"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GroupUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "O novo nome do grupo.",
+            "example": "Desafio 30 Dias de Testes (Avançado)"
+          },
+          "description": {
+            "type": "string",
+            "description": "A nova descrição do grupo.",
+            "example": "Foco em TDD, BDD e testes de integração."
+          },
+          "image": {
+            "type": "string",
+            "description": "A nova URL para a image de capa do grupo.",
+            "format": "uri",
+            "nullable": true
+          },
+          "participants_remove": {
+            "type": "array",
+            "description": "Lista com os IDs dos participantes a serem removidos do grupo.",
+            "example": [
+              "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Checkin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "summary_ai": {
+            "type": "string",
+            "nullable": true
+          },
+          "points": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "likes_count": {
+            "type": "integer",
+            "description": "O número total de curtidas no check-in."
+          },
+          "liked_by_me": {
+            "type": "boolean",
+            "description": "Indica se o usuário autenticado curtiu este check-in."
+          },
+          "comments": {
+            "type": "array",
+            "description": "Pode ser uma lista parcial dos comentários mais recentes.",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          }
+        }
+      },
+      "CheckinCreate": {
+        "required": [
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Dia 05: Testes Unitários com Jest"
+          },
+          "description": {
+            "type": "string",
+            "example": "Foquei em mocks e spies."
+          },
+          "image": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Badge": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri"
+          },
+          "points": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserSummary"
+          }
+        }
+      },
+      "Like": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserSummary"
+          }
+        }
+      },
+      "Commits": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GroupSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Desafio 30 Dias de Testes"
+          },
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "image": {
+            "type": "string",
+            "example": "https://example.com/path/to/image.png"
+          }
+        }
+      },
+      "PublicUserProfileWithGroups": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/PublicUserProfile"
+          },
+          "common_groups": {
+            "type": "array",
+            "description": "Lista de grupos que este usuário e você (usuário autenticado) têm em comum.",
+            "items": {
+              "$ref": "#/components/schemas/GroupSummary"
+            }
+          }
+        }
+      },
+      "CheckinSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "Dia 05: Testes Unitários com Jest"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-26T11:00:00Z"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserSummary"
+          }
+        }
+      },
+      "GroupWithDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Group"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "participants": {
+                "type": "array",
+                "description": "Uma lista de membros do grupo.",
+                "items": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "GroupJoinRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Código de ingresso do grupo.",
+            "example": "123"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Opcional. Use apenas em fluxos administrativos/serviço. \nSe ausente, o backend resolve o usuário a partir do JWT.\n",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "GroupJoinResponse": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/GroupSummary"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/GroupJoinResponse_membership"
+          }
+        }
+      },
+      "github_callback_body": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "O código temporário recebido do GitHub após o consentimento do usuário.",
+            "example": "a1b2c3d4e5f6g7h8"
+          }
+        }
+      },
+      "inline_response_200": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/PrivateUserResponse"
+          },
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "checkinId_comments_body": {
+        "required": [
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "example": "Excelente progresso! Continue assim."
+          }
+        }
+      },
+      "GroupJoinResponse_membership": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "member",
+            "enum": [
+              "admin",
+              "member"
+            ]
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Requisição inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 400,
+              "message": "Erro de Validação",
+              "details": "O campo 'email' deve ser um email válido."
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Não autorizado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 401,
+              "message": "Token de autenticação não fornecido ou inválido."
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Acesso negado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 403,
+              "message": "Acesso Negado",
+              "details": "Você não tem permissão para excluir este comentário."
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "statusCode": 404,
+              "message": "Recurso Não Encontrado",
+              "details": "O grupo com o ID 'group-uuid-nao-existe' não foi encontrado."
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Número máximo de itens a serem retornados.",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "default": 20
+        }
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "description": "Número de itens a serem pulados para paginação.",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "description": "Insira o token JWT com o prefixo 'Bearer ' (Ex: 'Bearer eyJhbG...')",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

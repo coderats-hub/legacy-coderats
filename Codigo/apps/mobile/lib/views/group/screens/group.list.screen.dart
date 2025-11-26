@@ -3,7 +3,6 @@ import 'package:app/repositories/group.repository.dart';
 import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 // --- IMPORTS DE DOMÍNIO ---
 import 'package:app/domain/group/group.dart';
@@ -45,13 +44,8 @@ class _GroupListScreenState extends State<GroupListScreen> {
     try {
       final session = SessionManager.instance;
       
-      GroupDao? groupDao;
-      
-      if (!kIsWeb) {
-        final localDb = await LocalDatabase.getInstance();
-        groupDao = localDb.groups;
-      }
-      // ---------------------
+      final localDb = await LocalDatabase.maybeGetInstance();
+      final GroupDao? groupDao = localDb?.groups;
 
       final connectivity = ConnectivityService();
       final httpClient = HttpClient(session);

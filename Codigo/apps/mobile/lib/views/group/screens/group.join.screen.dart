@@ -38,12 +38,12 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
     try {
       // 1. Montar as dependências (Igual fizemos na tela anterior)
       final session = SessionManager.instance;
-      final localDb = await LocalDatabase.getInstance();
+      final localDb = await LocalDatabase.maybeGetInstance();
       final httpClient = HttpClient(session);
       
       final repository = GroupRepository(
         remote: GroupRemoteService(httpClient),
-        local: localDb.groups,
+        local: localDb?.groups,
         net: ConnectivityService(),
         session: session,
       );

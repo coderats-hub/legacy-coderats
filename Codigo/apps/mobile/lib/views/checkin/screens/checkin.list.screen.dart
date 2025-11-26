@@ -40,16 +40,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
     });
 
     try {
-        final database = await LocalDatabase.getInstance();
+        final database = await LocalDatabase.maybeGetInstance();
         final session = SessionManager.instance;
         final httpClient = HttpClient(session);
         
-        final _repository = CheckinRepository(
+        final repository = CheckinRepository(
           remote: CheckinRemoteService(httpClient),
-          local: CheckinDao(database.raw),
+          local: database != null ? CheckinDao(database.raw) : null,
           net: ConnectivityService(),
         );
-      final data = await _repository.getFeed();
+      final data = await repository.getFeed();
       if (mounted) {
         setState(() {
           _checkins = data;

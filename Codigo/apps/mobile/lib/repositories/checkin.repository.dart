@@ -5,7 +5,7 @@ import 'package:app/services/connectivity_service.dart';
 
 class CheckinRepository {
   final CheckinRemoteService remote;
-  final CheckinDao local;
+  final CheckinDao? local;
   final ConnectivityService net;
 
   CheckinRepository({
@@ -20,13 +20,24 @@ class CheckinRepository {
     if (isOnline) {
       try {
         final data = await remote.getFeed();
-        await local.cacheFeed(data); 
+        if (local != null) {
+          await local!.cacheFeed(data);
+        }
         return data;
-      } catch (e) {
+      } catch (_) {
+        if (local != null) {
+          final cached = await local!.getFeed();
+          if (cached.isNotEmpty) return cached;
+        }
+        rethrow;
       }
     }
-    
-    return local.getFeed();
+
+    if (local != null) {
+      return local!.getFeed();
+    }
+
+    throw Exception('Sem conexão e sem cache disponível para o feed.');
   }
 
   Future<void> createCheckin({
@@ -36,10 +47,10 @@ class CheckinRepository {
     String? image,
   }) async {
     await remote.createCheckin(
-      groupId: groupId, 
-      title: title, 
-      description: description, 
-      image: image
+      groupId: groupId,
+      title: title,
+      description: description,
+      image: image,
     );
   }
 
