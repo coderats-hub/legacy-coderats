@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -26,11 +27,13 @@ public class GroupParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId") // Mapeia o campo 'userId' do @EmbeddedId
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("groupId") // Mapeia o campo 'groupId' do @EmbeddedId
     @JoinColumn(name = "group_id")
+    @JsonIgnore
     private Group group;
 
     // --- Colunas Extras ---

@@ -69,10 +69,9 @@ public class GroupService {
         User user = userRepository.findById(creatorUserId)
                 .orElseThrow(() -> new RuntimeException("Usuário criador não encontrado"));
 
-        GroupParticipant creator = new GroupParticipant();
-        creator.setUser(user);       
-        creator.setGroup(savedGroup); 
-        creator.setRole("admin");
+        GroupParticipant creator = new GroupParticipant(user.getId(), savedGroup.getId(), "admin");
+        creator.setUser(user);
+        creator.setGroup(savedGroup);
 
         participantRepository.save(creator);
 

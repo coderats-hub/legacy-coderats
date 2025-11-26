@@ -74,10 +74,10 @@ public class GroupController {
 
     // POST /groups - Criar novo grupo
     @PostMapping("/groups")
-    public ResponseEntity<Group> createGroup(@RequestBody GroupCreateRequest request) {
+    public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupCreateRequest request) {
         UUID creatorUserId = getCurrentUserId();
         Group createdGroup = groupService.createGroup(request, creatorUserId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdGroup);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdGroup));
     }
 
     // GET /groups/{groupId} - Obter detalhes de um grupo
@@ -99,13 +99,13 @@ public class GroupController {
 
     // PATCH /groups/{groupId} - Atualizar grupo
     @PatchMapping("/groups/{groupId}")
-    public ResponseEntity<Group> updateGroup(@PathVariable String groupId, @RequestBody GroupUpdateRequest request) {
+    public ResponseEntity<GroupResponse> updateGroup(@PathVariable String groupId, @RequestBody GroupUpdateRequest request) {
         try {
             UUID groupUUID = UUID.fromString(groupId);
             UUID userId = getCurrentUserId();
 
             Group updatedGroup = groupService.updateGroup(groupUUID, request, userId);
-            return ResponseEntity.ok(updatedGroup);
+            return ResponseEntity.ok(toResponse(updatedGroup));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
@@ -163,9 +163,14 @@ public class GroupController {
                 group.getName(),
                 group.getDescription(),
                 group.getImage(),
+                group.getCode(),
+                group.getRepository(),
                 group.getMethod(),
-                group.getStartDate() != null ? group.getStartDate().toInstant() : null,
-                group.getEndDate() != null ? group.getEndDate().toInstant() : null
+                group.isStatus(),
+                group.getStartDate(),
+                group.getEndDate(),
+                group.getCreatedAt(),
+                group.getUpdatedAt()
         );
     }
 

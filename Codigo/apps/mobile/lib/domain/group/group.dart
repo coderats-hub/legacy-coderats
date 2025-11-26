@@ -24,6 +24,25 @@ class Group {
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
+    final rawStatus = json['status'];
+    bool statusValue = true;
+    if (rawStatus is bool) {
+      statusValue = rawStatus;
+    } else if (rawStatus is num) {
+      statusValue = rawStatus == 1;
+    }
+
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is String && value.isNotEmpty) {
+        return DateTime.parse(value);
+      }
+      return null;
+    }
+
+    final startRaw = json['start_date'] ?? json['startDate'];
+    final endRaw = json['end_date'] ?? json['endDate'];
+
     return Group(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -31,13 +50,10 @@ class Group {
       image: json['image'] as String?,
       code: json['code'] as String?,
       method: json['method'] as String?,
-      status: json['status'] == 1 || json['status'] == true,
+      status: statusValue,
       repository: json['repository'] as String?,
-      startDate: json['start_date'] != null
-          ? DateTime.parse(json['start_date'])
-          : null,
-      endDate:
-          json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+      startDate: parseDate(startRaw),
+      endDate: parseDate(endRaw),
     );
   }
 
