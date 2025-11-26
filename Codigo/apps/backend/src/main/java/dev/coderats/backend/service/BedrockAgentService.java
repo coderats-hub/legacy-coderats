@@ -74,13 +74,13 @@ public class BedrockAgentService {
             if (!completed) {
                 throw new IllegalStateException("Tempo excedido aguardando resposta do Bedrock Agent.");
             }
-        } catch (RuntimeException ex) {
-            throw new IllegalStateException("Erro ao executar o Bedrock Agent.", ex);
+        } catch (SdkClientException ex) {
+            throw new IllegalStateException("Falha ao chamar o Bedrock Agent.", ex);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Thread interrompida ao aguardar resposta do Bedrock.", ex);
-        } catch (SdkClientException ex) {
-            throw new IllegalStateException("Falha ao chamar o Bedrock Agent.", ex);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Erro ao executar o Bedrock Agent.", ex);
         }
 
         if (errorRef.get() != null) {
