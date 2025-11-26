@@ -85,4 +85,20 @@ class GroupRepository {
       endDate: endDate,
     );
   }
+
+  Future<String> joinGroup(String code) async {
+    final online = await net.isOnline();
+    if (!online) {
+      throw Exception('Conexao com a internet indisponivel.');
+    }
+
+    final group = await remote.joinGroup(code);
+    final userId = session.currentUserId;
+
+    if (local != null && userId != null) {
+      await local!.cacheGroups([group], userId);
+    }
+
+    return group.id;
+  }
 }
