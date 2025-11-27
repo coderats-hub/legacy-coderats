@@ -11,30 +11,37 @@ import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.UserSummary;
 import dev.coderats.backend.infra.repository.CheckinRepository;
 import dev.coderats.backend.infra.repository.GroupParticipantRepository;
+import dev.coderats.backend.infra.repository.GroupRepository;
 import dev.coderats.backend.infra.repository.UserRepository;
 import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
 import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
-import dev.coderats.backend.service.CommitEvaluationService;
+import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
 
 @Service
 public class CheckinService {
 
     private final CheckinRepository checkinRepository;
     private final GroupParticipantRepository participantRepository;
+    private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final CommitEvaluationService commitEvaluationService;
+    private final GitHubCommitService gitHubCommitService;
 
     public CheckinService(
         CheckinRepository checkinRepository,
         GroupParticipantRepository participantRepository,
+        GroupRepository groupRepository,
         UserRepository userRepository,
-        CommitEvaluationService commitEvaluationService
+        CommitEvaluationService commitEvaluationService,
+        GitHubCommitService gitHubCommitService
     ) {
         this.checkinRepository = checkinRepository;
         this.participantRepository = participantRepository;
+        this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.commitEvaluationService = commitEvaluationService;
+        this.gitHubCommitService = gitHubCommitService;
     }
     
     public CommitEvaluationService.EvaluationResult previewCheckin(UUID userId, List<CommitSelectionRequest> commits) {
@@ -93,6 +100,19 @@ public class CheckinService {
             .stream()
             .map(this::toSummary)
             .collect(Collectors.toList());
+    }
+
+    public List<GitHubCommitResponse> listRecentCommitsForGroup(UUID userId, UUID groupId, int page, int size, int hours) {
+        if (!participantRepository.existsByUserIdAndGroupId(userId, groupId)) {
+            throw new IllegalStateException("Usuário não participa deste grupo.");
+        }
+        var group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalStateException("Grupo não encontrado"));
+        if (group.getRepository() == null || group.getRepository().isBlank()) {
+            throw new IllegalStateException("Grupo não possui repositório associado.");
+        }
+        int effectiveHours = hours > 0 ? hours : 24;
+        return gitHubCommitService.fetchRecentCommitsForRepository(userId, page, size, effectiveHours, group.getRepository());
     }
 
     private CheckinResponse toResponse(Checkin checkin) {

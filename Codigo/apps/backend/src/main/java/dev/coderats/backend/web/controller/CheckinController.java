@@ -19,6 +19,7 @@ import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
 import dev.coderats.backend.web.dto.request.CheckinPreviewRequest;
 import dev.coderats.backend.web.dto.response.CheckinPreviewResponse;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
+import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
 
 @RestController
 public class CheckinController {
@@ -61,6 +62,24 @@ public class CheckinController {
             UUID userId = getCurrentUserId();
             var created = checkinService.createCheckin(userId, gid, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/groups/{groupId}/commits")
+    public ResponseEntity<List<GitHubCommitResponse>> listRecentCommits(
+            @PathVariable String groupId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "24") int hours) {
+        try {
+            UUID gid = UUID.fromString(groupId);
+            UUID userId = getCurrentUserId();
+            var commits = checkinService.listRecentCommitsForGroup(userId, gid, page, size, hours);
+            return ResponseEntity.ok(commits);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (IllegalStateException e) {

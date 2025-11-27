@@ -49,11 +49,33 @@ public class GitHubCommitService {
     }
 
     public List<GitHubCommitResponse> fetchRecentCommits(UUID userId, int page, int size) {
+        return fetchCommits(userId, page, size, 48, null);
+    }
+
+    public List<GitHubCommitResponse> fetchRecentCommitsForRepository(
+            UUID userId,
+            int page,
+            int size,
+            int thresholdHours,
+            String repository) {
+        if (!StringUtils.hasText(repository)) {
+            return List.of();
+        }
+        return fetchCommits(userId, page, size, thresholdHours, repository.trim());
+    }
+
+    private List<GitHubCommitResponse> fetchCommits(
+            UUID userId,
+            int page,
+            int size,
+            int thresholdHours,
+            String repositoryFilter) {
         var user = requireGithubUser(userId);
 
         int normalizedPage = Math.max(page, 1);
         int normalizedSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
         int eventsPageSize = Math.min(30, normalizedSize * 3);
+        int effectiveHours = thresholdHours > 0 ? thresholdHours : 48;
 
         String uri = UriComponentsBuilder.fromPath("/users/{login}/events")
                 .queryParam("page", normalizedPage)
@@ -77,7 +99,8 @@ public class GitHubCommitService {
         }
 
         Map<String, GitHubCommitResponse> commits = new LinkedHashMap<>();
-        OffsetDateTime threshold = OffsetDateTime.now(ZoneOffset.UTC).minusHours(48);
+        OffsetDateTime threshold = OffsetDateTime.now(ZoneOffset.UTC).minusHours(effectiveHours);
+        String normalizedRepository = repositoryFilter != null ? repositoryFilter.trim() : null;
 
         outer: for (GithubEvent event : events) {
             if (!"PushEvent".equals(event.type()) || event.payload() == null) {
@@ -86,6 +109,10 @@ public class GitHubCommitService {
             String repoName = event.repo() != null ? event.repo().name() : null;
             OffsetDateTime createdAt = event.createdAt();
             if (createdAt == null || createdAt.isBefore(threshold) || !StringUtils.hasText(repoName)) {
+                continue;
+            }
+            if (StringUtils.hasText(normalizedRepository)
+                    && !normalizedRepository.equalsIgnoreCase(repoName)) {
                 continue;
             }
 
