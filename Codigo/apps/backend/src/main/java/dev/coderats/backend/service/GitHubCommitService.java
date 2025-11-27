@@ -58,10 +58,11 @@ public class GitHubCommitService {
             int size,
             int thresholdHours,
             String repository) {
-        if (!StringUtils.hasText(repository)) {
+        String normalized = normalizeRepositoryName(repository);
+        if (!StringUtils.hasText(normalized)) {
             return List.of();
         }
-        return fetchCommits(userId, page, size, thresholdHours, repository.trim());
+        return fetchCommits(userId, page, size, thresholdHours, normalized);
     }
 
     private List<GitHubCommitResponse> fetchCommits(
@@ -100,19 +101,20 @@ public class GitHubCommitService {
 
         Map<String, GitHubCommitResponse> commits = new LinkedHashMap<>();
         OffsetDateTime threshold = OffsetDateTime.now(ZoneOffset.UTC).minusHours(effectiveHours);
-        String normalizedRepository = repositoryFilter != null ? repositoryFilter.trim() : null;
+        String normalizedRepository = normalizeRepositoryName(repositoryFilter);
 
         outer: for (GithubEvent event : events) {
             if (!"PushEvent".equals(event.type()) || event.payload() == null) {
                 continue;
             }
             String repoName = event.repo() != null ? event.repo().name() : null;
+            String normalizedEventRepo = normalizeRepositoryName(repoName);
             OffsetDateTime createdAt = event.createdAt();
-            if (createdAt == null || createdAt.isBefore(threshold) || !StringUtils.hasText(repoName)) {
+            if (createdAt == null || createdAt.isBefore(threshold) || !StringUtils.hasText(normalizedEventRepo)) {
                 continue;
             }
             if (StringUtils.hasText(normalizedRepository)
-                    && !normalizedRepository.equalsIgnoreCase(repoName)) {
+                    && !normalizedRepository.equalsIgnoreCase(normalizedEventRepo)) {
                 continue;
             }
 
@@ -125,14 +127,14 @@ public class GitHubCommitService {
                 if (!StringUtils.hasText(commit.sha())) {
                     continue;
                 }
-                GithubCommitDetail detail = fetchCommitDetail(repoName, commit.sha(), user.getGithubAccessToken());
+                GithubCommitDetail detail = fetchCommitDetail(normalizedEventRepo, commit.sha(), user.getGithubAccessToken());
                 commits.putIfAbsent(
                         commit.sha(),
                         new GitHubCommitResponse(
                                 commit.sha(),
                                 resolveMessage(commit, detail),
-                                repoName,
-                                resolveHtmlUrl(repoName, commit.sha(), detail),
+                                normalizedEventRepo,
+                                resolveHtmlUrl(normalizedEventRepo, commit.sha(), detail),
                                 resolveCommittedAt(createdAt, detail),
                                 mapFiles(detail)));
 
@@ -204,7 +206,7 @@ public class GitHubCommitService {
         if (!StringUtils.hasText(repository) || !StringUtils.hasText(sha)) {
             return null;
         }
-        var repo = splitRepository(repository);
+        var repo = splitRepository(normalizeRepositoryName(repository));
         if (repo == null) {
             log.debug("Repositorio invalido '{}' - esperado owner/repo", repository);
             return null;
@@ -379,3 +381,21 @@ public class GitHubCommitService {
             @JsonProperty("blob_url") String blobUrl) {
     }
 }
+    private String normalizeRepositoryName(String repository) {
+        if (!StringUtils.hasText(repository)) {
+            return null;
+        }
+        String sanitized = repository.trim();
+        if (sanitized.endsWith(".git")) {
+            sanitized = sanitized.substring(0, sanitized.length() - 4);
+        }
+        sanitized = sanitized.replace("\\", "/");
+        if (sanitized.contains("github.com")) {
+            int idx = sanitized.indexOf("github.com");
+            sanitized = sanitized.substring(idx + "github.com".length());
+        }
+        sanitized = sanitized.replaceAll("^https?://", "");
+        sanitized = sanitized.replaceAll("^github\\.com", "");
+        sanitized = sanitized.replaceAll("^/+", "");
+        return sanitized;
+    }
