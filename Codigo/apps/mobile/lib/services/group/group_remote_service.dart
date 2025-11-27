@@ -94,6 +94,16 @@ class GroupRemoteService {
     return Group.fromJson(map['group']);
   }
 
+  Future<void> leaveGroup(String groupId, String userId) async {
+    final resp = await http.patch('/groups/$groupId', {
+      'remove_participants': [userId],
+    });
+
+    if (resp.statusCode != 200) {
+      _throwHttp('Erro ao sair do grupo', resp);
+    }
+  }
+
   String _formatDate(DateTime date) => date.toUtc().toIso8601String();
 
   Never _throwHttp(String fallback, dynamic resp) {

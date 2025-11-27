@@ -123,7 +123,14 @@ public class GroupService {
                     if (user == null) {
                         return null;
                     }
-                    return new UserSummary(user.getId(), user.getName(), user.getImage());
+                    return new UserSummary(
+                        user.getId(), 
+                        user.getName(), 
+                        user.getImage(),
+                        user.getGithubUser(),
+                        0.0, // points - será implementado futuramente
+                        participant.getRole()
+                    );
                 })
                 .filter(summary -> summary != null)
                 .collect(Collectors.toList());

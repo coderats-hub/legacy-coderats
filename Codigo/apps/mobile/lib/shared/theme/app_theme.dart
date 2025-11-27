@@ -44,6 +44,7 @@ class AppColors {
   // Cores funcionais
   static const skip = Color(0xFFFF7A45);          // Laranja para links "pular"
   static const error = Color(0xFFE53935);         // Vermelho para erros
+  static const success = Color(0xFF4CAF50);       // Verde para sucesso
 }
 
 // Sistema de tipografia da aplicação (fonte Inter)
