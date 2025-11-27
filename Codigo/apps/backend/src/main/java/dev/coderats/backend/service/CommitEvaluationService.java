@@ -25,15 +25,15 @@ public class CommitEvaluationService {
     private static final Logger log = LoggerFactory.getLogger(CommitEvaluationService.class);
 
     private final GitHubCommitService gitHubCommitService;
-    private final BedrockAgentService bedrockAgentService;
+    private final OpenAiEvaluationService openAiEvaluationService;
     private final ObjectMapper objectMapper;
 
     public CommitEvaluationService(
             GitHubCommitService gitHubCommitService,
-            BedrockAgentService bedrockAgentService,
+            OpenAiEvaluationService openAiEvaluationService,
             ObjectMapper objectMapper) {
         this.gitHubCommitService = gitHubCommitService;
-        this.bedrockAgentService = bedrockAgentService;
+        this.openAiEvaluationService = openAiEvaluationService;
         this.objectMapper = objectMapper;
     }
 
@@ -51,9 +51,9 @@ public class CommitEvaluationService {
 
         log.debug("[CheckinPreview] Iniciando avaliacao de {} commits para o usuario {}", details.size(), userId);
         String payload = serialize(details);
-        var agentResult = bedrockAgentService.evaluate(payload);
-        String summary = StringUtils.hasText(agentResult.summary())
-                ? agentResult.summary()
+        var agentResult = openAiEvaluationService.evaluate(payload);
+        String summary = StringUtils.hasText(agentResult.summary_ai())
+                ? agentResult.summary_ai()
                 : "Resumo indisponível.";
         return new EvaluationResult(summary, agentResult.points());
     }
