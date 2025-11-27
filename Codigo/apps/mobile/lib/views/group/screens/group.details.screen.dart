@@ -100,6 +100,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   GroupDetails? _details; // Dados completos do grupo + participantes
   bool _isLoadingDetails = true;
   bool _descOpen = false;
+  String? _currentUserRole; // 'admin' ou 'member'
 
   // --- ESTADO DOS CHECK-INS (PAGINAÇÃO) ---
   final _scrollCtrl = ScrollController();
@@ -164,9 +165,28 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   Future<void> _loadGroupDetails() async {
     try {
       final details = await _groupRepository!.getGroupDetails(widget.groupId);
+      
+      // Detecta a role do usuário atual
+      final session = SessionManager.instance;
+      final currentUserId = session.currentUserId;
+      String? userRole;
+      
+      if (currentUserId != null) {
+        try {
+          final currentParticipant = details.participants.firstWhere(
+            (p) => p.id == currentUserId,
+          );
+          userRole = currentParticipant.role ?? 'member';
+        } catch (e) {
+          // Usuário não é participante do grupo
+          userRole = null;
+        }
+      }
+      
       if (mounted) {
         setState(() {
           _details = details;
+          _currentUserRole = userRole;
           _isLoadingDetails = false;
         });
       }
@@ -243,43 +263,50 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         title: displayName,
         onBack: () => Navigator.of(context).maybePop(),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
-            onSelected: (value) {
-              if (value == 'edit' && _details != null) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => GroupEditScreen(
-                      initialName: displayName, 
-                      initialDescription: displayDesc, 
-                      imageUrl: displayImage
+          if (_currentUserRole == 'admin')
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+              onSelected: (value) {
+                if (value == 'edit' && _details != null) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GroupEditScreen(
+                        initialName: displayName, 
+                        initialDescription: displayDesc, 
+                        imageUrl: displayImage
+                      ),
                     ),
-                  ),
-                );
-              } else if(value == 'delete' && _details != null) {
-                  // TODO: Implementar exclusão de grupo
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Funcionalidade de exclusão será implementada')),
                   );
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Editar grupo')]),
-              ),
-              const PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, size: 20, color: AppColors.textPrimary),
-                    SizedBox(width: 8),
-                    Text('Excluir grupo'),
-                  ],
+                } else if(value == 'delete' && _details != null) {
+                    // TODO: Implementar exclusão de grupo
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Funcionalidade de exclusão será implementada')),
+                    );
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Editar grupo')]),
                 ),
-              ),
-            ],
-          ),
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 20, color: AppColors.textPrimary),
+                      SizedBox(width: 8),
+                      Text('Excluir grupo'),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else if (_currentUserRole == 'member')
+            IconButton(
+              icon: const Icon(Icons.exit_to_app, color: AppColors.textPrimary),
+              tooltip: 'Sair do grupo',
+              onPressed: () => _showLeaveGroupDialog(context),
+            ),
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
@@ -489,6 +516,100 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       linked[k] = map[k]!;
     }
     return linked;
+  }
+
+  void _showLeaveGroupDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppCorners.lg),
+        ),
+        title: Text(
+          'Sair do Grupo',
+          style: AppTextStyles.title.copyWith(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          'Tem certeza que deseja sair deste grupo? Você precisará de um novo convite para entrar novamente.',
+          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'Cancelar',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _leaveGroup();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppCorners.md),
+              ),
+            ),
+            child: Text(
+              'Sair',
+              style: AppTextStyles.subtitle.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _leaveGroup() async {
+    if (_groupRepository == null) return;
+
+    try {
+      // Mostra loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+
+      await _groupRepository!.leaveGroup(widget.groupId);
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Remove loading
+        Navigator.of(context).pop(); // Volta para a tela anterior
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Você saiu do grupo com sucesso',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Remove loading
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erro ao sair do grupo: $e',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 

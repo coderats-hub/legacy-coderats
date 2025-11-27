@@ -4,13 +4,15 @@ class GroupParticipant {
   final String? image; 
   final String githubUser;
   final double points;
+  final String? role; // 'admin' ou 'member'
 
   const GroupParticipant({
     required this.id,
     required this.name,
     this.image,
     required this.githubUser,
-    this.points = 0.0, 
+    this.points = 0.0,
+    this.role,
   });
 
   factory GroupParticipant.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class GroupParticipant {
       image: json['image'] as String?,
       githubUser: (json['github_user'] ?? json['githubUser'] ?? '') as String,
       points: (json['points'] as num?)?.toDouble() ?? 0.0,
+      role: json['role'] as String?,
     );
   }
 
@@ -30,6 +33,7 @@ class GroupParticipant {
       'image': image,
       'github_user': githubUser, 
       'points': points,
+      'role': role,
     };
   }
 }

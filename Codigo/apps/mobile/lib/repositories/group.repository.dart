@@ -99,4 +99,23 @@ class GroupRepository {
 
     return group.id;
   }
+
+  Future<void> leaveGroup(String groupId) async {
+    final online = await net.isOnline();
+    if (!online) {
+      throw Exception('Conexão com a internet indisponível.');
+    }
+
+    final userId = session.currentUserId;
+    if (userId == null) {
+      throw Exception('Usuário não autenticado.');
+    }
+
+    await remote.leaveGroup(groupId, userId);
+
+    // Remove do cache local
+    if (local != null) {
+      await local!.removeUserFromGroup(groupId, userId);
+    }
+  }
 }

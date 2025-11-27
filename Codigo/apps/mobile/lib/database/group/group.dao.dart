@@ -173,4 +173,13 @@ class GroupDao {
 
     return GroupDetails(group: group, participants: members);
   }
+
+  Future<void> removeUserFromGroup(String groupId, String userId) async {
+    final db = await _db;
+    await db.delete(
+      'group_participants',
+      where: 'group_id = ? AND user_id = ?',
+      whereArgs: [groupId, userId],
+    );
+  }
 }
