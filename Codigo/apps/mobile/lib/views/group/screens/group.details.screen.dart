@@ -526,20 +526,36 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppCorners.lg),
         ),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         title: Text(
           'Sair do Grupo',
-          style: AppTextStyles.title.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.title.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 20,
+          ),
         ),
         content: Text(
           'Tem certeza que deseja sair deste grupo? Você precisará de um novo convite para entrar novamente.',
-          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+          style: AppTextStyles.subtitle.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             child: Text(
               'Cancelar',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.subtitle.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ElevatedButton(
@@ -549,6 +565,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppCorners.md),
               ),
@@ -556,7 +573,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             child: Text(
               'Sair',
               style: AppTextStyles.subtitle.copyWith(
-                color: AppColors.textPrimary,
+                color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
