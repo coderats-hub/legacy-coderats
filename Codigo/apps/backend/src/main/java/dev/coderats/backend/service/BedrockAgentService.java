@@ -1,13 +1,11 @@
 package dev.coderats.backend.service;
 
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,30 +25,19 @@ public class BedrockAgentService {
 
     private static final Logger log = LoggerFactory.getLogger(BedrockAgentService.class);
 
+    private static final String AGENT_ID = "AAQOIDRFC4";
+
     private final BedrockAgentRuntimeAsyncClient client;
-    private final String agentId;
-    private final String agentAliasId;
     private final ObjectMapper mapper;
 
     public BedrockAgentService(
             BedrockAgentRuntimeAsyncClient client,
-            @Value("${bedrock.agent.id:}") String agentId,
-            @Value("${bedrock.agent.alias-id:}") String agentAliasId,
             ObjectMapper mapper) {
         this.client = client;
-        this.agentId = agentId;
-        this.agentAliasId = agentAliasId;
         this.mapper = mapper;
     }
 
     public BedrockAgentResult evaluate(String payload) {
-        if (!StringUtils.hasText(agentId) || !StringUtils.hasText(agentAliasId)) {
-            log.warn("Bedrock Agent não configurado. Retornando resposta padrão para prévia.");
-            return new BedrockAgentResult(
-                    0,
-                    "Prévia indisponível: Bedrock Agent não configurado.",
-                    "{\"summary\":\"Bedrock Agent não configurado\",\"points\":0}");
-        }
         var buffer = new StringBuilder();
         var latch = new CountDownLatch(1);
         var errorRef = new AtomicReference<Throwable>();
@@ -66,9 +53,7 @@ public class BedrockAgentService {
                 .build();
 
         InvokeAgentRequest request = InvokeAgentRequest.builder()
-                .agentId(agentId)
-                .agentAliasId(agentAliasId)
-                .sessionId(UUID.randomUUID().toString())
+                .agentId(AGENT_ID)
                 .inputText(payload)
                 .build();
 
