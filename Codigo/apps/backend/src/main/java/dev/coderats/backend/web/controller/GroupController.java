@@ -99,7 +99,9 @@ public class GroupController {
     }
 
     // PATCH /groups/{groupId} - Atualizar grupo
-    @PatchMapping("/groups/{groupId}")
+    @PatchMapping(value = "/groups/{groupId}", 
+                  consumes = "application/json", 
+                  produces = "application/json")
     public ResponseEntity<GroupResponse> updateGroup(@PathVariable String groupId, @RequestBody GroupUpdateRequest request) {
         try {
             UUID groupUUID = UUID.fromString(groupId);
@@ -110,9 +112,10 @@ public class GroupController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
+            if (e.getMessage().contains("não encontrado") || e.getMessage().contains("não é membro")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("administradores")) {
+            }
+            if (e.getMessage().contains("administradores") || e.getMessage().contains("Membros só podem remover a si mesmos")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.badRequest().build();

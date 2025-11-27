@@ -165,13 +165,32 @@ public class GroupService {
 
         Group group = groupOpt.get();
 
-        // Verificar se o usuário é admin do grupo
+        // Verificar participação do usuário
         Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
-        if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
+        if (participation.isEmpty()) {
+            throw new RuntimeException("Usuário não é membro do grupo");
+        }
+
+        boolean isAdmin = "admin".equals(participation.get().getRole());
+        
+        // Verificar se é apenas auto-remoção (membro pode remover a si mesmo)
+        boolean isSelfRemovalOnly = request.remove_participants() != null 
+            && request.remove_participants().size() == 1
+            && request.remove_participants().get(0).equals(userIdFromAuth.toString())
+            && request.name() == null 
+            && request.description() == null 
+            && request.image() == null
+            && request.repository() == null
+            && request.method() == null
+            && request.status() == null
+            && request.end_date() == null;
+
+        // Se não for admin e não for auto-remoção, bloquear
+        if (!isAdmin && !isSelfRemovalOnly) {
             throw new RuntimeException("Apenas administradores podem atualizar o grupo");
         }
 
-        // Atualizar campos se fornecidos
+        // Atualizar campos se fornecidos (apenas admins)
         if (request.name() != null) {
             group.setName(request.name());
         }
@@ -194,11 +213,21 @@ public class GroupService {
             group.setEndDate(request.end_date());
         }
 
-        // Remover participantes se especificado
+        // Remover participantes
         if (request.remove_participants() != null && !request.remove_participants().isEmpty()) {
             List<UUID> userIdsToRemove = request.remove_participants().stream()
                     .map(UUID::fromString)
                     .collect(Collectors.toList());
+            
+            // Admin pode remover qualquer um, member só pode remover a si mesmo
+            if (!isAdmin) {
+                for (UUID id : userIdsToRemove) {
+                    if (!id.equals(userIdFromAuth)) {
+                        throw new RuntimeException("Membros só podem remover a si mesmos");
+                    }
+                }
+            }
+            
             participantRepository.deleteByIdUserIdInAndIdGroupId(userIdsToRemove, groupId);
         }
 
