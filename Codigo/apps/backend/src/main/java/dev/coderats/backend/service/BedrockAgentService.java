@@ -45,7 +45,11 @@ public class BedrockAgentService {
 
     public BedrockAgentResult evaluate(String payload) {
         if (!StringUtils.hasText(agentId) || !StringUtils.hasText(agentAliasId)) {
-            throw new IllegalStateException("Configuração do Bedrock Agent ausente.");
+            log.warn("Bedrock Agent não configurado. Retornando resposta padrão para prévia.");
+            return new BedrockAgentResult(
+                    0,
+                    "Prévia indisponível: Bedrock Agent não configurado.",
+                    "{\"summary\":\"Bedrock Agent não configurado\",\"points\":0}");
         }
         var buffer = new StringBuilder();
         var latch = new CountDownLatch(1);
