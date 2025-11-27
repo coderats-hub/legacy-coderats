@@ -91,6 +91,11 @@ public class GroupService {
         Group group = groupRepository.findByCode(code.trim())
                 .orElseThrow(() -> new RuntimeException("Grupo não encontrado para o código informado"));
 
+        // Verificar se o grupo está ativo
+        if (!group.isStatus()) {
+            throw new RuntimeException("Este grupo está inativo e não aceita novos membros");
+        }
+
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -212,15 +217,21 @@ public class GroupService {
             throw new RuntimeException("Grupo não encontrado");
         }
 
+        Group group = groupOpt.get();
+        
+        // Verificar se o grupo já está inativo
+        if (!group.isStatus()) {
+            throw new RuntimeException("Grupo já está inativo");
+        }
+
         // Verificar se o usuário é admin do grupo
         Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
         if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
             throw new RuntimeException("Apenas administradores podem excluir o grupo");
         }
 
-        // Marcar como deletado (soft delete)
-        Group group = groupOpt.get();
-        group.setDeletedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        // Marcar como inativo (soft delete)
+        group.setStatus(false);
         groupRepository.save(group);
     }
 

@@ -56,6 +56,8 @@ public class GroupController {
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("não encontrado")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } else if (e.getMessage() != null && e.getMessage().contains("inativo")) {
+                return ResponseEntity.status(HttpStatus.GONE).build(); // 410 Gone
             }
             return ResponseEntity.badRequest().build();
         }
@@ -135,6 +137,8 @@ public class GroupController {
                 return ResponseEntity.notFound().build();
             } else if (e.getMessage().contains("administradores")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } else if (e.getMessage().contains("já está inativo")) {
+                return ResponseEntity.status(HttpStatus.GONE).build(); // 410 Gone
             }
             return ResponseEntity.badRequest().build();
         }

@@ -278,10 +278,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     ),
                   );
                 } else if(value == 'delete' && _details != null) {
-                    // TODO: Implementar exclusão de grupo
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Funcionalidade de exclusão será implementada')),
-                    );
+                    _showDeleteGroupDialog(context);
                 }
               },
               itemBuilder: (BuildContext context) => [
@@ -519,50 +516,16 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   void _showLeaveGroupDialog(BuildContext context) {
-    showDialog(
+    showConfirmationDialog(
       context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppCorners.lg),
-        ),
-        title: Text(
-          'Sair do Grupo',
-          style: AppTextStyles.title.copyWith(color: AppColors.textPrimary),
-        ),
-        content: Text(
-          'Tem certeza que deseja sair deste grupo? Você precisará de um novo convite para entrar novamente.',
-          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              'Cancelar',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _leaveGroup();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppCorners.md),
-              ),
-            ),
-            child: Text(
-              'Sair',
-              style: AppTextStyles.subtitle.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: 'Sair do grupo?',
+      icon: Icons.exit_to_app,
+      iconColor: AppColors.primary,
+      description: 'Você pode entrar novamente usando o código do grupo.',
+      details: 'Seu histórico de check-ins será mantido.',
+      confirmText: 'Sair',
+      confirmColor: AppColors.error,
+      onConfirm: _leaveGroup,
     );
   }
 
@@ -583,7 +546,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
       if (mounted) {
         Navigator.of(context).pop(); // Remove loading
-        Navigator.of(context).pop(); // Volta para a tela anterior
+        Navigator.of(context).pop(true); // Volta para a tela anterior retornando 'true' para indicar que deve fazer refresh
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -603,6 +566,66 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           SnackBar(
             content: Text(
               'Erro ao sair do grupo: $e',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDeleteGroupDialog(BuildContext context) {
+    showConfirmationDialog(
+      context: context,
+      title: 'Excluir grupo?',
+      icon: Icons.warning_amber_rounded,
+      iconColor: AppColors.error,
+      description: 'Esta ação não pode ser desfeita.',
+      details: 'O grupo será marcado como inativo e nenhum membro poderá mais acessá-lo ou entrar nele.',
+      confirmText: 'Excluir',
+      confirmColor: AppColors.error,
+      onConfirm: _deleteGroup,
+    );
+  }
+
+  Future<void> _deleteGroup() async {
+    if (_groupRepository == null) return;
+
+    try {
+      // Mostra loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+
+      await _groupRepository!.deleteGroup(widget.groupId);
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Remove loading
+        Navigator.of(context).pop(true); // Volta para a tela anterior retornando 'true' para indicar que deve fazer refresh
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Grupo excluído com sucesso',
+              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Remove loading
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erro ao excluir grupo: $e',
               style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
             ),
             backgroundColor: AppColors.error,
