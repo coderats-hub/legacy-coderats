@@ -177,10 +177,15 @@ public class GitHubCommitService {
         if (!StringUtils.hasText(repository) || !StringUtils.hasText(sha)) {
             return null;
         }
+        var repo = splitRepository(repository);
+        if (repo == null) {
+            log.debug("Repositorio invalido '{}' - esperado owner/repo", repository);
+            return null;
+        }
         String effectiveToken = sanitize(token);
         try {
             return http.get()
-                    .uri("/repos/{repository}/commits/{sha}", repository, sha)
+                    .uri("/repos/{owner}/{repo}/commits/{sha}", repo.owner(), repo.repo(), sha)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + effectiveToken)
                     .retrieve()
                     .body(GithubCommitDetail.class);
@@ -189,6 +194,17 @@ public class GitHubCommitService {
             return null;
         }
     }
+
+    private RepoRef splitRepository(String repository) {
+        String sanitized = repository.trim();
+        int slash = sanitized.indexOf('/');
+        if (slash <= 0 || slash == sanitized.length() - 1) {
+            return null;
+        }
+        return new RepoRef(sanitized.substring(0, slash), sanitized.substring(slash + 1));
+    }
+
+    private record RepoRef(String owner, String repo) {}
 
     private String sanitize(String token) {
         return token != null ? token.trim() : null;
