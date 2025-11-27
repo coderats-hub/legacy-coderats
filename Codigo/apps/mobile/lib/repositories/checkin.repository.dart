@@ -12,7 +12,7 @@ class CheckinRepository {
 
   Future<List<Checkin>> fetchFeed({int limit = 20, int offset = 0}) async {
     final token = await _storage.getToken();
-    if (token == null) throw Exception('Token n\u00e3o encontrado');
+    if (token == null) throw Exception('Token não encontrado');
 
     final uri = Uri.parse('$_baseUrl/feed').replace(queryParameters: {
       'limit': '$limit',
@@ -34,7 +34,7 @@ class CheckinRepository {
     int offset = 0,
   }) async {
     final token = await _storage.getToken();
-    if (token == null) throw Exception('Token n\u00e3o encontrado');
+    if (token == null) throw Exception('Token não encontrado');
 
     final uri = Uri.parse('$_baseUrl/groups/$groupId/checkins').replace(
       queryParameters: {
@@ -61,7 +61,7 @@ class CheckinRepository {
     List<GithubCommit> commits = const [],
   }) async {
     final token = await _storage.getToken();
-    if (token == null) throw Exception('Token n\u00e3o encontrado');
+    if (token == null) throw Exception('Token não encontrado');
 
     final uri = Uri.parse('$_baseUrl/groups/$groupId/checkins');
 
@@ -77,10 +77,9 @@ class CheckinRepository {
     if (summaryAi != null && summaryAi.isNotEmpty) {
       payload['summary_ai'] = summaryAi;
     }
-
     if (commits.isNotEmpty) {
       payload['commits'] = commits
-          .where((commit) => commit.sha.isNotEmpty && commit.repository.isNotEmpty)
+          .where((c) => c.repository.isNotEmpty && c.sha.isNotEmpty)
           .map((commit) => {
                 'repository': commit.repository,
                 'sha': commit.sha,
