@@ -125,11 +125,14 @@ public class GitHubCommitService {
         }
 
         List<GitHubCommitDetailPayload> results = new ArrayList<>();
+        String maskedToken = maskToken(user.getGithubAccessToken());
+        log.debug("[GitHubCommit] Preparando busca de {} commits para usuario={} token={}", commits.size(), user.getGithubUser(), maskedToken);
         for (CommitSelectionRequest commit : commits) {
             if (commit == null || !StringUtils.hasText(commit.repository()) || !StringUtils.hasText(commit.sha())) {
                 continue;
             }
-            GithubCommitDetail detail = fetchCommitDetail(commit.repository(), commit.sha(), user.getGithubAccessToken());
+            String sanitizedToken = sanitize(user.getGithubAccessToken());
+            GithubCommitDetail detail = fetchCommitDetail(commit.repository(), commit.sha(), sanitizedToken);
             if (detail != null) {
                 results.add(toPayload(commit.repository(), commit.sha(), detail));
             }
@@ -174,16 +177,31 @@ public class GitHubCommitService {
         if (!StringUtils.hasText(repository) || !StringUtils.hasText(sha)) {
             return null;
         }
+        String effectiveToken = sanitize(token);
         try {
             return http.get()
                     .uri("/repos/{repository}/commits/{sha}", repository, sha)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + effectiveToken)
                     .retrieve()
                     .body(GithubCommitDetail.class);
         } catch (RestClientException ex) {
             log.debug("Falha ao obter detalhes do commit {} em {}: {}", sha, repository, ex.getMessage());
             return null;
         }
+    }
+
+    private String sanitize(String token) {
+        return token != null ? token.trim() : null;
+    }
+
+    private String maskToken(String token) {
+        if (!StringUtils.hasText(token)) {
+            return "null";
+        }
+        String sanitized = sanitize(token);
+        int length = sanitized != null ? sanitized.length() : 0;
+        String prefix = sanitized != null ? sanitized.substring(0, Math.min(6, sanitized.length())) : "";
+        return prefix + "...(" + length + ")";
     }
 
     private String resolveMessage(GithubCommit commit, GithubCommitDetail detail) {
