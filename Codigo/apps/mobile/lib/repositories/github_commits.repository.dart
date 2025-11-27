@@ -17,6 +17,8 @@ class GithubCommitsRepository {
     int page = 1,
     int size = 5,
     int hours = 24,
+    String? repoUrl,
+    String? githubUsername,
   }) async {
     final token = await _storage.getToken();
     if (token == null) {
@@ -26,13 +28,17 @@ class GithubCommitsRepository {
       throw Exception('groupId obrigatório para carregar commits');
     }
 
-    final uri = Uri.parse('$_baseUrl/groups/$groupId/commits').replace(
-      queryParameters: {
-        'page': '$page',
-        'size': '$size',
-        'hours': '$hours',
-      },
-    );
+    final queryParameters = <String, String>{
+      'page': '$page',
+      'size': '$size',
+      'hours': '$hours',
+      if (repoUrl != null && repoUrl.isNotEmpty) 'repoUrl': repoUrl,
+      if (githubUsername != null && githubUsername.isNotEmpty)
+        'githubUsername': githubUsername,
+    };
+
+    final uri = Uri.parse('$_baseUrl/groups/$groupId/commits')
+        .replace(queryParameters: queryParameters);
 
     final response = await http.get(
       uri,
@@ -51,5 +57,41 @@ class GithubCommitsRepository {
         .map((item) =>
             GithubCommit.fromJson(Map<String, dynamic>.from(item as Map)))
         .toList();
+  }
+
+  Future<String?> fetchGroupRepository(String groupId) async {
+    final token = await _storage.getToken();
+    if (token == null) {
+      throw Exception('Token não encontrado');
+    }
+    if (groupId.isEmpty) {
+      throw Exception('groupId obrigatório para carregar repositório');
+    }
+
+    final uri = Uri.parse('$_baseUrl/groups/$groupId');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+          'Falha ao carregar detalhes do grupo (status ${response.statusCode})');
+    }
+
+    final decoded = json.decode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+
+    if (decoded['group'] is Map<String, dynamic>) {
+      final group = decoded['group'] as Map<String, dynamic>;
+      return (group['repository'] as String?)?.trim();
+    }
+
+    return (decoded['repository'] as String?)?.trim();
   }
 }

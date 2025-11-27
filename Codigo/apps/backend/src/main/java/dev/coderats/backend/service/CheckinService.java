@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import dev.coderats.backend.domain.Checkin;
 import dev.coderats.backend.domain.CheckinSummary;
@@ -102,17 +103,33 @@ public class CheckinService {
             .collect(Collectors.toList());
     }
 
-    public List<GitHubCommitResponse> listRecentCommitsForGroup(UUID userId, UUID groupId, int page, int size, int hours) {
+    public List<GitHubCommitResponse> listRecentCommitsForGroup(
+            UUID userId,
+            UUID groupId,
+            int page,
+            int size,
+            int hours,
+            String repoOverride,
+            String githubUsername) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Usuário não encontrado"));
+        if (StringUtils.hasText(githubUsername)
+                && !githubUsername.equalsIgnoreCase(user.getGithubUser())) {
+            throw new IllegalStateException("GitHub informado não corresponde ao usuário autenticado.");
+        }
         if (!participantRepository.existsByUserIdAndGroupId(userId, groupId)) {
             throw new IllegalStateException("Usuário não participa deste grupo.");
         }
         var group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new IllegalStateException("Grupo não encontrado"));
-        if (group.getRepository() == null || group.getRepository().isBlank()) {
+        String repository = StringUtils.hasText(group.getRepository())
+                ? group.getRepository()
+                : repoOverride;
+        if (!StringUtils.hasText(repository)) {
             throw new IllegalStateException("Grupo não possui repositório associado.");
         }
         int effectiveHours = hours > 0 ? hours : 24;
-        return gitHubCommitService.fetchRecentCommitsForRepository(userId, page, size, effectiveHours, group.getRepository());
+        return gitHubCommitService.fetchRecentCommitsForRepository(userId, page, size, effectiveHours, repository);
     }
 
     private CheckinResponse toResponse(Checkin checkin) {

@@ -429,7 +429,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           // Navega para tela de criação de check-in
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => CommitCheckinScreen(groupId: widget.groupId),
+              builder: (context) => CommitCheckinScreen(
+                groupId: widget.groupId,
+                groupRepository: _details?.group.repository,
+              ),
             ),
           );
         },

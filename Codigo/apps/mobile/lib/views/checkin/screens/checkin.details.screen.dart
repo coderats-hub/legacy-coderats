@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app/core/session_manager.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
 
@@ -12,7 +13,8 @@ import '../widgets/shared_widgets.dart';
 
 class CommitCheckinScreen extends StatefulWidget {
   final String? groupId;
-  const CommitCheckinScreen({super.key, this.groupId});
+  final String? groupRepository;
+  const CommitCheckinScreen({super.key, this.groupId, this.groupRepository});
 
   @override
   State<CommitCheckinScreen> createState() => _CommitCheckinScreenState();
@@ -23,6 +25,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   final _descriptionController = TextEditingController();
   final _repository = CheckinRepository();
   final _githubCommitsRepository = GithubCommitsRepository();
+  final SessionManager _session = SessionManager.instance;
 
   Uint8List? _pickedImageBytes;
   bool _showTitleError = false;
@@ -37,6 +40,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   final int _commitPageSize = 5;
   final int _commitLookbackHours = 24;
   bool _hasMoreCommits = true;
+  String? _groupRepository;
 
   @override
   void dispose() {
@@ -49,6 +53,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   void initState() {
     super.initState();
     _titleController.addListener(() => setState(() {}));
+    _groupRepository = widget.groupRepository;
     _loadCommits();
   }
 
@@ -56,6 +61,23 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     final source = await ImageSourceModal.show(context);
     if (source == null) return;
     // Upload de imagem desabilitado; apenas UI.
+  }
+
+  Future<String?> _ensureGroupRepository(String groupId) async {
+    if (_groupRepository != null && _groupRepository!.isNotEmpty) {
+      return _groupRepository;
+    }
+    final repo = await _githubCommitsRepository.fetchGroupRepository(groupId);
+    if (repo != null && repo.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _groupRepository = repo;
+        });
+      } else {
+        _groupRepository = repo;
+      }
+    }
+    return _groupRepository;
   }
 
   Future<void> _loadCommits({bool loadMore = false}) async {
@@ -86,11 +108,27 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     }
 
     try {
+      final repoUrl = await _ensureGroupRepository(groupId);
+      if (repoUrl == null || repoUrl.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _commitErrorMessage =
+                'Grupo não possui repositório configurado. Atualize o cadastro do grupo e tente novamente.';
+            _isLoadingCommits = false;
+            _hasMoreCommits = false;
+          });
+        }
+        return;
+      }
+
+      final githubUsername = _session.currentUser?.githubUser;
       final items = await _githubCommitsRepository.fetchCommits(
         groupId: groupId,
         page: nextPage,
         size: _commitPageSize,
         hours: _commitLookbackHours,
+        repoUrl: repoUrl,
+        githubUsername: githubUsername,
       );
       if (!mounted) return;
       setState(() {

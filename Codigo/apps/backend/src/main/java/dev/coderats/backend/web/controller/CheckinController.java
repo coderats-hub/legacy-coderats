@@ -74,11 +74,20 @@ public class CheckinController {
             @PathVariable String groupId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "24") int hours) {
+            @RequestParam(defaultValue = "24") int hours,
+            @RequestParam(value = "repoUrl", required = false) String repoUrl,
+            @RequestParam(value = "githubUsername", required = false) String githubUsername) {
         try {
             UUID gid = UUID.fromString(groupId);
             UUID userId = getCurrentUserId();
-            var commits = checkinService.listRecentCommitsForGroup(userId, gid, page, size, hours);
+            var commits = checkinService.listRecentCommitsForGroup(
+                    userId,
+                    gid,
+                    page,
+                    size,
+                    hours,
+                    repoUrl,
+                    githubUsername);
             return ResponseEntity.ok(commits);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
