@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin/checkin.dart';
+import '../domain/checkin/github_commit.dart';
 import 'package:app/shared/services/storage.service.dart';
 
 class CheckinRepository {
@@ -57,6 +58,7 @@ class CheckinRepository {
     String? description,
     String? image,
     String? summaryAi,
+    List<GithubCommit> commits = const [],
   }) async {
     final token = await _storage.getToken();
     if (token == null) throw Exception('Token n\u00e3o encontrado');
@@ -74,6 +76,16 @@ class CheckinRepository {
     }
     if (summaryAi != null && summaryAi.isNotEmpty) {
       payload['summary_ai'] = summaryAi;
+    }
+
+    if (commits.isNotEmpty) {
+      payload['commits'] = commits
+          .where((commit) => commit.sha.isNotEmpty && commit.repository.isNotEmpty)
+          .map((commit) => {
+                'repository': commit.repository,
+                'sha': commit.sha,
+              })
+          .toList();
     }
 
     final resp = await http.post(

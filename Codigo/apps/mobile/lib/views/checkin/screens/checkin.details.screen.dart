@@ -35,6 +35,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   String? _commitErrorMessage;
   int _commitPage = 1;
   final int _commitPageSize = 5;
+  final int _commitLookbackHours = 24;
   bool _hasMoreCommits = true;
 
   @override
@@ -59,6 +60,18 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
 
   Future<void> _loadCommits({bool loadMore = false}) async {
     if (_isLoadingCommits) return;
+    final groupId = widget.groupId ?? dotenv.env['DEFAULT_GROUP_ID'];
+    if (groupId == null || groupId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _commits = [];
+          _hasMoreCommits = false;
+          _commitErrorMessage =
+              'Defina DEFAULT_GROUP_ID no .env ou passe um groupId para carregar commits.';
+        });
+      }
+      return;
+    }
     final nextPage = loadMore ? _commitPage + 1 : 1;
 
     if (mounted) {
@@ -74,8 +87,10 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
 
     try {
       final items = await _githubCommitsRepository.fetchCommits(
+        groupId: groupId,
         page: nextPage,
         size: _commitPageSize,
+        hours: _commitLookbackHours,
       );
       if (!mounted) return;
       setState(() {
@@ -174,6 +189,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
         title: _titleController.text,
         description: composedDescription.isNotEmpty ? composedDescription : null,
         summaryAi: commitSummary.isNotEmpty ? commitSummary : null,
+        commits: _selectedCommits.values.toList(),
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -13,18 +13,24 @@ class GithubCommitsRepository {
   final String _baseUrl;
 
   Future<List<GithubCommit>> fetchCommits({
+    required String groupId,
     int page = 1,
     int size = 5,
+    int hours = 24,
   }) async {
     final token = await _storage.getToken();
     if (token == null) {
       throw Exception('Token não encontrado');
     }
+    if (groupId.isEmpty) {
+      throw Exception('groupId obrigatório para carregar commits');
+    }
 
-    final uri = Uri.parse('$_baseUrl/integrations/github/commits').replace(
+    final uri = Uri.parse('$_baseUrl/groups/$groupId/commits').replace(
       queryParameters: {
         'page': '$page',
         'size': '$size',
+        'hours': '$hours',
       },
     );
 
