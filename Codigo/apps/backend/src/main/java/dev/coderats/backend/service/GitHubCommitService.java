@@ -330,6 +330,25 @@ public class GitHubCommitService {
                 .collect(Collectors.toList());
     }
 
+    private String normalizeRepositoryName(String repository) {
+        if (!StringUtils.hasText(repository)) {
+            return null;
+        }
+        String sanitized = repository.trim();
+        if (sanitized.endsWith(".git")) {
+            sanitized = sanitized.substring(0, sanitized.length() - 4);
+        }
+        sanitized = sanitized.replace("\\", "/");
+        if (sanitized.contains("github.com")) {
+            int idx = sanitized.indexOf("github.com");
+            sanitized = sanitized.substring(idx + "github.com".length());
+        }
+        sanitized = sanitized.replaceAll("^https?://", "");
+        sanitized = sanitized.replaceAll("^github\\.com", "");
+        sanitized = sanitized.replaceAll("^/+", "");
+        return sanitized;
+    }
+
     private record GithubEvent(
             String type,
             GithubRepo repo,
@@ -381,21 +400,3 @@ public class GitHubCommitService {
             @JsonProperty("blob_url") String blobUrl) {
     }
 }
-    private String normalizeRepositoryName(String repository) {
-        if (!StringUtils.hasText(repository)) {
-            return null;
-        }
-        String sanitized = repository.trim();
-        if (sanitized.endsWith(".git")) {
-            sanitized = sanitized.substring(0, sanitized.length() - 4);
-        }
-        sanitized = sanitized.replace("\\", "/");
-        if (sanitized.contains("github.com")) {
-            int idx = sanitized.indexOf("github.com");
-            sanitized = sanitized.substring(idx + "github.com".length());
-        }
-        sanitized = sanitized.replaceAll("^https?://", "");
-        sanitized = sanitized.replaceAll("^github\\.com", "");
-        sanitized = sanitized.replaceAll("^/+", "");
-        return sanitized;
-    }
