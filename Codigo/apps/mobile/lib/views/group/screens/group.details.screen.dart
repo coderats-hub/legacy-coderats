@@ -36,7 +36,6 @@ import 'package:flutter/services.dart';
 
 // Core & Database
 import 'package:app/core/session_manager.dart';
-import 'package:app/database/checkin/checkin.dao.dart';
 
 // Domain Models
 import 'package:app/domain/checkin/checkin.dart';
@@ -138,17 +137,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       session: session,
     );
 
-    // Configura Checkin Repo (Usando o que criamos nos passos anteriores)
+    // Configura Checkin Repo apenas com dados remotos
     final checkinRemote = CheckinRemoteService(httpClient);
-    // Nota: Precisamos instanciar o CheckinDao. 
-    // Assumindo que localDb expõe o database raw ou criamos um getter lá.
-    final checkinDao = localDb != null ? CheckinDao(localDb.raw) : null; 
-    
     final checkinRepo = CheckinRepository(
       remote: checkinRemote,
-      local: checkinDao,
       net: connectivity,
     );
+
 
     if (mounted) {
       setState(() {

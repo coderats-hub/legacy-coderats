@@ -61,7 +61,7 @@ class GroupDao {
 
   Future<void> cacheGroups(List<Group> groups, String userId) async {
     if (groups.isEmpty) return;
-    final db = await _db;
+    final db = _db;
 
     await db.transaction((txn) async {
       for (final g in groups) {
@@ -92,7 +92,7 @@ class GroupDao {
   }
 
   Future<List<Group>> getGroupsByUser(String userId) async {
-    final db = await _db;
+    final db = _db;
     
     final rows = await db.rawQuery('''
       SELECT g.* FROM groups g
@@ -105,7 +105,7 @@ class GroupDao {
   }
 
   Future<void> cacheGroupDetails(GroupDetails details) async {
-    final db = await _db;
+    final db = _db;
 
     await db.transaction((txn) async {
       await txn.insert(
@@ -144,7 +144,7 @@ class GroupDao {
   }
 
   Future<GroupDetails?> getGroupDetails(String groupId) async {
-    final db = await _db;
+    final db = _db;
 
     final groupRows = await db.query(
       'groups',
@@ -175,7 +175,7 @@ class GroupDao {
   }
 
   Future<void> removeUserFromGroup(String groupId, String userId) async {
-    final db = await _db;
+    final db = _db;
     await db.delete(
       'group_participants',
       where: 'group_id = ? AND user_id = ?',

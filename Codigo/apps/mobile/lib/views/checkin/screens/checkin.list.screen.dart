@@ -1,12 +1,10 @@
 
 import 'package:app/core/session_manager.dart';
-import 'package:app/database/checkin/checkin.dao.dart';
 import 'package:app/domain/checkin/checkin.dart';
 import 'package:app/repositories/checkin.repository.dart';
 import 'package:app/services/checkin/checkin_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
@@ -40,13 +38,11 @@ class _CheckinScreenState extends State<CheckinScreen> {
     });
 
     try {
-        final database = await LocalDatabase.maybeGetInstance();
         final session = SessionManager.instance;
         final httpClient = HttpClient(session);
         
         final repository = CheckinRepository(
           remote: CheckinRemoteService(httpClient),
-          local: database != null ? CheckinDao(database.raw) : null,
           net: ConnectivityService(),
         );
       final data = await repository.getFeed();
