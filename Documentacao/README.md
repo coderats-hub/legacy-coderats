@@ -1,31 +1,27 @@
 # Documentação de Produto e Engenharia — CodeRats
-Este diretório centraliza os artefatos de planejamento, requisitos e especificações técnicas do projeto CodeRats. Os arquivos aqui contidos detalham desde a visão macro do produto até as regras de negócio e integrações de sistema.
+
+Este diretório centraliza os artefatos de planejamento, requisitos e especificações técnicas do projeto **CodeRats**. Os arquivos aqui contidos documentam desde a visão macro do produto até regras de negócio, integrações e detalhamentos táticos.
 
 A seguir, listam-se os artefatos, suas localizações e descrições:
 
 ---
-- [**doc_CODERATS_projeto.pdf**](doc_CODERATS_projeto.pdf) 
 
-Documentação técnica principal e apresentação do projeto. Contém a fundamentação teórica (baseada em gamificação e neurociência), a composição da equipe multidisciplinar e a visão arquitetural do sistema como ferramenta educacional.
+- [**doc_CODERATS_projeto.pdf**](doc_CODERATS_projeto.pdf)  
+  Documentação técnica principal e apresentação do projeto. Contém a fundamentação teórica (baseada em gamificação e neurociência), a composição da equipe multidisciplinar e a visão arquitetural do sistema como ferramenta educacional.
 
-- [**Features List.pdf**](Features List.pdf) 
+- [**Features List.pdf**](Features%20List.pdf)  
+  Documento de visão do backlog do produto. Lista Requisitos Funcionais (RF) e Não-Funcionais (RNF), incluindo prioridades, distribuição por Sprint e identificadores (IDs) para rastreabilidade.
 
-Documento de visão do backlog do produto. Lista os Requisitos Funcionais (RF) e Não-Funcionais (RNF), com suas respectivas prioridades, atribuições de Sprint e identificadores (IDs) para rastreabilidade.
+- [**Features List - csv.csv**](Features%20List%20-%20csv.csv)  
+  Versão estruturada em CSV da lista de funcionalidades. Contém os mesmos dados do PDF (ID, Feature Name, Prioridade, Sprint, Tela), ideal para importação em ferramentas de gestão ou análise de dados.
 
-- [**Features List - csv.csv**](Features List - csv.csv) 
+- [**User Stories e Critérios de Aceite.pdf**](User%20Stories%20e%20Crit%C3%A9rios%20de%20Aceite.pdf)  
+  Documento que detalha requisitos em formato de Histórias de Usuário. Inclui regras de negócio essenciais, modos de pontuação ("Quantidade" vs. "Frequência"), regras de ranking e cenários de teste (Gherkin/BDD).
 
-Versão em dados estruturados (CSV) da lista de funcionalidades. Contém os mesmos dados do PDF (ID, Feature Name, Prioridade, Sprint, Tela), ideal para importação em ferramentas de gestão de projetos ou análise de dados.
+- [**Histórias de Tarefa.pdf**](Hist%C3%B3rias%20de%20Tarefa.pdf)  
+  Documento de planejamento tático da Sprint 01. Decompõe histórias de usuário em tarefas técnicas (Task Stories), definindo happy path inicial, configurações de ambiente (DevOps) e entregáveis de Back-end e Front-end.
 
-- [**User Stories e Critérios de Aceite.pdf**](User Stories e Critérios de Aceite.pdf) 
-
-Detalhamento dos requisitos em formato de Histórias de Usuário. Especifica as regras de negócio críticas, como os modos de pontuação ("Quantidade" vs. "Frequência"), regras de ranking e cenários de teste (Gherkin/BDD) para validação.
-
-- [**Histórias de Tarefa.pdf**](Histórias de Tarefa.pdf) 
-
-Documento de planejamento tático, focado na Sprint 01. Quebra as histórias de usuário em tarefas técnicas de desenvolvimento (Task Stories), definindo o "happy path" inicial, configurações de ambiente (DevOps) e entregáveis de Back-end e Front-end.
-
-- [**Funcionamento Conexão API GitHub.pdf**](Funcionamento Conexão API GitHub.pdf) 
-
-Manual técnico específico para a integração com o GitHub. Detalha a arquitetura de autenticação OAuth 2.0, os endpoints da API REST utilizados, estratégias de busca de commits e parâmetros de filtragem de dados.
+- [**Funcionamento Conexão API GitHub.pdf**](Funcionamento%20Conex%C3%A3o%20API%20GitHub.pdf)  
+  Manual técnico da integração com o GitHub. Descreve a arquitetura OAuth 2.0, endpoints utilizados da API REST, estratégias de obtenção de commits e parâmetros de filtragem.
 
 ---
