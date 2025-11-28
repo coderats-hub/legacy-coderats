@@ -4,6 +4,7 @@ import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/core/session_manager.dart';
+import 'package:app/services/user/user_remote_service.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
@@ -40,12 +41,15 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       final session = SessionManager.instance;
       final localDb = await LocalDatabase.maybeGetInstance();
       final httpClient = HttpClient(session);
+      final remoteService = GroupRemoteService(httpClient);
+      final userRemote = UserRemoteService(httpClient);
       
       final repository = GroupRepository(
-        remote: GroupRemoteService(httpClient),
+        remote: remoteService,
         local: localDb?.groups,
         net: ConnectivityService(),
         session: session,
+        userRemote: userRemote,
       );
 
       // 2. Chamar o método de entrar no grupo

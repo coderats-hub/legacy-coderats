@@ -4,19 +4,28 @@ import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/database/group/group.dao.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/core/session_manager.dart';
+import 'package:app/services/user/user_remote_service.dart';
 
 class GroupRepository {
   final GroupRemoteService remote;
   final GroupDao? local; // <--- AGORA É OPCIONAL (NULLABLE)
   final ConnectivityService net;
   final SessionManager session;
+  final UserRemoteService userRemote;
 
   GroupRepository({
     required this.remote,
-    this.local,          // <--- REMOVIDO 'required'
+    this.local, // <--- REMOVIDO 'required'
     required this.net,
     required this.session,
+    required this.userRemote,
   });
+
+  Future<void> _syncUsersCache() async {
+    if (local == null) return;
+    final users = await userRemote.getAllUsers();
+    await local!.cacheUsers(users);
+  }
 
   Future<List<Group>> getUserGroups() async {
     final userId = session.currentUserId;
@@ -27,6 +36,7 @@ class GroupRepository {
         final groups = await remote.getUserGroups();
         // Só salva no cache se o banco local existir (Mobile) e tivermos um usuário
         if (local != null && userId != null) {
+          await _syncUsersCache();
           await local!.cacheGroups(groups, userId);
         }
         return groups;
@@ -39,7 +49,7 @@ class GroupRepository {
     if (local != null && userId != null) {
       return await local!.getGroupsByUser(userId);
     }
-    return []; 
+    return [];
   }
 
   Future<GroupDetails> getGroupDetails(String groupId) async {
@@ -59,7 +69,7 @@ class GroupRepository {
       final cached = await local!.getGroupDetails(groupId);
       if (cached != null) return cached;
     }
-    
+
     throw Exception("Dados não disponíveis offline.");
   }
 
@@ -103,12 +113,12 @@ class GroupRepository {
   Future<void> leaveGroup(String groupId) async {
     final online = await net.isOnline();
     if (!online) {
-      throw Exception('Conexão com a internet indisponível.');
+      throw Exception('Conexao com a internet indisponivel.');
     }
 
     final userId = session.currentUserId;
     if (userId == null) {
-      throw Exception('Usuário não autenticado.');
+      throw Exception('Usuario não autenticado.');
     }
 
     await remote.leaveGroup(groupId, userId);

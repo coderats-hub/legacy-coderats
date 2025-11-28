@@ -4,6 +4,10 @@ import 'package:app/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app/core/session_manager.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:app/services/http_client.dart';
+import 'package:app/services/local_database.dart';
+import 'package:app/services/user/user_remote_service.dart';
 
 class AuthService {
   Future<bool> exchangeCodeForToken(String code) async {
@@ -34,6 +38,7 @@ class AuthService {
         
         // Agora busca os dados do usuário usando o token
         await _fetchAndUpdateCurrentUser(authResponse.token, baseUrl);
+        await _refreshLocalUsersCache();
         
         return true;
       } else {
@@ -66,6 +71,19 @@ class AuthService {
       }
     } catch (e) {
       print('Erro ao buscar dados do usuário: $e');
+    }
+  }
+  Future<void> _refreshLocalUsersCache() async {
+    if (kIsWeb) return;
+    try {
+      final localDb = await LocalDatabase.maybeGetInstance();
+      if (localDb == null) return;
+      final httpClient = HttpClient(SessionManager.instance);
+      final userRemote = UserRemoteService(httpClient);
+      final users = await userRemote.getAllUsers();
+      await localDb.groups.cacheUsers(users);
+    } catch (e) {
+      print('Erro ao sincronizar usu�rios locais: ');
     }
   }
 }

@@ -11,6 +11,7 @@ import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/core/session_manager.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/views/group/screens/group.list.screen.dart'; 
+import 'package:app/services/user/user_remote_service.dart';
 
 enum EvaluationMethod {
   photoStreak,
@@ -295,12 +296,14 @@ class _ScoringModeGroupsScreenState extends State<ScoringModeGroupsScreen> {
       
       final httpClient = HttpClient(session);
       final remoteService = GroupRemoteService(httpClient);
+      final userRemote = UserRemoteService(httpClient);
       
       final repository = GroupRepository(
         remote: remoteService,
         local: localDb?.groups,
         net: connectivity,
         session: session,
+        userRemote: userRemote,
       );
 
       // 3. Conversão do Enum para String da API

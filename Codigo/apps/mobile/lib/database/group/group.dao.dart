@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:app/database/app_database.dart';
 import 'package:app/domain/group/group.dart';
+import 'package:app/domain/user/user.model.dart';
 
 const _uuid = Uuid();
 
@@ -48,6 +49,12 @@ class GroupDao {
         'image': m.image,
         'github_user': m.githubUser,
       };
+  Map<String, Object?> _userToMap(User user) => {
+        'id': user.id,
+        'name': user.name,
+        'image': user.image,
+        'github_user': user.githubUser,
+      };
 
   GroupParticipant _memberFromJoinedRow(Map<String, Object?> row) {
     return GroupParticipant(
@@ -89,6 +96,19 @@ class GroupDao {
         }
       }
     });
+  }
+
+  Future<void> cacheUsers(List<User> users) async {
+    if (users.isEmpty) return;
+    final batch = _db.batch();
+    for (final user in users) {
+      batch.insert(
+        'users',
+        _userToMap(user),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<List<Group>> getGroupsByUser(String userId) async {

@@ -53,6 +53,7 @@ import 'package:app/services/connectivity_service.dart';
 import 'package:app/services/group/group_remote_service.dart';
 import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
+import 'package:app/services/user/user_remote_service.dart';
 
 // Shared Components & Theme
 import 'package:app/shared/components/components.dart';
@@ -130,11 +131,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     
     // Configura Group Repo
     final groupRemote = GroupRemoteService(httpClient);
+    final userRemote = UserRemoteService(httpClient);
     final groupRepo = GroupRepository(
       remote: groupRemote,
       local: localDb?.groups,
       net: connectivity,
       session: session,
+      userRemote: userRemote,
     );
 
     // Configura Checkin Repo apenas com dados remotos

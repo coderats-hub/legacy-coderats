@@ -11,6 +11,7 @@ import 'package:app/domain/group/group_details.dart';
 // --- IMPORTS DE INFRAESTRUTURA ---
 import 'package:app/core/session_manager.dart';
 import 'package:app/services/group/group_remote_service.dart';
+import 'package:app/services/user/user_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
 
 // --- IMPORTS DE UI/TELAS ---
@@ -56,12 +57,14 @@ class _GroupListScreenState extends State<GroupListScreen> {
       final httpClient = HttpClient(session);
       
       final remoteService = GroupRemoteService(httpClient);
+      final userRemote = UserRemoteService(httpClient);
       
       final repository = GroupRepository(
         remote: remoteService,
         local: groupDao, 
         net: connectivity,
         session: session,
+        userRemote: userRemote,
       );
 
       if (mounted) {
