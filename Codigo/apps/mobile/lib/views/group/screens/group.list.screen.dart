@@ -199,6 +199,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
                             return _GroupCard(
                               group: g,
                               groupRepository: _groupRepository!,
+                              onGroupChanged: _reload, // Passa o callback de reload
                             );
                           },
                         );
@@ -238,10 +239,12 @@ class _GroupListScreenState extends State<GroupListScreen> {
 class _GroupCard extends StatefulWidget {
   final Group group;
   final GroupRepository groupRepository;
+  final VoidCallback onGroupChanged; // Callback para notificar mudanças
 
   const _GroupCard({
     required this.group,
     required this.groupRepository,
+    required this.onGroupChanged,
   });
 
   @override
@@ -307,9 +310,9 @@ class _GroupCardState extends State<_GroupCard> {
       imageUrl: widget.group.image,
       // Se necessário adapte status/bannerStyle aqui
       expanded: expanded,
-      onBannerTap: () {
+      onBannerTap: () async {
         // --- NAVEGAÇÃO PARA A TELA COMPLETA ---
-        Navigator.of(context).push(
+        final shouldRefresh = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
             builder: (_) => GroupDetailPage(
               groupId: widget.group.id,
@@ -318,6 +321,11 @@ class _GroupCardState extends State<_GroupCard> {
             ),
           ),
         );
+
+        // Se o usuário saiu do grupo, notifica o parent para recarregar
+        if (shouldRefresh == true && mounted) {
+          widget.onGroupChanged();
+        }
       },
       onExpandChanged: _onExpandChanged,
     );

@@ -118,4 +118,21 @@ class GroupRepository {
       await local!.removeUserFromGroup(groupId, userId);
     }
   }
+
+  Future<void> deleteGroup(String groupId) async {
+    final online = await net.isOnline();
+    if (!online) {
+      throw Exception('Conexão com a internet indisponível.');
+    }
+
+    await remote.deleteGroup(groupId);
+
+    // Remove do cache local (marca como inativo ou remove completamente)
+    if (local != null) {
+      final userId = session.currentUserId;
+      if (userId != null) {
+        await local!.removeUserFromGroup(groupId, userId);
+      }
+    }
+  }
 }
