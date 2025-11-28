@@ -21,6 +21,7 @@ class UserAvatarInfo extends StatelessWidget {
   final double avatarRadius;
   final VoidCallback? onTap;
   final bool showAvatar;
+  final String? imageUrl;
   
   const UserAvatarInfo({
     super.key,
@@ -29,6 +30,7 @@ class UserAvatarInfo extends StatelessWidget {
     this.avatarRadius = 18,
     this.onTap,
     this.showAvatar = true,
+    this.imageUrl,
   });
 
   @override
@@ -39,6 +41,12 @@ class UserAvatarInfo extends StatelessWidget {
           CircleAvatar(
             radius: avatarRadius, 
             backgroundColor: AppColors.accent,
+            backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                ? NetworkImage(imageUrl!)
+                : null,
+            child: imageUrl == null || imageUrl!.isEmpty
+                ? null
+                : null,
           ),
           const SizedBox(width: AppSpacing.md),
         ],
