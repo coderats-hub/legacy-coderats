@@ -31,19 +31,24 @@ class _FeedListScreenState extends State<FeedListScreen> {
   @override
   void initState() {
     super.initState();
-    final sessionManager = SessionManager.instance;
-    final httpClient = HttpClient(sessionManager);
-    final apiService = ApiService(httpClient);
-    final db = await LocalDatabase.maybeGetInstance();
-    _repo = FeedRepository(apiService, local: db?.feed);
-    _loadMore();
-    _ctrl.addListener(_onScroll);
+    _initRepo();
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _initRepo() async {
+    final sessionManager = SessionManager.instance;
+    final httpClient = HttpClient(sessionManager);
+    final apiService = ApiService(httpClient);
+    final db = await LocalDatabase.maybeGetInstance();
+    _repo = FeedRepository(apiService, local: db?.feed);
+    if (mounted) {
+      _loadMore();
+    }
   }
 
   void _onScroll() {

@@ -121,6 +121,22 @@ class GroupRepository {
     );
   }
 
+  Future<Group> updateGroup(
+    String id, {
+    String? name,
+    String? description,
+    String? image,
+    List<String>? participantsRemove,
+  }) async {
+    return remote.updateGroup(
+      id,
+      name: name,
+      description: description,
+      image: image,
+      participantsRemove: participantsRemove,
+    );
+  }
+
   Future<String> joinGroup(String code) async {
     final online = await net.isOnline();
     if (!online) {
