@@ -324,34 +324,34 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                           },
                         ),
                         const SizedBox(width: AppSpacing.sm),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppCorners.md),
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => CheckinScreen(
-                                  groupId: widget.groupId,
-                                  groupName: displayName,
+                        Material(
+                          color: AppColors.accent,
+                          shape: const StadiumBorder(),
+                          child: InkWell(
+                            customBorder: const StadiumBorder(),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => CheckinScreen(
+                                    groupId: widget.groupId,
+                                    groupName: displayName,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              child: Text(
+                                'Ver checkins',
+                                style: AppTextStyles.subtitle.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
                                 ),
                               ),
-                            );
-                          },
-                          child: const Text(
-                            'Ver commits',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              fontSize: 14,
                             ),
                           ),
                         ),
@@ -445,10 +445,17 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             if (val == 'edit') {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => GroupEditScreen(
-                    initialName: widget.groupNamePreview.toString(),
-                    initialDescription: widget.descriptionPreview,
-                    imageUrl: widget.imageUrlPreview),
-              ));
+                  groupId: widget.groupId,
+                  initialName: _group?.name ?? widget.groupNamePreview ?? '',
+                  initialDescription: _group?.description ?? widget.descriptionPreview,
+                  imageUrl: _group?.image ?? widget.imageUrlPreview,
+                  participants: _ranking,
+                ),
+              )).then((refresh) {
+                if (refresh == true) {
+                  _loadData();
+                }
+              });
             } else if (val == 'delete') {
               _showDeleteGroupDialog(context);
             }

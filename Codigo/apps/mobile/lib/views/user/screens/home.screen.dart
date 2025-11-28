@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'onboarding.screen.dart';
 import 'code_exchange.screen.dart';
+import 'package:app/core/session_manager.dart';
 
 // Tela inicial da aplicação - splash/welcome screen com login GitHub
 class TelaInicio extends StatefulWidget {
@@ -14,6 +15,23 @@ class TelaInicio extends StatefulWidget {
 }
 
 class _TelaInicioState extends State<TelaInicio> {
+
+  @override
+  void initState() {
+    super.initState();
+    _redirectIfAuthenticated();
+  }
+
+  void _redirectIfAuthenticated() {
+    final token = SessionManager.instance.token;
+    if (token != null) {
+      Future.microtask(() {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/feed');
+        }
+      });
+    }
+  }
   
   Future<void> _launchGitHubLogin() async {
     final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
@@ -102,7 +120,7 @@ class _TelaInicioState extends State<TelaInicio> {
                       
                       // Texto do botão
                       const Text(
-                        'Entrar com GitHub',
+                        'Login via GitHub',
                         style: TextStyle(
                           fontSize: 16,
                           color: Color(0xFFD9D9D9), // Cor do texto

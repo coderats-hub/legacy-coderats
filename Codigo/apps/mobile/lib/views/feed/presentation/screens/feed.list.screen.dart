@@ -34,7 +34,8 @@ class _FeedListScreenState extends State<FeedListScreen> {
     final sessionManager = SessionManager.instance;
     final httpClient = HttpClient(sessionManager);
     final apiService = ApiService(httpClient);
-    _repo = FeedRepository(apiService);
+    final db = await LocalDatabase.maybeGetInstance();
+    _repo = FeedRepository(apiService, local: db?.feed);
     _loadMore();
     _ctrl.addListener(_onScroll);
   }
@@ -194,42 +195,54 @@ class _FeedListScreenState extends State<FeedListScreen> {
         title: 'Feed',
         showBackButton: false,
       ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        backgroundColor: AppColors.surface,
-        onRefresh: () async {
-          setState(() {
-            _items.clear();
-            _offset = 0;
-            _hasMore = true;
-            _errorMessage = null;
-          });
-          await _loadMore();
-        },
-        child: ListView.builder(
-          controller: _ctrl,
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.sm,
+      body: Column(
+        children: [
+          if (_loading)
+            const LinearProgressIndicator(
+              minHeight: 2,
+              color: AppColors.primary,
+              backgroundColor: AppColors.border,
+            ),
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () async {
+                setState(() {
+                  _items.clear();
+                  _offset = 0;
+                  _hasMore = true;
+                  _errorMessage = null;
+                });
+                await _loadMore();
+              },
+              child: ListView.builder(
+                controller: _ctrl,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                itemCount: _items.length + (_loading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= _items.length) {
+                    return const SizedBox(
+                      height: 80,
+                      child: AppLoading(),
+                    );
+                  }
+                  final item = _items[index];
+                  return FeedCard(
+                    item: item,
+                    onLike: () => _toggleLike(item),
+                    isLikeLoading: _likesLoading.contains(item.id),
+                  );
+                },
+              ),
+            ),
           ),
-          itemCount: _items.length + (_loading ? 1 : 0),
-          itemBuilder: (context, index) {
-            if (index >= _items.length) {
-              return const SizedBox(
-                height: 80,
-                child: AppLoading(),
-              );
-            }
-            final item = _items[index];
-            return FeedCard(
-              item: item,
-              onLike: () => _toggleLike(item),
-              isLikeLoading: _likesLoading.contains(item.id),
-            );
-          },
-        ),
+        ],
       ),
       bottomNavigationBar: AppNavbar(
         currentIndex: 0,

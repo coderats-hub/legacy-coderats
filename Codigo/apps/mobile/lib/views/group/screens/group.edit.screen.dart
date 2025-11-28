@@ -1,32 +1,65 @@
-import 'package:flutter/material.dart';
-
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
-import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'dart:io';
+import 'package:app/domain/group/group_participant.dart';
+import 'package:app/repositories/group.repository.dart';
+import 'package:app/services/group/group_remote_service.dart';
+import 'package:app/services/http_client.dart';
+import 'package:app/services/connectivity_service.dart';
+import 'package:app/services/user/user_remote_service.dart';
+import 'package:app/core/session_manager.dart';
 
 class GroupEditScreen extends StatefulWidget {
+  final String groupId;
   final String initialName;
   final String? initialDescription;
   final String? imageUrl;
+  final List<GroupParticipant> participants;
 
-  const GroupEditScreen({super.key, required this.initialName, this.initialDescription, this.imageUrl});
+  const GroupEditScreen({
+    super.key,
+    required this.groupId,
+    required this.initialName,
+    this.initialDescription,
+    this.imageUrl,
+    this.participants = const [],
+  });
 
   @override
   State<GroupEditScreen> createState() => _GroupEditScreenState();
 }
 
 class _GroupEditScreenState extends State<GroupEditScreen> {
-  late final TextEditingController _nameCtrl;  
-  late final TextEditingController _descCtrl;   
-  Uint8List? _pickedImageBytes;               
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _descCtrl;
+  Uint8List? _pickedImageBytes;
+  late List<GroupParticipant> _participants;
+  final Set<String> _removedIds = {};
+  bool _saving = false;
+
+  late final GroupRepository _groupRepo;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialName);
     _descCtrl = TextEditingController(text: widget.initialDescription ?? '');
+    _participants = List<GroupParticipant>.from(widget.participants);
+
+    final session = SessionManager.instance;
+    final http = HttpClient(session);
+    _groupRepo = GroupRepository(
+      remote: GroupRemoteService(http),
+      local: null,
+      net: ConnectivityService(),
+      session: session,
+      userRemote: UserRemoteService(http),
+    );
   }
 
   @override
@@ -36,12 +69,10 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     super.dispose();
   }
 
-
-  // Seleção de imagem usando modal compartilhado
-  void _selectImage() async {
+  Future<void> _selectImage() async {
     final source = await ImageSourceModal.show(context);
     if (source == null) return;
-    
+
     try {
       final params = OpenFileDialogParams(
         dialogType: OpenFileDialogType.image,
@@ -65,9 +96,59 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     }
   }
 
-  void _save() {
-    // TODO: Integrar com API para persistir alterações
-    Navigator.of(context).maybePop();
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await _groupRepo.updateGroup(
+        widget.groupId,
+        name: _nameCtrl.text.trim(),
+        description: _descCtrl.text.trim().isNotEmpty ? _descCtrl.text.trim() : null,
+        image: _pickedImageBytes != null ? base64Encode(_pickedImageBytes!) : null,
+        participantsRemove: _removedIds.toList(),
+      );
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar grupo: $e'), backgroundColor: AppColors.error),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _confirmRemove(String participantId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Remover participante?', style: TextStyle(color: Colors.white)),
+          content: const Text(
+            'Você tem certeza que deseja remover este participante do grupo? Ele pode voltar a entrar depois com o código.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Remover', style: TextStyle(color: AppColors.error)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _removedIds.add(participantId);
+        _participants.removeWhere((p) => p.id == participantId);
+      });
+    }
   }
 
   @override
@@ -94,7 +175,13 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                     const Spacer(),
                     GestureDetector(
                       onTap: _save,
-                      child: Text('OK', style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                      child: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            )
+                          : Text('OK', style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ),
@@ -103,7 +190,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
                 child: GestureDetector(
-                  onTap: _selectImage, // Abre seletor de imagem
+                  onTap: _selectImage,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
@@ -112,18 +199,20 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: <Widget>[
-                          // Fundo: gradiente padrão ou imagem selecionada
-                          _pickedImageBytes == null
-                              ? Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFF9A24DD), Color(0xFF5A1A9A)],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                  ),
-                                )
-                              : Image.memory(_pickedImageBytes!, fit: BoxFit.cover, width: double.infinity),
+                          if (_pickedImageBytes != null)
+                            Image.memory(_pickedImageBytes!, fit: BoxFit.cover, width: double.infinity)
+                          else if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty)
+                            Image.network(widget.imageUrl!, fit: BoxFit.cover, width: double.infinity)
+                          else
+                            Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF9A24DD), Color(0xFF5A1A9A)],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                              ),
+                            ),
                           Center(
                             child: Container(
                               width: 56,
@@ -152,7 +241,6 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Campo de edição do nome
                     Container(
                       height: 48,
                       decoration: BoxDecoration(
@@ -186,7 +274,6 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
 
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Campo de edição da descrição (multilinha)
                     Container(
                       decoration: BoxDecoration(
                         color: AppColors.surface.withOpacity(0.92),
@@ -207,8 +294,7 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                               maxLines: 4,
                               style: AppTextStyles.inputLabel.copyWith(color: AppColors.textPrimary, fontSize: 13),
                               decoration: InputDecoration(
-                                hintText:
-                                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet.',
+                                hintText: 'Descrição do grupo',
                                 hintStyle: AppTextStyles.inputHint.copyWith(fontSize: 13),
                                 border: InputBorder.none,
                                 isCollapsed: true,
@@ -231,34 +317,25 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
                     const SizedBox(height: AppSpacing.lg),
 
                     Text('Participantes', style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.sm),
 
-                    // Lista horizontal de avatares dos membros
-                    Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                          child: const Center(child: Icon(Icons.person, color: Colors.black)),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                          child: const Center(child: Icon(Icons.person, color: Colors.black)),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        // Botão para remover participantes
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.surface.withOpacity(0.6)),
-                          child: IconButton(onPressed: () {}, icon: const Icon(Icons.delete_outline, color: Colors.white)),
-                        ),
-                      ],
-                    ),
+                    if (_participants.isEmpty)
+                      Text('Nenhum participante listado.', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary))
+                    else
+                      Wrap(
+                        spacing: AppSpacing.md,
+                        runSpacing: AppSpacing.md,
+                        children: _participants.map((p) {
+                          final removed = _removedIds.contains(p.id);
+                          return _ParticipantChip(
+                            name: p.name,
+                            imageUrl: p.image,
+                            role: p.role ?? '',
+                            removed: removed,
+                            onRemove: () => _confirmRemove(p.id),
+                          );
+                        }).toList(),
+                      ),
                   ],
                 ),
               ),
@@ -267,6 +344,60 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ParticipantChip extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+  final String role;
+  final bool removed;
+  final VoidCallback onRemove;
+
+  const _ParticipantChip({
+    required this.name,
+    required this.imageUrl,
+    required this.role,
+    required this.removed,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: removed ? AppColors.border : AppColors.surface.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(AppCorners.md),
+        border: Border.all(color: removed ? AppColors.error : AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.primary,
+            backgroundImage: imageUrl != null && imageUrl!.isNotEmpty ? NetworkImage(imageUrl!) : null,
+            child: (imageUrl == null || imageUrl!.isEmpty)
+                ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white))
+                : null,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: AppTextStyles.subtitle.copyWith(color: Colors.white)),
+              Text(role, style: AppTextStyles.inputHint.copyWith(fontSize: 11)),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          IconButton(
+            onPressed: onRemove,
+            icon: Icon(Icons.remove_circle, color: removed ? AppColors.error : AppColors.textSecondary, size: 20),
+          )
+        ],
       ),
     );
   }
