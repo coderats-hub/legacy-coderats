@@ -9,14 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import dev.coderats.backend.domain.Checkin;
+import dev.coderats.backend.domain.CheckinLike;
+import dev.coderats.backend.domain.CheckinLikeId;
 import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.UserSummary;
+import dev.coderats.backend.infra.repository.CheckinLikeRepository;
 import dev.coderats.backend.infra.repository.CheckinRepository;
 import dev.coderats.backend.infra.repository.GroupParticipantRepository;
 import dev.coderats.backend.infra.repository.GroupRepository;
 import dev.coderats.backend.infra.repository.UserRepository;
 import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
 import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
+import dev.coderats.backend.web.dto.response.CheckinLikeResponse;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
 import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
 import jakarta.transaction.Transactional;
@@ -25,6 +29,7 @@ import jakarta.transaction.Transactional;
 public class CheckinService {
 
     private final CheckinRepository checkinRepository;
+    private final CheckinLikeRepository checkinLikeRepository;
     private final GroupParticipantRepository participantRepository;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
@@ -33,6 +38,7 @@ public class CheckinService {
 
     public CheckinService(
             CheckinRepository checkinRepository,
+            CheckinLikeRepository checkinLikeRepository,
             GroupParticipantRepository participantRepository,
             GroupRepository groupRepository,
             UserRepository userRepository,
@@ -40,6 +46,7 @@ public class CheckinService {
             GitHubCommitService gitHubCommitService
     ) {
         this.checkinRepository = checkinRepository;
+        this.checkinLikeRepository = checkinLikeRepository;
         this.participantRepository = participantRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
@@ -93,14 +100,14 @@ public class CheckinService {
     public List<CheckinResponse> getFeed(UUID userId, int limit, int offset) {
         return checkinRepository.findFeedByUserId(userId, limit, offset)
                 .stream()
-                .map(this::toResponse)
+                .map(checkin -> toResponse(checkin, userId))
                 .collect(Collectors.toList());
     }
 
-    public List<CheckinResponse> getGroupCheckins(UUID groupId, int limit, int offset) {
+    public List<CheckinResponse> getGroupCheckins(UUID userId, UUID groupId, int limit, int offset) {
         return checkinRepository.findByGroupIdOrderByPointsDesc(groupId, limit, offset)
                 .stream()
-                .map(this::toResponse)
+                .map(checkin -> toResponse(checkin, userId))
                 .collect(Collectors.toList());
     }
 
@@ -140,8 +147,78 @@ public class CheckinService {
         return gitHubCommitService.fetchRecentCommitsForRepository(userId, page, size, effectiveHours, repository);
     }
 
+    @Transactional
+    public void likeCheckin(UUID checkinId, UUID userId) {
+        // Verificar se o checkin existe
+        var checkin = checkinRepository.findById(checkinId)
+                .orElseThrow(() -> new IllegalStateException("Checkin não encontrado"));
+
+        // Verificar se o usuário faz parte do grupo
+        if (!participantRepository.existsByUserIdAndGroupId(userId, checkin.getGroupId())) {
+            throw new IllegalStateException("Usuário não pertence ao grupo do checkin");
+        }
+
+        // Verificar se já existe like desse usuário para esse checkin
+        if (checkinLikeRepository.existsByCheckinIdAndUserId(checkinId, userId)) {
+            return; // Já curtiu, não faz nada
+        }
+
+        // Criar o like
+        var like = new CheckinLike(checkinId, userId);
+        checkinLikeRepository.save(like);
+
+        // Incrementar o contador
+        checkin.setLikesCount(checkin.getLikesCount() + 1);
+        checkinRepository.save(checkin);
+    }
+
+    @Transactional
+    public void unlikeCheckin(UUID checkinId, UUID userId) {
+        // Verificar se o checkin existe
+        var checkin = checkinRepository.findById(checkinId)
+                .orElseThrow(() -> new IllegalStateException("Checkin não encontrado"));
+
+        // Verificar se existe like desse usuário para esse checkin
+        if (!checkinLikeRepository.existsByCheckinIdAndUserId(checkinId, userId)) {
+            return; // Não curtiu, não faz nada
+        }
+
+        // Remover o like usando deleteById com chave composta
+        CheckinLikeId likeId = new CheckinLikeId();
+        likeId.setCheckinId(checkinId);
+        likeId.setUserId(userId);
+        checkinLikeRepository.deleteById(likeId);
+
+        // Decrementar o contador (sem deixar negativo)
+        int newCount = Math.max(0, checkin.getLikesCount() - 1);
+        checkin.setLikesCount(newCount);
+        checkinRepository.save(checkin);
+    }
+
+    public boolean userHasLiked(UUID checkinId, UUID userId) {
+        return checkinLikeRepository.existsByCheckinIdAndUserId(checkinId, userId);
+    }
+
+    public CheckinLikeResponse likeCheckinAndGetResponse(UUID checkinId, UUID userId) {
+        likeCheckin(checkinId, userId);
+        var checkin = checkinRepository.findById(checkinId).orElseThrow();
+        return new CheckinLikeResponse(checkin.getLikesCount(), true);
+    }
+
+    public CheckinLikeResponse unlikeCheckinAndGetResponse(UUID checkinId, UUID userId) {
+        unlikeCheckin(checkinId, userId);
+        var checkin = checkinRepository.findById(checkinId).orElseThrow();
+        return new CheckinLikeResponse(checkin.getLikesCount(), false);
+    }
+
     private CheckinResponse toResponse(Checkin checkin) {
+        return toResponse(checkin, null);
+    }
+
+    private CheckinResponse toResponse(Checkin checkin, UUID currentUserId) {
         var author = toUserSummary(checkin);
+        boolean userHasLiked = currentUserId != null
+                && checkinLikeRepository.existsByCheckinIdAndUserId(checkin.getId(), currentUserId);
 
         return new CheckinResponse(
                 checkin.getId(),
@@ -150,6 +227,8 @@ public class CheckinService {
                 checkin.getImage(),
                 checkin.getSummaryAi(),
                 checkin.getPoints(),
+                checkin.getLikesCount(),
+                userHasLiked,
                 checkin.getCreatedAt(),
                 author
         );

@@ -12,6 +12,8 @@ public record CheckinResponse(
     String image,
     String summary_ai,
     int points,
+    int likesCount,
+    boolean userHasLiked,
     OffsetDateTime createdAt,
     UserSummary author
 ) {}

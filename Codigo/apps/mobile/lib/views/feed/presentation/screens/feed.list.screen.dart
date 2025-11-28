@@ -26,6 +26,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
   final int _limit = 20;
   bool _useRecommendations = false;
   String? _errorMessage;
+  final Set<String> _likesLoading = {};
 
   @override
   void initState() {
@@ -81,6 +82,49 @@ class _FeedListScreenState extends State<FeedListScreen> {
           _loading = false;
           _errorMessage = 'Erro ao carregar feed: $e';
         });
+      }
+    }
+  }
+
+  Future<void> _toggleLike(FeedItem item) async {
+    if (_likesLoading.contains(item.id)) return;
+    
+    setState(() {
+      _likesLoading.add(item.id);
+    });
+    
+    try {
+      LikeResponse response;
+      if (item.userHasLiked) {
+        response = await _repo.unlikeCheckin(item.id);
+      } else {
+        response = await _repo.likeCheckin(item.id);
+      }
+      
+      if (mounted) {
+        setState(() {
+          // Atualizar o item na lista
+          final index = _items.indexWhere((i) => i.id == item.id);
+          if (index != -1) {
+            _items[index] = item.copyWith(
+              likesCount: response.likesCount,
+              userHasLiked: response.userHasLiked,
+            );
+          }
+          _likesLoading.remove(item.id);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _likesLoading.remove(item.id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao atualizar curtida: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -179,7 +223,11 @@ class _FeedListScreenState extends State<FeedListScreen> {
               );
             }
             final item = _items[index];
-            return FeedCard(item: item);
+            return FeedCard(
+              item: item,
+              onLike: () => _toggleLike(item),
+              isLikeLoading: _likesLoading.contains(item.id),
+            );
           },
         ),
       ),

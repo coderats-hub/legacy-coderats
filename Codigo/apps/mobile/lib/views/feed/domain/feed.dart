@@ -1,13 +1,3 @@
-// ==============================
-// Arquivo: features/feed/domain/feed.dart
-// ==============================
-//
-// Pasta 'domain':
-// Contém modelos e regras de negócio da feature 'feed'.
-//
-// Este arquivo é um template com um modelo simples de FeedItem.
-// Substitua/expanda conforme a necessidade da feature.
-
 class FeedAuthor {
   final String id;
   final String name;
@@ -44,6 +34,8 @@ class FeedItem {
   final String? image;
   final String? summaryAi;
   final int points;
+  final int likesCount;
+  final bool userHasLiked;
   final DateTime createdAt;
   final FeedAuthor author;
 
@@ -54,6 +46,8 @@ class FeedItem {
     this.image,
     this.summaryAi,
     required this.points,
+    required this.likesCount,
+    required this.userHasLiked,
     required this.createdAt,
     required this.author,
   });
@@ -66,14 +60,15 @@ class FeedItem {
       image: json['image'] as String?,
       summaryAi: json['summary_ai'] as String?,
       points: (json['points'] as num?)?.toInt() ?? 0,
+      likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
+      userHasLiked: json['userHasLiked'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       author: FeedAuthor.fromJson(json['author'] as Map<String, dynamic>),
     );
   }
 
   bool get hasGithub => description?.contains('Commits selecionados:') ?? false;
-  
-  // Extrai apenas a descrição antes dos commits
+
   String? get cleanDescription {
     if (description == null) return null;
     final parts = description!.split('\n\nCommits selecionados:');
@@ -81,7 +76,6 @@ class FeedItem {
     return parts[0].trim().isEmpty ? null : parts[0].trim();
   }
   
-  // Extrai a lista de commits
   List<String> get commits {
     if (description == null || !hasGithub) return [];
     final parts = description!.split('Commits selecionados:');
@@ -95,10 +89,48 @@ class FeedItem {
         .toList();
   }
   
-  // Conta quantos commits foram selecionados
   int get commitsCount => commits.length;
+
+  FeedItem copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? image,
+    String? summaryAi,
+    int? points,
+    int? likesCount,
+    bool? userHasLiked,
+    DateTime? createdAt,
+    FeedAuthor? author,
+  }) {
+    return FeedItem(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      image: image ?? this.image,
+      summaryAi: summaryAi ?? this.summaryAi,
+      points: points ?? this.points,
+      likesCount: likesCount ?? this.likesCount,
+      userHasLiked: userHasLiked ?? this.userHasLiked,
+      createdAt: createdAt ?? this.createdAt,
+      author: author ?? this.author,
+    );
+  }
 }
 
-// Observações:
-// - Mantenha a lógica de domínio aqui (validações, conversões simples),
-//   e deixe I/O, armazenamento e UI fora desta camada.
+class LikeResponse {
+  final int likesCount;
+  final bool userHasLiked;
+
+  LikeResponse({
+    required this.likesCount,
+    required this.userHasLiked,
+  });
+
+  factory LikeResponse.fromJson(Map<String, dynamic> json) {
+    return LikeResponse(
+      likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
+      userHasLiked: json['userHasLiked'] as bool? ?? false,
+    );
+  }
+}

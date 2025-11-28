@@ -35,4 +35,48 @@ class FeedRepository {
     // quando o backend implementar recomendações baseadas em grafos
     return fetchFeedItems(limit: limit, offset: offset);
   }
+
+  Future<LikeResponse> likeCheckin(String checkinId) async {
+    try {
+      // Remove espaços e quebras de linha que podem estar no ID
+      final cleanId = checkinId.trim().replaceAll(RegExp(r'\s+'), '');
+      final url = '/checkins/$cleanId/like';
+      
+      print('Tentando curtir checkin. ID: "$cleanId", URL: "$url"');
+      
+      final response = await _apiService.postJson(url, {});
+      
+      if (response == null) {
+        throw Exception('Resposta vazia do servidor');
+      }
+
+      print('Resposta do like: $response');
+      return LikeResponse.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      print('Erro ao curtir checkin: $e');
+      rethrow;
+    }
+  }
+
+  Future<LikeResponse> unlikeCheckin(String checkinId) async {
+    try {
+      // Remove espaços e quebras de linha que podem estar no ID
+      final cleanId = checkinId.trim().replaceAll(RegExp(r'\s+'), '');
+      final url = '/checkins/$cleanId/like';
+      
+      print('Tentando remover curtida do checkin. ID: "$cleanId", URL: "$url"');
+      
+      final response = await _apiService.deleteJson(url);
+      
+      if (response == null) {
+        throw Exception('Resposta vazia do servidor');
+      }
+
+      print('Resposta do unlike: $response');
+      return LikeResponse.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      print('Erro ao remover curtida do checkin: $e');
+      rethrow;
+    }
+  }
 }
