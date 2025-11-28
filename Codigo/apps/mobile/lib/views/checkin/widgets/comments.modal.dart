@@ -167,11 +167,19 @@ class _CommentsModalState extends State<CommentsModal> with SingleTickerProvider
                                         return Row(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            // avatar
-                                            CircleAvatar(
-                                              radius: 18,
-                                              backgroundColor: AppColors.surface.withOpacity(0.12),
-                                              child: const Icon(Icons.person, size: 18, color: Colors.white),
+                                            // avatar (clicável)
+                                            GestureDetector(
+                                              onTap: () {
+                                                // TODO: Implementar navegação para perfil quando tiver dados do usuário
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Perfil de ${c.author} - ID necessário')),
+                                                );
+                                              },
+                                              child: CircleAvatar(
+                                                radius: 18,
+                                                backgroundColor: AppColors.surface.withOpacity(0.12),
+                                                child: const Icon(Icons.person, size: 18, color: Colors.white),
+                                              ),
                                             ),
                                             const SizedBox(width: AppSpacing.md),
 

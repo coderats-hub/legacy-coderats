@@ -306,6 +306,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         controller: _scrollCtrl,
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         children: [
+          // Código
+          if (!_isLoadingDetails)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: _GroupCodeWidget(code: displayCode),
+            ),
+          const SizedBox(height: AppSpacing.md),
+
           // Banner
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -316,14 +324,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
               radius: AppCorners.lg,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Código
-          if (!_isLoadingDetails)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: _GroupCodeWidget(code: displayCode),
-            ),
           const SizedBox(height: AppSpacing.lg),
 
           // Descrição
@@ -371,6 +371,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     points: '${member.points.toStringAsFixed(0)} pontos', // Arredonda
                     pos: '${index + 1}º',
                     imageUrl: member.image,
+                    userId: member.id, // Passa o ID do usuário para navegação
+                    githubUser: member.githubUser, // Passa o GitHub user para navegação
                   );
                 }).toList(),
               );
@@ -649,13 +651,28 @@ class _CheckinTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Avatar do Autor do Check-in
-              Container(
-                width: 36, height: 36,
-                decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle),
-                child: c.author.image != null 
-                    ? ClipOval(child: Image.network(c.author.image!, fit: BoxFit.cover))
-                    : Center(child: Text(c.author.name.isNotEmpty ? c.author.name[0] : '?', style: const TextStyle(color: Colors.white))),
+              // Avatar do Autor do Check-in (clicável)
+              GestureDetector(
+                onTap: () {
+                  // Navegar para o perfil público do autor
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => PublicProfileScreen(
+                        userId: c.author.id,
+                        userName: c.author.name,
+                        userImage: c.author.image,
+                        githubUser: null, // TODO: Adicionar githubUser ao CheckinAuthor quando disponível
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle),
+                  child: c.author.image != null 
+                      ? ClipOval(child: Image.network(c.author.image!, fit: BoxFit.cover))
+                      : Center(child: Text(c.author.name[0], style: const TextStyle(color: Colors.white))),
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -703,36 +720,39 @@ class _GroupCodeWidgetState extends State<_GroupCodeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
-      onTap: () async {
-        await Clipboard.setData(ClipboardData(text: widget.code));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Código copiado!'), duration: Duration(seconds: 1)),
-          );
-        }
-      },
-      child: IntrinsicWidth(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: _isPressed ? const Color(0xFF7DCDC1).withOpacity(0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppCorners.sm),
-            border: Border.all(color: const Color(0xFF7DCDC1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
-              const SizedBox(width: 8),
-              Text(
-                'Código: ${widget.code}', 
-                style: AppTextStyles.subtitle.copyWith(color: const Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
-              ),
-            ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: () async {
+          await Clipboard.setData(ClipboardData(text: widget.code));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Código copiado!'), duration: Duration(seconds: 1)),
+            );
+          }
+        },
+        child: IntrinsicWidth(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: _isPressed ? const Color(0xFF7DCDC1).withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppCorners.sm),
+              border: Border.all(color: const Color(0xFF7DCDC1)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
+                const SizedBox(width: 8),
+                Text(
+                  'Código: ${widget.code}', 
+                  style: AppTextStyles.subtitle.copyWith(color: const Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -780,7 +800,9 @@ class _RankingTile extends StatelessWidget {
   final String points;
   final String pos;
   final String? imageUrl;
-  const _RankingTile({required this.name, required this.points, required this.pos, this.imageUrl});
+  final String? userId;
+  final String? githubUser;
+  const _RankingTile({required this.name, required this.points, required this.pos, this.imageUrl, this.userId, this.githubUser});
 
   @override
   Widget build(BuildContext context) {
@@ -793,10 +815,27 @@ class _RankingTile extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 18, 
-                  backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
-                  child: imageUrl == null ? Text(name[0]) : null,
+                GestureDetector(
+                  onTap: () {
+                    if (userId != null) {
+                      // Navegar para o perfil público do usuário
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PublicProfileScreen(
+                            userId: userId,
+                            userName: name,
+                            userImage: imageUrl,
+                            githubUser: githubUser, // Adicionar parâmetro githubUser
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: CircleAvatar(
+                    radius: 18, 
+                    backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
+                    child: imageUrl == null ? Text(name[0]) : null,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(

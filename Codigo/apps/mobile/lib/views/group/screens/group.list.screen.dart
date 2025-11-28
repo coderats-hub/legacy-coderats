@@ -212,18 +212,6 @@ class _GroupListScreenState extends State<GroupListScreen> {
           ),
         ],
       ),
-      // Botão flutuante para criar novo grupo
-      floatingActionButton: _online
-          ? AppFAB(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
-                ).then((_) => _reload());
-              },
-              icon: Icons.add,
-              tooltip: 'Criar grupo',
-            )
-          : null,
       bottomNavigationBar: AppNavbar(
         currentIndex: 1, // Grupos é o índice 1
         onTap: (index) {
