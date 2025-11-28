@@ -5,9 +5,8 @@ import java.util.UUID;
 
 public record CheckinSummary(
     UUID id,
-    String description, 
-    OffsetDateTime checkinDate,
-    UUID userId,      
-    String userName     
+    String title,
+    OffsetDateTime createdAt,
+    UserSummary author
 ) {
 }

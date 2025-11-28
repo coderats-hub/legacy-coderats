@@ -39,7 +39,6 @@ import 'package:app/core/session_manager.dart';
 
 // Domain Models
 import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/domain/checkin/checkin_author.dart';
 import 'package:app/domain/group/group.dart';
 import 'package:app/domain/group/group_details.dart';
 
@@ -105,6 +104,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   // --- ESTADO DOS CHECK-INS (PAGINAÇÃO) ---
   final _scrollCtrl = ScrollController();
   final List<Checkin> _items = [];
+  static const _checkinsPageSize = 10;
   bool _loadingCheckins = false;
   bool _hasMoreCheckins = true;
   int _page = 0;
@@ -140,12 +140,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       userRemote: userRemote,
     );
 
-    // Configura Checkin Repo apenas com dados remotos
-    final checkinRemote = CheckinRemoteService(httpClient);
-    final checkinRepo = CheckinRepository(
-      remote: checkinRemote,
-      net: connectivity,
-    );
+    // Configura Checkin Repo
+    final checkinRepo = CheckinRepository();
 
 
     if (mounted) {
@@ -199,33 +195,33 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   // Aqui vamos assumir que existe um método ou usaremos o feed geral filtrado (simulação).
   Future<void> _loadCheckins() async {
     if (_loadingCheckins || !_hasMoreCheckins || _checkinRepository == null) return;
-    
+
     setState(() => _loadingCheckins = true);
 
     try {
-      // TODO: Substituir por chamada real: await _checkinRepository!.getGroupCheckins(widget.groupId, page: _page);
-      // Como ainda não implementamos filtro por grupo no Repo, vou simular um delay e retornar lista vazia ou mock
-      // para não quebrar a UI que você quer ver.
-      
-      await Future.delayed(const Duration(seconds: 1)); // Simula rede
-      
-      // Se fosse real:
-      // final newItems = await _checkinRepository!.getCheckinsByGroup(widget.groupId, offset: _page * 20);
-      
-      // Mock temporário usando a Classe REAL de domínio
-      final newItems = _page < 2 ? _generateMockCheckinsDomain(_page) : <Checkin>[];
+      final offset = _page * _checkinsPageSize;
+      final newItems = await _checkinRepository!.fetchGroupCheckins(
+        widget.groupId,
+        limit: _checkinsPageSize,
+        offset: offset,
+      );
 
       if (mounted) {
         setState(() {
           _items.addAll(newItems);
           _page++;
-          _hasMoreCheckins = newItems.length >= 5; // Exemplo de limite
+          _hasMoreCheckins = newItems.length == _checkinsPageSize;
           _loadingCheckins = false;
         });
       }
     } catch (e) {
-      debugPrint('Erro checkins: $e');
-      if (mounted) setState(() => _loadingCheckins = false);
+      debugPrint('Erro ao carregar checkins do grupo: $e');
+      if (mounted) {
+        setState(() {
+          _loadingCheckins = false;
+          _hasMoreCheckins = false;
+        });
+      }
     }
   }
 
@@ -415,10 +411,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     // Navega para lista completa de check-ins
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const CheckinScreen(),
-                      ),
-                    );
-                  },
+                    builder: (context) => CheckinScreen(groupId: widget.groupId),
+                  ),
+                );
+              },
                   child: const Text(
                     'Visualizar com detalhes',
                     style: TextStyle(
@@ -462,7 +458,10 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           // Navega para tela de criação de check-in
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const CommitCheckinScreen(),
+              builder: (context) => CommitCheckinScreen(
+                groupId: widget.groupId,
+                groupRepository: _details?.group.repository,
+              ),
             ),
           );
         },
@@ -482,22 +481,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         },
       ),
     );
-  }
-
-  // Helper para gerar dados falsos porem usando a classe de Dominio real
-  List<Checkin> _generateMockCheckinsDomain(int page) {
-    return List.generate(5, (i) {
-      final date = DateTime.now().subtract(Duration(days: page));
-      return Checkin(
-        id: "mock-$page-$i",
-        title: "Check-in simulado #$i",
-        description: "Descrição do checkin de teste",
-        points: (i + 1) * 10,
-        createdAt: date,
-        author: CheckinAuthor(id: "u$i", name: i % 2 == 0 ? "Você" : "Alice", image: null),
-        likesCount: i,
-      );
-    });
   }
 
   Map<DateTime, List<Checkin>> _groupByDay(List<Checkin> items) {
@@ -713,14 +696,7 @@ class _CheckinTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text("+${c.points}", style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.favorite, size: 12, color: Colors.redAccent),
-                      const SizedBox(width: 2),
-                      Text("${c.likesCount}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                    ],
-                  )
+                  const SizedBox(height: 4)
                 ],
               ),
             ],

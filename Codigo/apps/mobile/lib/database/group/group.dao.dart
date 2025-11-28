@@ -112,15 +112,10 @@ class GroupDao {
   }
 
   Future<List<Group>> getGroupsByUser(String userId) async {
-    final db = _db;
-    
-    final rows = await db.rawQuery('''
-      SELECT g.* FROM groups g
-      INNER JOIN group_participants gp ON gp.group_id = g.id
-      WHERE gp.user_id = ?
-      ORDER BY g.start_date DESC
-    ''', [userId]);
-
+    final rows = await _db.query(
+      'groups',
+      orderBy: 'start_date DESC',
+    );
     return rows.map((r) => _groupFromMap(r)).toList();
   }
 
@@ -136,7 +131,7 @@ class GroupDao {
 
       await txn.delete(
         'group_participants',
-        where: 'group_id = ?',
+        where: 'group_id = ? AND role IS NULL',
         whereArgs: [details.group.id],
       );
 

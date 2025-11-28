@@ -13,6 +13,9 @@ jobs:
   # ------------------------------------------------------------
   backend:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_SYSTEM_PROMPT: ${{ vars.OPENAI_SYSTEM_PROMPT }}
     outputs:
       image_tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -158,11 +161,14 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     needs: backend
-    if: github.ref_name == 'main' || github.ref_name == 'development'
+    if: github.ref_name == 'main' || github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_SYSTEM_PROMPT: ${{ vars.OPENAI_SYSTEM_PROMPT }}
     steps:
       # Credenciais Conta 1 — usadas em development
       - name: Configure AWS credentials (Conta 1 - staging)
-        if: github.ref_name == 'development'
+        if: github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -183,11 +189,17 @@ jobs:
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             ASG_NAME="${{ vars.ASG_NAME_PROD_ACCOUNT2 }}"
             echo "🚀 Atualizando ambiente de PRODUÇÃO (Conta 2): $ASG_NAME"
+            aws autoscaling start-instance-refresh \
+             --region ${{ vars.AWS_REGION_ACCOUNT2}} \
+             --auto-scaling-group-name "$ASG_NAME" \
+             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
           else
             ASG_NAME="${{ vars.ASG_NAME_STAGING }}"
             echo "🚧 Atualizando ambiente de STAGING (Conta 1): $ASG_NAME"
+            aws autoscaling start-instance-refresh \
+             --region ${{ vars.AWS_REGION }} \
+             --auto-scaling-group-name "$ASG_NAME" \
+             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
           fi
 
-          aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name "$ASG_NAME" \
-            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
+          

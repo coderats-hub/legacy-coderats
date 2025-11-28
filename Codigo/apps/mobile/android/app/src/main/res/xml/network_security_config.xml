@@ -1,0 +1,5 @@
+<network-security-config>
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">coderats-dev-alb-687982124.us-east-2.elb.amazonaws.com</domain>
+  </domain-config>
+</network-security-config>

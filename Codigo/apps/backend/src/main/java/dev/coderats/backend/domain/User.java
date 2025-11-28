@@ -40,6 +40,9 @@ public class User {
     @Column(name = "github_id", nullable = false, unique = true)
     private Long githubId; // Mapeado de BIGINT
 
+    @Column(name = "github_access_token")
+    private String githubAccessToken;
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -76,6 +79,8 @@ public class User {
     public void setGithubUser(String githubUser) { this.githubUser = githubUser; }
     public Long getGithubId() { return githubId; }
     public void setGithubId(Long githubId) { this.githubId = githubId; }
+    public String getGithubAccessToken() { return githubAccessToken; }
+    public void setGithubAccessToken(String githubAccessToken) { this.githubAccessToken = githubAccessToken; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }

@@ -1,65 +1,46 @@
-/**
- * TELA DE CRIAÇÃO DE CHECK-IN
- * 
- * Esta tela permite ao usuário criar um novo check-in/atividade.
- * Funcionalidades principais:
- * - Upload de imagem da atividade
- * - Campo obrigatório de título
- * - Campo opcional de descrição
- * - Seleção de commits relacionados do GitHub
- * - Validação de campos obrigatórios
- * - Submissão da atividade
- * 
- * Estados da tela:
- * - Carregamento de commits
- * - Validação de formulário
- * - Feedback de sucesso/erro
- * - Contagem de commits selecionados
- */
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app/core/session_manager.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
-import 'package:google_fonts/google_fonts.dart';
-// import 'package:image_picker/image_picker.dart';  // Removido para resolver conflito Android SDK
-import 'dart:typed_data';
+
+import '../../../repositories/checkin.repository.dart';
+import '../../../repositories/github_commits.repository.dart';
+import '../../../domain/checkin/github_commit.dart';
 import '../widgets/shared_widgets.dart';
 
-// Tela para criar um novo check-in de atividade
 class CommitCheckinScreen extends StatefulWidget {
-  const CommitCheckinScreen({super.key});
+  final String? groupId;
+  final String? groupRepository;
+  const CommitCheckinScreen({super.key, this.groupId, this.groupRepository});
 
   @override
   State<CommitCheckinScreen> createState() => _CommitCheckinScreenState();
 }
 
-// Estado da tela de criação de check-in
 class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
-  // Controladores dos campos de texto
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
-  // Lista mockada de commits disponíveis (futuramente virá da API do GitHub)
-  final List<CommitItem> _commits = [
-    CommitItem(title: 'Título do commit aqui', isSelected: false),
-    CommitItem(title: 'Título do commit', isSelected: false),
-    CommitItem(title: 'Exemplo de commit já utilizado', isSelected: false, isUsed: true),
-    CommitItem(title: 'Título do commit', isSelected: false),
-  ];
-  
- // Variáveis de estado da tela
-  int _selectedCommitsCount = 0; // Contador de commits selecionados
+  final _repository = CheckinRepository();
+  final _githubCommitsRepository = GithubCommitsRepository();
+  final SessionManager _session = SessionManager.instance;
+
   Uint8List? _pickedImageBytes;
-  bool _showTitleError = false; // Controla exibição do erro de título 
-  
-  @override
-  void initState() {
-    super.initState();
-    // Listener para atualizar o botão quando o título muda
-    _titleController.addListener(() {
-      setState(() {});
-    });
-  }
+  bool _showTitleError = false;
+  bool _isSubmitting = false;
+  bool _showCommitSelectionError = false;
+
+  List<GithubCommit> _commits = [];
+  final Map<String, GithubCommit> _selectedCommits = {};
+  bool _isLoadingCommits = false;
+  String? _commitErrorMessage;
+  int _commitPage = 1;
+  final int _commitPageSize = 5;
+  final int _commitLookbackHours = 24;
+  bool _hasMoreCommits = true;
+  String? _groupRepository;
 
   @override
   void dispose() {
@@ -68,39 +49,205 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     super.dispose();
   }
 
-  void _toggleCommit(int index) {
-    if (_commits[index].isUsed) return;
-    
+  @override
+  void initState() {
+    super.initState();
+    _titleController.addListener(() => setState(() {}));
+    _groupRepository = widget.groupRepository;
+    _loadCommits();
+  }
+
+  void _selectImage() async {
+    final source = await ImageSourceModal.show(context);
+    if (source == null) return;
+    // Upload de imagem desabilitado; apenas UI.
+  }
+
+  Future<String?> _ensureGroupRepository(String groupId) async {
+    if (_groupRepository != null && _groupRepository!.isNotEmpty) {
+      return _groupRepository;
+    }
+    final repo = await _githubCommitsRepository.fetchGroupRepository(groupId);
+    if (repo != null && repo.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _groupRepository = repo;
+        });
+      } else {
+        _groupRepository = repo;
+      }
+    }
+    return _groupRepository;
+  }
+
+  Future<void> _loadCommits({bool loadMore = false}) async {
+    if (_isLoadingCommits) return;
+    final groupId = widget.groupId ?? dotenv.env['DEFAULT_GROUP_ID'];
+    if (groupId == null || groupId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _commits = [];
+          _hasMoreCommits = false;
+          _commitErrorMessage =
+              'Defina DEFAULT_GROUP_ID no .env ou passe um groupId para carregar commits.';
+        });
+      }
+      return;
+    }
+    final nextPage = loadMore ? _commitPage + 1 : 1;
+
+    if (mounted) {
+      setState(() {
+        _isLoadingCommits = true;
+        _commitErrorMessage = null;
+        if (!loadMore) {
+          _commits = [];
+          _hasMoreCommits = true;
+        }
+      });
+    }
+
+    try {
+      final repoUrl = await _ensureGroupRepository(groupId);
+      if (repoUrl == null || repoUrl.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _commitErrorMessage =
+                'Grupo não possui repositório configurado. Atualize o cadastro do grupo e tente novamente.';
+            _isLoadingCommits = false;
+            _hasMoreCommits = false;
+          });
+        }
+        return;
+      }
+
+      final githubUsername = _session.currentUser?.githubUser;
+      final items = await _githubCommitsRepository.fetchCommits(
+        groupId: groupId,
+        page: nextPage,
+        size: _commitPageSize,
+        hours: _commitLookbackHours,
+        repoUrl: repoUrl,
+        githubUsername: githubUsername,
+      );
+      if (!mounted) return;
+      setState(() {
+        _commitPage = nextPage;
+        if (loadMore) {
+          _commits = [..._commits, ...items];
+        } else {
+          _commits = items;
+          _selectedCommits.removeWhere(
+            (sha, _) => !_commits.any((c) => c.sha == sha),
+          );
+        }
+        _hasMoreCommits = items.length == _commitPageSize;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _commitErrorMessage = 'Não foi possível carregar commits: $e';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() => _isLoadingCommits = false);
+    }
+  }
+
+  void _toggleCommitSelection(GithubCommit commit) {
     setState(() {
-      _commits[index].isSelected = !_commits[index].isSelected;
-      _selectedCommitsCount = _commits.where((commit) => commit.isSelected).length;
+      if (_selectedCommits.containsKey(commit.sha)) {
+        _selectedCommits.remove(commit.sha);
+      } else {
+        _selectedCommits[commit.sha] = commit;
+        if (_titleController.text.isEmpty && commit.message.isNotEmpty) {
+          _titleController.text = commit.message;
+        }
+      }
+      _showCommitSelectionError = _selectedCommits.isEmpty;
     });
   }
 
-  // Seleção de imagem usando modal compartilhado
-  void _selectImage() async {
-    final source = await ImageSourceModal.show(context);
-    
-    if (source == null) return;
-    
-    // Image picker functionality disabled - only UI works
-    /*
-    try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
-        imageQuality: 80,
-        maxWidth: 1280,
-      );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _pickedImageBytes = bytes;
-      });
-    } catch (e) {
-      // ignore
+  String _buildCommitSummary() {
+    if (_selectedCommits.isEmpty) return '';
+    final buffer = StringBuffer('Commits selecionados:');
+    for (final commit in _selectedCommits.values) {
+      final repo = commit.repository.isNotEmpty ? commit.repository : 'repositório';
+      final shortSha =
+          commit.sha.length > 7 ? commit.sha.substring(0, 7) : commit.sha;
+      buffer.writeln();
+      buffer.write('- ${commit.message.isNotEmpty ? commit.message : 'Commit sem mensagem'}');
+      buffer.write(' • $repo ($shortSha)');
     }
-    */
+    return buffer.toString().trim();
+  }
+
+  String _composeDescription(String commitSummary) {
+    final pieces = <String>[];
+    final description = _descriptionController.text.trim();
+    if (description.isNotEmpty) {
+      pieces.add(description);
+    }
+    if (commitSummary.isNotEmpty) {
+      pieces.add(commitSummary);
+    }
+    return pieces.join('\n\n');
+  }
+
+  Future<void> _submitCheckin() async {
+    final groupId = widget.groupId ?? dotenv.env['DEFAULT_GROUP_ID'];
+    if (groupId == null || groupId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Defina DEFAULT_GROUP_ID no .env ou passe o groupId para criar check-in.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_titleController.text.isEmpty) {
+      setState(() => _showTitleError = true);
+      return;
+    }
+
+    if (_selectedCommits.isEmpty) {
+      setState(() => _showCommitSelectionError = true);
+      return;
+    }
+
+    final commitSummary = _buildCommitSummary();
+    final composedDescription = _composeDescription(commitSummary);
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await _repository.createCheckin(
+        groupId: groupId,
+        title: _titleController.text,
+        description: composedDescription.isNotEmpty ? composedDescription : null,
+        summaryAi: commitSummary.isNotEmpty ? commitSummary : null,
+        commits: _selectedCommits.values.toList(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Check-in criado com sucesso!'),
+          backgroundColor: AppColors.accent,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao criar check-in: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -113,45 +260,26 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
           title: 'Code Rats',
         ),
         body: SafeArea(
-          child: _buildBody(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSpacing.lg),
+                _buildImageUploadSection(),
+                const SizedBox(height: AppSpacing.xl),
+                _buildTitleField(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildDescriptionField(),
+                const SizedBox(height: AppSpacing.lg),
+                _buildCommitSelector(),
+                const SizedBox(height: AppSpacing.xxl),
+                _buildSubmitButton(),
+                const SizedBox(height: AppSpacing.xxxl),
+              ],
+            ),
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSpacing.lg),
-          
-          // Seção de upload de imagem
-          _buildImageUploadSection(),
-          
-          const SizedBox(height: AppSpacing.xl),
-          
-          // Campo de título
-          _buildTitleField(),
-          
-          const SizedBox(height: AppSpacing.lg),
-          
-          // Campo de descrição
-          _buildDescriptionField(),
-          
-          const SizedBox(height: AppSpacing.xl),
-          
-          // Seção de seleção de commits
-          _buildCommitsSection(),
-          
-          const SizedBox(height: AppSpacing.xxl),
-          
-          // Botão de envio
-          _buildSubmitButton(),
-          
-          const SizedBox(height: AppSpacing.xxxl),
-        ],
       ),
     );
   }
@@ -203,45 +331,33 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            RichText(
-              text: TextSpan(
-                text: 'Título',
-                style: AppTextStyles.inputLabel,
-                children: const [
-                  TextSpan(
-                    text: ' *',
-                    style: TextStyle(color: AppColors.error),
-                  ),
-                ],
-              ),
-            ),
-            if (_showTitleError) ...[
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Título é obrigatório',
-                style: AppTextStyles.inputHint.copyWith(
-                  color: AppColors.error,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SharedTextField(
+        Text('T\u00edtulo', style: AppTextStyles.inputLabel),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
           controller: _titleController,
-          placeholder: 'Insira o título da sua atividade',
-          label: null,
-          enabled: true,
-          onChanged: (value) {
-            if (_showTitleError && value.isNotEmpty) {
-              setState(() {
-                _showTitleError = false;
-              });
-            }
-          },
+          decoration: InputDecoration(
+            hintText: 'Digite o t\u00edtulo do check-in',
+            hintStyle: AppTextStyles.inputHint,
+            errorText: _showTitleError ? 'Campo obrigat\u00f3rio' : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.accent, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.surface,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+          ),
         ),
       ],
     );
@@ -251,187 +367,250 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Descrição',
-          style: AppTextStyles.inputLabel,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SharedTextField(
+        Text('Descri\u00e7\u00e3o', style: AppTextStyles.inputLabel),
+        const SizedBox(height: AppSpacing.xs),
+        TextField(
           controller: _descriptionController,
-          placeholder: 'Insira uma descrição para sua atividade',
-          label: null,
-          maxLines: 5,
-          enabled: true,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Conte o que voc\u00ea fez',
+            hintStyle: AppTextStyles.inputHint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              borderSide: const BorderSide(color: AppColors.accent, width: 2),
+            ),
+            filled: true,
+            fillColor: AppColors.surface,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildCommitsSection() {
+  Widget _buildCommitSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Selecionar commits',
-          style: AppTextStyles.inputLabel,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text('Selecionar commits', style: AppTextStyles.inputLabel),
+            ),
+            if (_showCommitSelectionError)
+              Text(
+                'Selecione pelo menos 1 commit',
+                style: AppTextStyles.inputHint.copyWith(
+                  color: AppColors.error,
+                  fontSize: 12,
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        if (_selectedCommitsCount == 0)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: Row(
+        if (_isLoadingCommits && _commits.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (_commitErrorMessage != null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+              border: Border.all(color: AppColors.error.withOpacity(0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 16,
-                  color: AppColors.error,
-                ),
-                const SizedBox(width: AppSpacing.xs),
                 Text(
-                  'Selecione pelo menos 1 commit',
-                  style: AppTextStyles.inputHint.copyWith(color: AppColors.error),
+                  'Não foi possível carregar os commits recentes.',
+                  style: AppTextStyles.inputLabel.copyWith(color: AppColors.error),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Verifique sua conexão e tente novamente.',
+                  style: AppTextStyles.inputHint,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.accent,
+                    ),
+                    onPressed: _isLoadingCommits ? null : () => _loadCommits(),
+                    child: const Text('Tentar novamente'),
+                  ),
                 ),
               ],
             ),
+          )
+        else if (_commits.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppCorners.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nenhum commit recente encontrado.',
+                  style: AppTextStyles.inputHint,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Faça um novo push no GitHub e toque em "Carregar mais +" para atualizar.',
+                  style: AppTextStyles.inputHint.copyWith(fontSize: 14),
+                ),
+              ],
+            ),
+          )
+        else
+          Column(
+            children: _commits.map(_buildCommitCard).toList(),
           ),
-        // Lista de commits
-        Column(
-          children: _commits.asMap().entries.map((entry) {
-            int index = entry.key;
-            CommitItem commit = entry.value;
-            return _buildCommitItem(commit, index);
-          }).toList(),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        // Botão carregar mais
-        Center(
-          child: TextButton(
-            onPressed: () {
-              // TODO: Implementar carregar mais commits
-            },
-            child: Text(
-              'Carregar mais +',
-              style: AppTextStyles.inputHint.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-                fontSize: 10,
+        if (_hasMoreCommits && _commits.isNotEmpty)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accent,
               ),
+              onPressed: _isLoadingCommits ? null : () => _loadCommits(loadMore: true),
+              child: _isLoadingCommits
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Carregar mais +'),
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildCommitItem(CommitItem commit, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: commit.isUsed 
-          ? AppColors.surface.withOpacity(0.5)
-          : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppCorners.sm),
-        border: Border.all(
-          color: commit.isSelected 
-            ? AppColors.accent
-            : AppColors.border.withOpacity(0.2),
-          width: commit.isSelected ? 2 : 1,
+  Widget _buildCommitCard(GithubCommit commit) {
+    final isSelected = _selectedCommits.containsKey(commit.sha);
+    final dateText = _formatCommitDate(commit.committedAt);
+
+    return GestureDetector(
+      onTap: () => _toggleCommitSelection(commit),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppCorners.md),
+          border: Border.all(
+            color: isSelected ? AppColors.accent : AppColors.border.withOpacity(0.4),
+            width: isSelected ? 2 : 1,
+          ),
         ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppCorners.sm),
-          splashColor: AppColors.accent.withOpacity(0.1),
-          highlightColor: AppColors.accent.withOpacity(0.05),
-          onTap: () => _toggleCommit(index),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
-            title: Text(
-              commit.title,
-              style: AppTextStyles.inputLabel.copyWith(
-                color: commit.isUsed ? AppColors.textSecondary : AppColors.textPrimary,
-                fontWeight: FontWeight.w400,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    commit.message.isNotEmpty ? commit.message : 'Commit sem mensagem',
+                    style: AppTextStyles.inputLabel,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    commit.repository,
+                    style: AppTextStyles.inputHint.copyWith(fontSize: 14),
+                  ),
+                  if (dateText.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      dateText,
+                      style: AppTextStyles.inputHint.copyWith(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            trailing: commit.isUsed 
-              ? const Icon(
-                  Icons.check_box,
-                  color: AppColors.textSecondary,
-                  size: 24,
-                )
-              : Checkbox(
-                  value: commit.isSelected,
-                  onChanged: (value) => _toggleCommit(index),
-                  activeColor: AppColors.accent,
-                  side: BorderSide(
-                    color: AppColors.border.withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-          ),
+            Checkbox(
+              value: isSelected,
+              onChanged: (_) => _toggleCommitSelection(commit),
+              activeColor: AppColors.accent,
+              side: const BorderSide(color: AppColors.border),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  String _formatCommitDate(DateTime? date) {
+    if (date == null) return '';
+    String two(int value) => value.toString().padLeft(2, '0');
+    final local = date.toLocal();
+    return '${two(local.day)}/${two(local.month)}/${local.year} ${two(local.hour)}:${two(local.minute)}';
+  }
+
   Widget _buildSubmitButton() {
-    final bool canSubmit = _titleController.text.isNotEmpty && _selectedCommitsCount > 0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: SizedBox(
         width: double.infinity,
         height: 48,
         child: AppButton(
-          text: 'Fazer Check-in',
-          onPressed: _submitCheckin, // Sempre permite clicar para mostrar validações
+          text: _isSubmitting ? 'Enviando...' : 'Fazer Check-in',
+          onPressed: _handleSubmit,
         ),
       ),
     );
   }
-
-  void _submitCheckin() {
-    if (_titleController.text.isEmpty) {
+  
+  void _handleSubmit() {
+    if (_isSubmitting) {
+      return;
+    }
+    final missingTitle = _titleController.text.isEmpty;
+    final missingCommits = _selectedCommits.isEmpty;
+    if (missingTitle || missingCommits) {
       setState(() {
-        _showTitleError = true;
+        _showTitleError = missingTitle;
+        _showCommitSelectionError = missingCommits;
       });
       return;
     }
-
-    if (_selectedCommitsCount == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, selecione pelo menos um commit'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    // TODO: Implementar envio do checkin
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Check-in criado com sucesso!'),
-        backgroundColor: AppColors.accent,
-      ),
-    );
-
-    // Voltar para a tela anterior
-    Navigator.of(context).pop();
+    _submitCheckin();
   }
-}
-
-// ======== MODELS ========
-
-// Modelo para representar um commit do GitHub
-class CommitItem {
-  final String title;    // Título/mensagem do commit
-  bool isSelected;       // Se está selecionado para o check-in
-  final bool isUsed;     // Se já foi usado em outro check-in
-
-  CommitItem({
-    required this.title,
-    this.isSelected = false, // Por padrão não selecionado
-    this.isUsed = false,     // Por padrão não usado
-  });
 }
