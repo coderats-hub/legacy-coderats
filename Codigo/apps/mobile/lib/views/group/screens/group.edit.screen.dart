@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:file_selector/file_selector.dart';
 
 class GroupEditScreen extends StatefulWidget {
   final String initialName;
@@ -41,25 +41,27 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     final source = await ImageSourceModal.show(context);
     if (source == null) return;
     
-    // Image picker functionality disabled - only UI works
-    /*
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
-        imageQuality: 80,
-        maxWidth: 1280,
+      final typeGroup = const XTypeGroup(
+        label: 'images',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
       );
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null) return;
       final bytes = await file.readAsBytes();
+      if (!mounted) return;
       setState(() {
-        _pickedImage = file;
         _pickedImageBytes = bytes;
       });
     } catch (e) {
-      // ignore
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar imagem: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
-    */
   }
 
   void _save() {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app/core/session_manager.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:file_selector/file_selector.dart';
 
 import '../../../repositories/checkin.repository.dart';
 import '../../../repositories/github_commits.repository.dart';
@@ -60,7 +62,28 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   void _selectImage() async {
     final source = await ImageSourceModal.show(context);
     if (source == null) return;
-    // Upload de imagem desabilitado; apenas UI.
+
+    try {
+      final typeGroup = const XTypeGroup(
+        label: 'images',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
+      );
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _pickedImageBytes = bytes;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar imagem: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   Future<String?> _ensureGroupRepository(String groupId) async {
@@ -226,6 +249,7 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
         groupId: groupId,
         title: _titleController.text,
         description: composedDescription.isNotEmpty ? composedDescription : null,
+        image: _pickedImageBytes != null ? base64Encode(_pickedImageBytes!) : null,
         summaryAi: commitSummary.isNotEmpty ? commitSummary : null,
         commits: _selectedCommits.values.toList(),
       );

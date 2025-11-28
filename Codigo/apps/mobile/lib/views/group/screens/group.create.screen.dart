@@ -3,6 +3,8 @@ import 'package:app/views/group/screens/group.scoring.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
+import 'package:file_selector/file_selector.dart';
+import 'dart:convert';
 import 'dart:typed_data';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -141,9 +143,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 : null,
             startDate: _startDate!,
             endDate: _endDate!,
-            // Como o ImagePicker está desativado, passamos null.
-            // Futuramente, se tiver bytes, você precisaria fazer upload antes ou passar base64 string
-            image: null, 
+            image: _pickedImageBytes != null ? base64Encode(_pickedImageBytes!) : null, 
           ),
         ),
       );
