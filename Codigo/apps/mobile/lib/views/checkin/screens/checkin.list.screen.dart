@@ -164,28 +164,29 @@ class _CheckinScreenState extends State<CheckinScreen> {
   }
 
   Widget _buildCheckinsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      itemCount: _checkins.length,
-      itemBuilder: (context, index) {
-        final c = _checkins[index];
-        final username = c.author.name ?? 'Desconhecido';
-        final timeAgo = _formatTimeAgo(c.createdAt);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _PostCard(
-            username: username,
-            title: c.title,
-            description: c.description ?? '',
-            timeAgo: timeAgo,
-            color: const Color(0xFF25A18E),
-            isGradient: true,
-            gradientColors: const [Color(0xFF25A18E), Color(0x3325A18E)],
-            points: c.points,
-            githubText: c.summaryAi ?? '',
-          ),
-        );
-      },
+    return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
+      onRefresh: _loadCheckins,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: _checkins.length,
+        itemBuilder: (context, index) {
+          final checkin = _checkins[index];
+          return _CheckinCard(
+            checkin: checkin,
+            onTap: () => _showCheckinDetails(checkin),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showCheckinDetails(Checkin checkin) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => _CheckinDetailModal(checkin: checkin),
     );
   }
 
@@ -198,163 +199,585 @@ class _CheckinScreenState extends State<CheckinScreen> {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-  
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-      ),
-    );
-  }
-}
+// Card moderno para cada check-in
+class _CheckinCard extends StatelessWidget {
+  final Checkin checkin;
+  final VoidCallback onTap;
 
-class _PostCard extends StatelessWidget {
-  const _PostCard({
-    required this.username,
-    required this.title,
-    required this.description,
-    required this.timeAgo,
-    required this.color,
-    required this.isGradient,
-    this.gradientColors,
-    required this.points,
-    required this.githubText,
+  const _CheckinCard({
+    required this.checkin,
+    required this.onTap,
   });
 
-  final String username;
-  final String title;
-  final String description;
-  final String timeAgo;
-  final Color color;
-  final bool isGradient;
-  final List<Color>? gradientColors;
-  final int points;
-  final String githubText;
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.lg),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  // TODO: Adicionar ID do usuário quando disponível
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Perfil de $username - ID necessário')),
-                  );
-                },
-                child: const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.surface,
-                  child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(username, style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w500)),
-              const Spacer(),
-              Text('$points pnts', style: AppTextStyles.inputHint),
-            ],
-          ),
+    final hasGithub = checkin.summaryAi != null && checkin.summaryAi!.isNotEmpty;
+    final timeAgo = _formatTimeAgo(checkin.createdAt);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppCorners.lg),
+        border: Border.all(
+          color: AppColors.border,
+          width: 1,
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Container(
-            height: 329,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: isGradient && gradientColors != null
-                  ? LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                      colors: gradientColors!,
-                    )
-                  : null,
-              color: isGradient ? null : color,
-              borderRadius: BorderRadius.circular(AppCorners.md),
-            ),
-            child: Stack(
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppCorners.lg),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (githubText.isNotEmpty)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 50,
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                // Header com avatar e info do usuário
+                Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.background.withOpacity(0.5),
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(AppCorners.md),
-                          bottomRight: Radius.circular(AppCorners.md),
-                        ),
+                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                        image: checkin.author.image != null && checkin.author.image!.isNotEmpty
+                            ? DecorationImage(
+                                image: NetworkImage(checkin.author.image!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: checkin.author.image == null || checkin.author.image!.isEmpty
+                          ? Text(
+                              checkin.author.name?.isNotEmpty == true 
+                                  ? checkin.author.name![0].toUpperCase() 
+                                  : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    // Info do usuário
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(githubText, style: AppTextStyles.inputHint.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(width: AppSpacing.sm),
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.xs),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(AppCorners.sm),
+                          Text(
+                            checkin.author.name ?? 'Usuário Desconhecido',
+                            style: AppTextStyles.subtitle.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
                             ),
-                            child: const Icon(Icons.code_outlined, color: AppColors.textPrimary, size: 16),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            timeAgo,
+                            style: AppTextStyles.inputHint.copyWith(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    // Points e badge GitHub
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(AppCorners.sm),
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            '${checkin.points} pts',
+                            style: AppTextStyles.inputLabel.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        if (hasGithub) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF6A00F4), Color(0xFF9B22FF)],
+                              ),
+                              borderRadius: BorderRadius.circular(AppCorners.sm),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.auto_awesome,
+                                  size: 10,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'IA',
+                                  style: AppTextStyles.inputLabel.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: AppSpacing.md),
+                
+                // Título do check-in
+                Text(
+                  checkin.title,
+                  style: AppTextStyles.inputLabel.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
+                ),
+                
+                // Descrição (limitada)
+                if (checkin.description != null && checkin.description!.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    checkin.description!,
+                    style: AppTextStyles.subtitle.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                
+                const SizedBox(height: AppSpacing.sm),
+                
+                // Footer com indicador para mais detalhes
+                Row(
+                  children: [
+                    if (hasGithub) ...[
+                      Icon(
+                        Icons.commit,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Com commits',
+                        style: AppTextStyles.inputHint.copyWith(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                    ] else 
+                      const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      ),
+    );
+  }
+  
+  String _formatTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 1) return 'Agora mesmo';
+    if (diff.inMinutes < 60) return 'Há ${diff.inMinutes} min';
+    if (diff.inHours < 24) return 'Há ${diff.inHours}h';
+    if (diff.inDays < 30) return 'Há ${diff.inDays} dia${diff.inDays > 1 ? 's' : ''}';
+    return 'Há ${(diff.inDays / 30).floor()} mês${(diff.inDays / 30).floor() > 1 ? 'es' : ''}';
+  }
+}
+
+// Modal responsivo para exibir detalhes completos do check-in
+class _CheckinDetailModal extends StatelessWidget {
+  final Checkin checkin;
+
+  const _CheckinDetailModal({required this.checkin});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final maxHeight = screenHeight * 0.85;
+    
+    final hasGithub = checkin.summaryAi != null && checkin.summaryAi!.isNotEmpty;
+    final commits = _parseCommits(checkin.description ?? '');
+    
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? AppSpacing.md : AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isSmallScreen ? double.infinity : 500,
+          maxHeight: maxHeight,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D2D2D),
+            borderRadius: BorderRadius.circular(AppCorners.lg),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              // Header
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? AppSpacing.md : AppSpacing.lg),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTextStyles.inputLabel.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(child: Text(description, style: AppTextStyles.inputHint)),
+                    Expanded(
+                      child: Text(
+                        checkin.title,
+                        style: AppTextStyles.title.copyWith(
+                          fontSize: isSmallScreen ? 16 : 18,
+                          color: Colors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                child: Text(timeAgo, style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary)),
+
+              // Conteúdo scrollável
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isSmallScreen ? AppSpacing.md : AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Info do autor
+                      Row(
+                        children: [
+                          Container(
+                            width: isSmallScreen ? 36 : 40,
+                            height: isSmallScreen ? 36 : 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary,
+                              image: checkin.author.image != null && checkin.author.image!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(checkin.author.image!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: checkin.author.image == null || checkin.author.image!.isEmpty
+                                ? Text(
+                                    checkin.author.name?.isNotEmpty == true 
+                                        ? checkin.author.name![0].toUpperCase() 
+                                        : '?',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isSmallScreen ? 14 : 16,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  checkin.author.name ?? 'Usuário Desconhecido',
+                                  style: AppTextStyles.subtitle.copyWith(
+                                    fontSize: isSmallScreen ? 14 : 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  _formatDate(checkin.createdAt),
+                                  style: AppTextStyles.inputHint.copyWith(
+                                    fontSize: isSmallScreen ? 11 : 12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(AppCorners.sm),
+                              border: Border.all(color: AppColors.primary, width: 1),
+                            ),
+                            child: Text(
+                              '${checkin.points} pts',
+                              style: AppTextStyles.inputLabel.copyWith(
+                                fontSize: isSmallScreen ? 11 : 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      SizedBox(height: isSmallScreen ? AppSpacing.md : AppSpacing.lg),
+                      
+                      // Descrição completa
+                      if (checkin.description != null && checkin.description!.isNotEmpty) ...[
+                        Text(
+                          'Descrição',
+                          style: AppTextStyles.inputLabel.copyWith(
+                            fontSize: isSmallScreen ? 13 : 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Container(
+                          padding: EdgeInsets.all(isSmallScreen ? AppSpacing.sm : AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.background.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(AppCorners.md),
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _cleanDescription(checkin.description!),
+                            style: AppTextStyles.subtitle.copyWith(
+                              fontSize: isSmallScreen ? 13 : 14,
+                              color: AppColors.textPrimary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+
+                      // Resumo IA (se disponível)
+                      if (hasGithub) ...[
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isSmallScreen ? AppSpacing.xs : AppSpacing.sm,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF6A00F4), Color(0xFF9B22FF)],
+                                ),
+                                borderRadius: BorderRadius.circular(AppCorners.sm),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.auto_awesome,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Resumo IA',
+                                    style: AppTextStyles.inputLabel.copyWith(
+                                      fontSize: isSmallScreen ? 11 : 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Container(
+                          padding: EdgeInsets.all(isSmallScreen ? AppSpacing.sm : AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppCorners.md),
+                            border: Border.all(
+                              color: const Color(0xFF6A00F4).withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            checkin.summaryAi!,
+                            style: AppTextStyles.subtitle.copyWith(
+                              fontSize: isSmallScreen ? 13 : 14,
+                              color: AppColors.textPrimary,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+
+                      // Lista de commits (se disponível)
+                      if (commits.isNotEmpty) ...[
+                        Text(
+                          'Commits (${commits.length})',
+                          style: AppTextStyles.inputLabel.copyWith(
+                            fontSize: isSmallScreen ? 13 : 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        ...commits.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final commit = entry.value;
+                          return Container(
+                            margin: EdgeInsets.only(
+                              bottom: index < commits.length - 1
+                                  ? (isSmallScreen ? AppSpacing.xs : AppSpacing.sm)
+                                  : 0,
+                            ),
+                            padding: EdgeInsets.all(isSmallScreen ? AppSpacing.xs : AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.background.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(AppCorners.sm),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(top: 6),
+                                  width: isSmallScreen ? 4 : 6,
+                                  height: isSmallScreen ? 4 : 6,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(width: isSmallScreen ? AppSpacing.xs : AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    commit,
+                                    style: AppTextStyles.subtitle.copyWith(
+                                      fontSize: isSmallScreen ? 12 : 13,
+                                      color: AppColors.textSecondary,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Container(
-            height: 1,
-            width: double.infinity,
-            color: AppColors.border,
-            margin: const EdgeInsets.only(top: AppSpacing.xs),
-          ),
-        ),
-      ],
+      ),
     );
+  }
+  
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 30) {
+      return 'Há ${(difference.inDays / 30).floor()} ${(difference.inDays / 30).floor() == 1 ? 'mês' : 'meses'}';
+    } else if (difference.inDays > 0) {
+      return 'Há ${difference.inDays} ${difference.inDays == 1 ? 'dia' : 'dias'}';
+    } else if (difference.inHours > 0) {
+      return 'Há ${difference.inHours} ${difference.inHours == 1 ? 'hora' : 'horas'}';
+    } else if (difference.inMinutes > 0) {
+      return 'Há ${difference.inMinutes} ${difference.inMinutes == 1 ? 'minuto' : 'minutos'}';
+    } else {
+      return 'Agora mesmo';
+    }
+  }
+  
+  String _cleanDescription(String description) {
+    final parts = description.split('\n\nCommits selecionados:');
+    if (parts.isEmpty) return description;
+    return parts[0].trim().isEmpty ? description : parts[0].trim();
+  }
+  
+  List<String> _parseCommits(String description) {
+    if (!description.contains('Commits selecionados:')) return [];
+    
+    final parts = description.split('Commits selecionados:');
+    if (parts.length < 2) return [];
+    
+    final commitSection = parts[1].trim();
+    return commitSection
+        .split('\n')
+        .where((line) => line.trim().startsWith('-'))
+        .map((line) => line.trim().substring(1).trim())
+        .toList();
   }
 }
