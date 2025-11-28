@@ -65,45 +65,19 @@ class _GithubCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Container(
-            height: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppCorners.lg),
-              gradient: _getGradient(),
-            ),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: GestureDetector(
-                onTap: () {
-                  GitHubActivityModal.show(
-                    context,
-                    title: item.title,
-                    description: item.cleanDescription,
-                    summaryAi: item.summaryAi,
-                    commits: item.commits,
-                  );
-                },
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A0B3C).withOpacity(0.9),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppCorners.lg)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Expanded(
-                        child: Text('Visualizar atividade Github', textAlign: TextAlign.center, style: AppTextStyles.button),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(left: AppSpacing.sm),
-                        child: const Icon(Icons.code, color: Colors.white, size: 20),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          _MediaPreview(
+            imageUrl: item.image,
+            fallbackGradient: _getGradient(),
+            cta: _GithubCTA(
+              onTap: () {
+                GitHubActivityModal.show(
+                  context,
+                  title: item.title,
+                  description: item.cleanDescription,
+                  summaryAi: item.summaryAi,
+                  commits: item.commits,
+                );
+              },
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -195,6 +169,15 @@ class _RegularCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
+          if (item.image != null && item.image!.isNotEmpty) ...[
+            _MediaPreview(
+              imageUrl: item.image,
+              fallbackGradient: null,
+              cta: null,
+              height: 200,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           Text.rich(
             TextSpan(
               children: [
@@ -293,5 +276,82 @@ String _formatDate(DateTime date) {
     return 'Há ${difference.inMinutes} ${difference.inMinutes == 1 ? 'minuto' : 'minutos'}';
   } else {
     return 'Agora mesmo';
+  }
+}
+
+class _MediaPreview extends StatelessWidget {
+  final String? imageUrl;
+  final Gradient? fallbackGradient;
+  final Widget? cta;
+  final double height;
+
+  const _MediaPreview({
+    this.imageUrl,
+    this.fallbackGradient,
+    this.cta,
+    this.height = 220,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppCorners.lg),
+      child: Stack(
+        children: [
+          SizedBox(
+            height: height,
+            width: double.infinity,
+            child: imageUrl != null && imageUrl!.isNotEmpty
+                ? Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) {
+                      return Container(decoration: BoxDecoration(gradient: fallbackGradient));
+                    },
+                  )
+                : Container(decoration: BoxDecoration(gradient: fallbackGradient)),
+          ),
+          if (cta != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: cta!,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GithubCTA extends StatelessWidget {
+  final VoidCallback onTap;
+  const _GithubCTA({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A0B3C).withOpacity(0.9),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppCorners.lg)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Expanded(
+              child: Text('Visualizar atividade Github', textAlign: TextAlign.center, style: AppTextStyles.button),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: AppSpacing.sm),
+              child: const Icon(Icons.code, color: Colors.white, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

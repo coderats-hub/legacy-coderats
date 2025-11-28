@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:app/core/session_manager.dart';
 import 'package:app/domain/checkin/checkin.dart';
+import 'package:app/domain/group/group.dart';
 import 'package:app/domain/group/group_participant.dart';
 
 import 'package:app/repositories/checkin.repository.dart';
@@ -54,6 +55,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   // Data
   List<Checkin> _items = [];
   List<GroupParticipant> _ranking = [];
+  Group? _group;
 
   // UI State
   bool _isLoading = true;
@@ -106,17 +108,22 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
   }
 
   Future<void> _loadData() async {
-    if (_checkinRepository == null) return;
+    if (_checkinRepository == null || _groupRepository == null) return;
     setState(() => _isLoading = true);
 
     try {
+      final details = await _groupRepository!.getGroupDetails(widget.groupId);
+      final participantsFromDetails = details.participants;
+
       final checkins = await _checkinRepository!.fetchGroupCheckins(
         widget.groupId,
         limit: _checkinsPageSize,
         offset: 0,
       );
 
-      final rankingProcessed = _extractRankingFromCheckins(checkins);
+      final rankingProcessed = participantsFromDetails.isNotEmpty
+          ? participantsFromDetails
+          : _extractRankingFromCheckins(checkins);
 
       // Simple role detection
       final myId = SessionManager.instance.currentUserId;
@@ -124,7 +131,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       if (myId != null && rankingProcessed.isNotEmpty) {
         try {
           final myData = rankingProcessed.firstWhere((p) => p.id == myId);
-          role = myData.role;
+          role = myData.role ?? role;
         } catch (_) {}
       }
 
@@ -133,6 +140,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
           _items = checkins;
           _ranking = rankingProcessed;
           _currentUserRole = role;
+          _group = details.group;
           _page = 1;
           _hasMore = checkins.length >= _checkinsPageSize;
           _isLoading = false;
@@ -206,10 +214,12 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     }
     if (_isLoadingMore) rows.add(_Row.loader());
 
-    final displayName = widget.groupNamePreview ?? 'Grupo';
-    final displayImage = widget.imageUrlPreview;
-    final displayDesc =
-        widget.descriptionPreview ?? 'Sem descrição disponível.';
+    final displayName = _group?.name ?? widget.groupNamePreview ?? 'Grupo';
+    final displayImage = _group?.image ?? widget.imageUrlPreview;
+    final displayDesc = _group?.description ??
+        widget.descriptionPreview ??
+        'Sem descrição disponível.';
+    final displayCode = _group?.code;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -236,6 +246,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
+
+                if (displayCode != null && displayCode.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: GroupCodeWidget(code: displayCode),
+                  ),
+                if (displayCode != null && displayCode.isNotEmpty)
+                  const SizedBox(height: AppSpacing.lg),
 
                 // Código (Exemplo fixo ou vazio já que API não retorna)
                 // Padding(
@@ -291,20 +309,53 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: RankingChip(
-                        label: 'Ver Todo Ranking',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => GroupRankingScreen(
-                                participants: _ranking,
+                    child: Row(
+                      children: [
+                        RankingChip(
+                          label: 'Ver Todo Ranking',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => GroupRankingScreen(
+                                  participants: _ranking,
+                                ),
                               ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
                             ),
-                          );
-                        },
-                      ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppCorners.md),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => CheckinScreen(
+                                  groupId: widget.groupId,
+                                  groupName: displayName,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Ver commits',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
