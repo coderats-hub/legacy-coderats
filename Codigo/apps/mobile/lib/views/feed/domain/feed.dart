@@ -1,13 +1,3 @@
-// ==============================
-// Arquivo: features/feed/domain/feed.dart
-// ==============================
-//
-// Pasta 'domain':
-// Contém modelos e regras de negócio da feature 'feed'.
-//
-// Este arquivo é um template com um modelo simples de FeedItem.
-// Substitua/expanda conforme a necessidade da feature.
-
 class FeedAuthor {
   final String id;
   final String name;
@@ -79,7 +69,28 @@ class FeedItem {
 
   bool get hasGithub => description?.contains('Commits selecionados:') ?? false;
 
-  // Método para criar uma cópia com alguns campos atualizados
+  String? get cleanDescription {
+    if (description == null) return null;
+    final parts = description!.split('\n\nCommits selecionados:');
+    if (parts.isEmpty) return description;
+    return parts[0].trim().isEmpty ? null : parts[0].trim();
+  }
+  
+  List<String> get commits {
+    if (description == null || !hasGithub) return [];
+    final parts = description!.split('Commits selecionados:');
+    if (parts.length < 2) return [];
+    
+    final commitSection = parts[1].trim();
+    return commitSection
+        .split('\n')
+        .where((line) => line.trim().startsWith('-'))
+        .map((line) => line.trim().substring(1).trim())
+        .toList();
+  }
+  
+  int get commitsCount => commits.length;
+
   FeedItem copyWith({
     String? id,
     String? title,
@@ -123,7 +134,3 @@ class LikeResponse {
     );
   }
 }
-
-// Observações:
-// - Mantenha a lógica de domínio aqui (validações, conversões simples),
-//   e deixe I/O, armazenamento e UI fora desta camada.
