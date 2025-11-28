@@ -65,19 +65,6 @@ class _GithubCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          // Botão de like mais proeminente
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _LikeButton(
-                likesCount: item.likesCount,
-                isLiked: item.userHasLiked,
-                onTap: onLike,
-                isLoading: isLikeLoading,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
           Container(
             height: 220,
             decoration: BoxDecoration(
@@ -120,59 +107,33 @@ class _GithubCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          
-          // Título em negrito
-          Text(
-            item.title,
-            style: AppTextStyles.inputLabel.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          
-          // Descrição limpa (sem commits)
-          if (item.cleanDescription != null && item.cleanDescription!.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              item.cleanDescription!,
-              style: AppTextStyles.subtitle.copyWith(
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-          
-          const SizedBox(height: AppSpacing.sm),
-          
-          // Footer com commits e data
+          // Botão de like logo embaixo da imagem
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Icon(
-                Icons.commit,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${item.commitsCount} ${item.commitsCount == 1 ? 'commit' : 'commits'}',
-                style: AppTextStyles.inputHint.copyWith(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                _formatDate(item.createdAt),
-                style: AppTextStyles.inputHint.copyWith(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
+              _LikeButton(
+                likesCount: item.likesCount,
+                isLiked: item.userHasLiked,
+                onTap: onLike,
+                isLoading: isLikeLoading,
               ),
             ],
           ),
-          
+          const SizedBox(height: AppSpacing.sm),
+          // show title + description in one line (like regular check-ins)
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: item.title, style: AppTextStyles.inputLabel.copyWith(fontSize: 14)),
+                if (item.description != null && item.description!.isNotEmpty) ...[ // Fixed spread operator
+                  const TextSpan(text: ' '),
+                  TextSpan(text: item.description!, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(_formatDate(item.createdAt), style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
         ],
@@ -234,19 +195,6 @@ class _RegularCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          // Botão de like mais proeminente
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _LikeButton(
-                likesCount: item.likesCount,
-                isLiked: item.userHasLiked,
-                onTap: onLike,
-                isLoading: isLikeLoading,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
           Text.rich(
             TextSpan(
               children: [
@@ -260,6 +208,19 @@ class _RegularCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(_formatDate(item.createdAt), style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
+          const SizedBox(height: AppSpacing.sm),
+          // Botão de like no card regular
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _LikeButton(
+                likesCount: item.likesCount,
+                isLiked: item.userHasLiked,
+                onTap: onLike,
+                isLoading: isLikeLoading,
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
         ],
