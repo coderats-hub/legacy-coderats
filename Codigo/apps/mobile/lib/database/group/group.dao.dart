@@ -136,7 +136,7 @@ class GroupDao {
 
       await txn.delete(
         'group_participants',
-        where: 'group_id = ?',
+        where: 'group_id = ? AND role IS NULL',
         whereArgs: [details.group.id],
       );
 
