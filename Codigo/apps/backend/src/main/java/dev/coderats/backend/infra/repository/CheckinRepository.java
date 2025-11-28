@@ -33,4 +33,14 @@ public interface CheckinRepository extends JpaRepository<Checkin, UUID> {
             LIMIT :limit OFFSET :offset
             """, nativeQuery = true)
     List<Checkin> findByGroupIdOrderByCreatedAtDesc(@Param("groupId") String groupId, @Param("limit") int limit, @Param("offset") int offset);
+
+    @Query(value = """
+            SELECT c.*
+            FROM checkins c
+            WHERE c.group_id = CAST(:groupId AS UUID)
+            AND c.deleted_at IS NULL
+            ORDER BY c.created_at DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Checkin> findRecentByGroupId(@Param("groupId") String groupId, @Param("limit") int limit);
 }
