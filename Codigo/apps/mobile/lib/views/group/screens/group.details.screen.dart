@@ -1,52 +1,13 @@
-/**
- * Tela de Detalhes do Grupo (GroupDetailPage)
- * 
- * NAVEGAÇÃO: Acessível via tap nos cards da lista de grupos
- * 
- * FUNÇÃO:
- * - Exibe informações completas de um grupo específico
- * - Mostra banner customizável, descrição expansível e ranking de membros
- * - Lista check-ins do grupo com paginação infinita por data
- * - Permite criação de novos check-ins e navegação para ranking completo
- * 
- * COMPONENTES PRINCIPAIS:
- * - BannerHero: Banner do grupo com imagem ou style personalizado
- * - _DescriptionAccordion: Descrição expansível do grupo
- * - _RankingTile: Membros do top 3 ranking
- * - _CheckinTile: Cards de check-ins agrupados por dia
- * - AppFAB: Botão para criar novo check-in
- * 
- * RECURSOS:
- * - Scroll infinito para carregar mais check-ins
- * - Agrupamento de check-ins por data
- * - Código do grupo copiável
- * - Navegação contextual para ranking e detalhes de check-in
- * 
- * FLUXOS DE NAVEGAÇÃO:
- * - Para ranking completo → group.ranking.screen.dart
- * - Para lista de check-ins → checkin.list.screen.dart  
- * - Para criar check-in → checkin.details.screen.dart
- * - Para perfil de membro → public.profile.screen.dart
- */
-
 import 'dart:async';
-
+import 'package:app/views/group/widgets/group_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-// Core & Database
 import 'package:app/core/session_manager.dart';
-
-// Domain Models
 import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
+import 'package:app/domain/group/group_participant.dart';
 
-// Repositories
 import 'package:app/repositories/checkin.repository.dart';
 import 'package:app/repositories/group.repository.dart';
-
-// Services
 import 'package:app/services/checkin/checkin_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/services/group/group_remote_service.dart';
@@ -54,28 +15,22 @@ import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
 import 'package:app/services/user/user_remote_service.dart';
 
-// Shared Components & Theme
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
-
-// Shared Utils
 import 'package:app/shared/utils/string_utils.dart';
 
-// Views - Widgets & Screens
+import 'package:app/views/group/widgets/banner.group.dart';
+
 import 'package:app/views/checkin/screens/checkin.details.screen.dart';
 import 'package:app/views/checkin/screens/checkin.list.screen.dart';
 import 'package:app/views/group/screens/group.edit.screen.dart';
 import 'package:app/views/group/screens/group.ranking.screen.dart';
-import 'package:app/views/group/widgets/banner.group.dart';
-import 'package:app/views/profile/screens/public.profile.screen.dart';
-
 
 class GroupDetailPage extends StatefulWidget {
-  // Agora recebemos o ID do grupo para buscar os dados frescos
-  final String groupId; 
-  // Opcionais: Dados "pré-carregados" para exibir enquanto carrega o resto
+  final String groupId;
   final String? groupNamePreview;
-  final String? imageUrlPreview; 
+  final String? imageUrlPreview;
+  final String? descriptionPreview;
   final BannerStyle bannerStyle;
 
   const GroupDetailPage({
@@ -83,6 +38,7 @@ class GroupDetailPage extends StatefulWidget {
     required this.groupId,
     this.groupNamePreview,
     this.imageUrlPreview,
+    this.descriptionPreview,
     this.bannerStyle = BannerStyle.tertiary,
   });
 
@@ -91,22 +47,24 @@ class GroupDetailPage extends StatefulWidget {
 }
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
-  // --- DEPENDÊNCIAS ---
+  // Dependencies
   GroupRepository? _groupRepository;
   CheckinRepository? _checkinRepository;
-  
-  // --- ESTADO DA TELA ---
-  GroupDetails? _details; // Dados completos do grupo + participantes
-  bool _isLoadingDetails = true;
-  bool _descOpen = false;
-  String? _currentUserRole; // 'admin' ou 'member'
 
-  // --- ESTADO DOS CHECK-INS (PAGINAÇÃO) ---
+  // Data
+  List<Checkin> _items = [];
+  List<GroupParticipant> _ranking = [];
+
+  // UI State
+  bool _isLoading = true;
+  bool _descOpen = false;
+  String? _currentUserRole;
+
+  // Pagination
   final _scrollCtrl = ScrollController();
-  final List<Checkin> _items = [];
-  static const _checkinsPageSize = 10;
-  bool _loadingCheckins = false;
-  bool _hasMoreCheckins = true;
+  static const _checkinsPageSize = 15;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   int _page = 0;
 
   @override
@@ -122,81 +80,91 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     super.dispose();
   }
 
-  // 1. Inicializa Repositórios
   Future<void> _initDependencies() async {
     final session = SessionManager.instance;
     final localDb = await LocalDatabase.maybeGetInstance();
     final connectivity = ConnectivityService();
     final httpClient = HttpClient(session);
-    
-    // Configura Group Repo
-    final groupRemote = GroupRemoteService(httpClient);
-    final userRemote = UserRemoteService(httpClient);
+
     final groupRepo = GroupRepository(
-      remote: groupRemote,
+      remote: GroupRemoteService(httpClient),
       local: localDb?.groups,
       net: connectivity,
       session: session,
-      userRemote: userRemote,
+      userRemote: UserRemoteService(httpClient),
     );
 
-    // Configura Checkin Repo
     final checkinRepo = CheckinRepository();
-
 
     if (mounted) {
       setState(() {
         _groupRepository = groupRepo;
         _checkinRepository = checkinRepo;
       });
-      // Inicia carregamento dos dados
-      _loadGroupDetails();
-      _loadCheckins();
+      _loadData();
     }
   }
 
-  // 2. Carrega Detalhes do Grupo (Header + Ranking)
-  Future<void> _loadGroupDetails() async {
+  Future<void> _loadData() async {
+    if (_checkinRepository == null) return;
+    setState(() => _isLoading = true);
+
     try {
-      final details = await _groupRepository!.getGroupDetails(widget.groupId);
-      
-      // Detecta a role do usuário atual
-      final session = SessionManager.instance;
-      final currentUserId = session.currentUserId;
-      String? userRole;
-      
-      if (currentUserId != null) {
+      final checkins = await _checkinRepository!.fetchGroupCheckins(
+        widget.groupId,
+        limit: _checkinsPageSize,
+        offset: 0,
+      );
+
+      final rankingProcessed = _extractRankingFromCheckins(checkins);
+
+      // Simple role detection
+      final myId = SessionManager.instance.currentUserId;
+      String? role = 'member';
+      if (myId != null && rankingProcessed.isNotEmpty) {
         try {
-          final currentParticipant = details.participants.firstWhere(
-            (p) => p.id == currentUserId,
-          );
-          userRole = currentParticipant.role ?? 'member';
-        } catch (e) {
-          // Usuário não é participante do grupo
-          userRole = null;
-        }
+          final myData = rankingProcessed.firstWhere((p) => p.id == myId);
+          role = myData.role;
+        } catch (_) {}
       }
-      
+
       if (mounted) {
         setState(() {
-          _details = details;
-          _currentUserRole = userRole;
-          _isLoadingDetails = false;
+          _items = checkins;
+          _ranking = rankingProcessed;
+          _currentUserRole = role;
+          _page = 1;
+          _hasMore = checkins.length >= _checkinsPageSize;
+          _isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint('Erro ao carregar grupo: $e');
-      if (mounted) setState(() => _isLoadingDetails = false);
+      debugPrint('Erro ao carregar dados: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // 3. Carrega Check-ins (Simulando feed do grupo)
-  // Nota: A API Docs mostrava POST /groups/{id}/checkins, mas não um GET específico paginado.
-  // Aqui vamos assumir que existe um método ou usaremos o feed geral filtrado (simulação).
-  Future<void> _loadCheckins() async {
-    if (_loadingCheckins || !_hasMoreCheckins || _checkinRepository == null) return;
+  List<GroupParticipant> _extractRankingFromCheckins(List<Checkin> list) {
+    final Map<String, GroupParticipant> uniqueAuthors = {};
+    for (var c in list) {
+      final participant = GroupParticipant(
+        id: c.author.id,
+        name: c.author.name,
+        image: c.author.image,
+        githubUser: c.author.githubUser,
+        points: c.author.points,
+        role: c.author.role,
+      );
+      uniqueAuthors[c.author.id] = participant;
+    }
+    final sorted = uniqueAuthors.values.toList()
+      ..sort((a, b) => b.points.compareTo(a.points));
+    return sorted;
+  }
 
-    setState(() => _loadingCheckins = true);
+  Future<void> _loadMoreCheckins() async {
+    if (_isLoadingMore || !_hasMore || _checkinRepository == null) return;
+    setState(() => _isLoadingMore = true);
 
     try {
       final offset = _page * _checkinsPageSize;
@@ -210,32 +178,25 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         setState(() {
           _items.addAll(newItems);
           _page++;
-          _hasMoreCheckins = newItems.length == _checkinsPageSize;
-          _loadingCheckins = false;
+          _hasMore = newItems.length >= _checkinsPageSize;
+          _isLoadingMore = false;
         });
       }
     } catch (e) {
-      debugPrint('Erro ao carregar checkins do grupo: $e');
-      if (mounted) {
-        setState(() {
-          _loadingCheckins = false;
-          _hasMoreCheckins = false;
-        });
-      }
+      if (mounted) setState(() => _isLoadingMore = false);
     }
   }
 
   void _onScroll() {
-    if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
-      _loadCheckins();
+    if (_scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 200) {
+      _loadMoreCheckins();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Agrupa check-ins reais por data
     final grouped = _groupByDay(_items);
-
     final List<_Row> rows = [];
     for (final entry in grouped.entries) {
       rows.add(_Row.header(entry.key));
@@ -243,257 +204,231 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         rows.add(_Row.item(c));
       }
     }
-    if (_loadingCheckins) rows.add(_Row.loader());
+    if (_isLoadingMore) rows.add(_Row.loader());
 
-    // Dados para exibição (Prioriza dados carregados da API, senão usa preview)
-    final displayName = _details?.group.name ?? widget.groupNamePreview ?? 'Carregando...';
-    final displayImage = _details?.group.image ?? widget.imageUrlPreview;
-    final displayDesc = _details?.group.description ?? 'Sem descrição disponível.';
-    final displayCode = _details?.group.code ?? '---';
+    final displayName = widget.groupNamePreview ?? 'Grupo';
+    final displayImage = widget.imageUrlPreview;
+    final displayDesc =
+        widget.descriptionPreview ?? 'Sem descrição disponível.';
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppHeader(
         title: displayName,
         onBack: () => Navigator.of(context).maybePop(),
-        actions: [
-          if (_currentUserRole == 'admin')
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
-              onSelected: (value) {
-                if (value == 'edit' && _details != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => GroupEditScreen(
-                        initialName: displayName, 
-                        initialDescription: displayDesc, 
-                        imageUrl: displayImage
-                      ),
-                    ),
-                  );
-                } else if(value == 'delete' && _details != null) {
-                    _showDeleteGroupDialog(context);
-                }
-              },
-              itemBuilder: (BuildContext context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('Editar grupo')]),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline, size: 20, color: AppColors.textPrimary),
-                      SizedBox(width: 8),
-                      Text('Excluir grupo'),
-                    ],
+        actions: _buildAppBarActions(),
+      ),
+      body: _isLoading
+          ? const Center(child: AppLoading())
+          : ListView(
+              controller: _scrollCtrl,
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              children: [
+                // Banner
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: BannerHero(
+                    imageUrl: displayImage,
+                    style: widget.bannerStyle,
+                    height: 128,
+                    radius: AppCorners.lg,
                   ),
                 ),
-              ],
-            )
-          else if (_currentUserRole == 'member')
-            IconButton(
-              icon: const Icon(Icons.exit_to_app, color: AppColors.textPrimary),
-              tooltip: 'Sair do grupo',
-              onPressed: () => _showLeaveGroupDialog(context),
-            ),
-          const SizedBox(width: AppSpacing.xs),
-        ],
-      ),
+                const SizedBox(height: AppSpacing.sm),
 
-      body: ListView(
-        controller: _scrollCtrl,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        children: [
-          // Banner
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: BannerHero(
-              imageUrl: displayImage,
-              style: widget.bannerStyle,
-              height: 128,
-              radius: AppCorners.lg,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
+                // Código (Exemplo fixo ou vazio já que API não retorna)
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                //   child: GroupCodeWidget(code: '...'),
+                // ),
 
-          // Código
-          if (!_isLoadingDetails)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: _GroupCodeWidget(code: displayCode),
-            ),
-          const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
-          // Descrição
-          _DescriptionAccordion(
-            open: _descOpen,
-            onToggle: () => setState(() => _descOpen = !_descOpen),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(
-                displayDesc,
-                style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
-              ),
-            ),
-          ),
+                // Descrição
+                DescriptionAccordion(
+                  open: _descOpen,
+                  onToggle: () => setState(() => _descOpen = !_descOpen),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Text(
+                      displayDesc,
+                      style: AppTextStyles.subtitle
+                          .copyWith(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
 
-          const SizedBox(height: AppSpacing.lg),
+                // Ranking
+                if (_ranking.isNotEmpty) ...[
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Text("Ranking",
+                        style: AppTextStyles.title
+                            .copyWith(fontSize: 18, color: Colors.white)),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Column(
+                    children:
+                        _ranking.take(3).toList().asMap().entries.map((entry) {
+                      final member = entry.value;
+                      final pointsFormatted = member.points % 1 == 0
+                          ? member.points.toInt().toString()
+                          : member.points.toString();
 
-          // Ranking (Dados Reais)
-          if (!_isLoadingDetails && _details != null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text("Ranking", style: AppTextStyles.title.copyWith(fontSize: 18, color: Colors.white)),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            
-            // Lógica de Ranking: Ordenar participantes por pontos
-            Builder(builder: (context) {
-              final participants = List.of(_details!.participants);
-              participants.sort((a, b) => b.points.compareTo(a.points)); // Maior para menor
-              final top3 = participants.take(3).toList();
+                      return RankingTile(
+                        name: StringUtils.truncateName(member.name),
+                        points: '$pointsFormatted pontos',
+                        pos: '${entry.key + 1}º',
+                        imageUrl: member.image,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: RankingChip(
+                        label: 'Ver Todo Ranking',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => GroupRankingScreen(
+                                participants: _ranking,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
 
-              if (top3.isEmpty) {
-                 return const Padding(
-                   padding: EdgeInsets.all(16.0),
-                   child: Text("Nenhum participante pontuou ainda.", style: TextStyle(color: Colors.white54)),
-                 );
-              }
+                const SizedBox(height: AppSpacing.lg),
 
-              return Column(
-                children: top3.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final member = entry.value;
-                  return _RankingTile(
-                    name: StringUtils.truncateName(member.name),
-                    points: '${member.points.toStringAsFixed(0)} pontos', // Arredonda
-                    pos: '${index + 1}º',
-                    imageUrl: member.image,
+                // Lista Check-ins
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: Text("Check-ins",
+                      style: AppTextStyles.title.copyWith(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+
+                if (_items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Center(
+                        child: Text("Nenhum check-in registrado.",
+                            style: TextStyle(color: Colors.white38))),
+                  ),
+
+                ...rows.map((r) {
+                  if (r.type == _RowType.header)
+                    return DayHeader(date: r.date!);
+                  if (r.type == _RowType.item) return CheckinTile(c: r.item!);
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                    child: AppLoading(),
                   );
                 }).toList(),
-              );
-            }),
 
-            const SizedBox(height: AppSpacing.xs),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: _RankingChip(
-                  label: 'Ver Todo Ranking',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => GroupRankingScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: AppSpacing.lg),
-
-          // Seção de check-ins com header e link para visualização detalhada
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Check-ins", style: AppTextStyles.title.copyWith(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                TextButton(
-                  onPressed: () {
-                    // Navega para lista completa de check-ins
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                    builder: (context) => CheckinScreen(groupId: widget.groupId),
-                  ),
-                );
-              },
-                  child: const Text(
-                    'Visualizar com detalhes',
-                    style: TextStyle(
-                      color: Color(0xFF7DCDC1),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 80),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-
-          // Lista de check-ins agrupados por data com paginação infinita
-          if (_items.isEmpty && !_loadingCheckins)
-            const Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Center(child: Text("Nenhum check-in registrado.", style: TextStyle(color: Colors.white38))),
-            ),
-
-          ...rows.map((r) {
-            if (r.type == _RowType.header) {
-              return _DayHeader(date: r.date!);
-            } else if (r.type == _RowType.item) {
-              return _CheckinTile(c: r.item!);
-            } else {
-              // Loader no final quando carregando mais itens
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: AppLoading(),
-              );
-            }
-          }).toList(),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
-      
-      // Botão flutuante para criar novo check-in neste grupo
       floatingActionButton: AppFAB(
         onPressed: () {
-          // Navega para tela de criação de check-in
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => CommitCheckinScreen(
-                groupId: widget.groupId,
-                groupRepository: _details?.group.repository,
-              ),
-            ),
-          );
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute(
+                  builder: (context) => CommitCheckinScreen(
+                    groupId: widget.groupId,
+                  ),
+                ),
+              )
+              .then((_) => _loadData());
         },
         icon: Icons.add,
         tooltip: 'Novo check-in',
       ),
-      // Barra de navegação inferior - grupos permanece ativo
       bottomNavigationBar: AppNavbar(
-        currentIndex: 1, // Mantém grupos como aba ativa
+        currentIndex: 1,
         onTap: (i) {
-          if (i == 0) {
+          if (i == 0)
             Navigator.of(context).pushNamed('/feed');
-          } else if (i == 2) {
-            Navigator.of(context).pushNamed('/profile');
-          }
-          // i == 1 é grupos, já está nessa tela
+          else if (i == 2) Navigator.of(context).pushNamed('/profile');
         },
       ),
     );
   }
 
+  // --- Lógica Interna ---
+
   Map<DateTime, List<Checkin>> _groupByDay(List<Checkin> items) {
     final map = <DateTime, List<Checkin>>{};
     for (final c in items) {
-      // Normaliza data para remover horas/minutos
-      final dateKey = DateTime(c.createdAt.year, c.createdAt.month, c.createdAt.day);
+      final dateKey =
+          DateTime(c.createdAt.year, c.createdAt.month, c.createdAt.day);
       map.putIfAbsent(dateKey, () => []).add(c);
     }
     final sortedKeys = map.keys.toList()..sort((a, b) => b.compareTo(a));
     final linked = <DateTime, List<Checkin>>{};
-    for (final k in sortedKeys) {
-      linked[k] = map[k]!;
-    }
+    for (final k in sortedKeys) linked[k] = map[k]!;
     return linked;
+  }
+
+  List<Widget> _buildAppBarActions() {
+    if (_currentUserRole == 'admin') {
+      return [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+          onSelected: (val) {
+            if (val == 'edit') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => GroupEditScreen(
+                    initialName: widget.groupNamePreview.toString(),
+                    initialDescription: widget.descriptionPreview,
+                    imageUrl: widget.imageUrlPreview),
+              ));
+            } else if (val == 'delete') {
+              _showDeleteGroupDialog(context);
+            }
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+                value: 'edit',
+                child: Row(children: [
+                  Icon(Icons.edit, size: 20),
+                  SizedBox(width: 8),
+                  Text('Editar')
+                ])),
+            const PopupMenuItem(
+                value: 'delete',
+                child: Row(children: [
+                  Icon(Icons.delete, size: 20, color: AppColors.error),
+                  SizedBox(width: 8),
+                  Text('Excluir', style: TextStyle(color: AppColors.error))
+                ])),
+          ],
+        )
+      ];
+    } else if (_currentUserRole == 'member') {
+      return [
+        IconButton(
+          icon: const Icon(Icons.exit_to_app, color: AppColors.textPrimary),
+          onPressed: () => _showLeaveGroupDialog(context),
+        ),
+      ];
+    }
+    return [];
   }
 
   void _showLeaveGroupDialog(BuildContext context) {
@@ -502,8 +437,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       title: 'Sair do grupo?',
       icon: Icons.exit_to_app,
       iconColor: AppColors.primary,
-      description: 'Você pode entrar novamente usando o código do grupo.',
-      details: 'Seu histórico de check-ins será mantido.',
+      description: 'Você pode entrar novamente depois.',
+      details: 'Seus pontos serão mantidos.',
       confirmText: 'Sair',
       confirmColor: AppColors.error,
       onConfirm: _leaveGroup,
@@ -512,47 +447,21 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   Future<void> _leaveGroup() async {
     if (_groupRepository == null) return;
-
     try {
-      // Mostra loading
       showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
-
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(
+              child: CircularProgressIndicator(color: AppColors.primary)));
       await _groupRepository!.leaveGroup(widget.groupId);
-
       if (mounted) {
-        Navigator.of(context).pop(); // Remove loading
-        Navigator.of(context).pop(true); // Volta para a tela anterior retornando 'true' para indicar que deve fazer refresh
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Você saiu do grupo com sucesso',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop(); // Remove loading
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erro ao sair do grupo: $e',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Erro ao sair do grupo")));
     }
   }
 
@@ -562,8 +471,8 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       title: 'Excluir grupo?',
       icon: Icons.warning_amber_rounded,
       iconColor: AppColors.error,
-      description: 'Esta ação não pode ser desfeita.',
-      details: 'O grupo será marcado como inativo e nenhum membro poderá mais acessá-lo ou entrar nele.',
+      description: 'Ação irreversível.',
+      details: 'O grupo será inativado.',
       confirmText: 'Excluir',
       confirmColor: AppColors.error,
       onConfirm: _deleteGroup,
@@ -572,281 +481,40 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
   Future<void> _deleteGroup() async {
     if (_groupRepository == null) return;
-
     try {
-      // Mostra loading
       showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
-
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(
+              child: CircularProgressIndicator(color: AppColors.primary)));
       await _groupRepository!.deleteGroup(widget.groupId);
-
       if (mounted) {
-        Navigator.of(context).pop(); // Remove loading
-        Navigator.of(context).pop(true); // Volta para a tela anterior retornando 'true' para indicar que deve fazer refresh
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Grupo excluído com sucesso',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop(); // Remove loading
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erro ao excluir grupo: $e',
-              style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Erro ao excluir grupo")));
     }
   }
 }
 
-// --- WIDGETS AUXILIARES (Ajustados para o Domínio Real) ---
-
+// Helpers para a lógica da Lista
 enum _RowType { header, item, loader }
+
 class _Row {
   final _RowType type;
   final DateTime? date;
   final Checkin? item;
-  _Row.header(this.date) : type = _RowType.header, item = null;
-  _Row.item(this.item) : type = _RowType.item, date = null;
-  _Row.loader() : type = _RowType.loader, date = null, item = null;
-}
-
-class _CheckinTile extends StatelessWidget {
-  final Checkin c;
-  const _CheckinTile({required this.c});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-      child: GestureDetector(
-        onTap: () {
-          // Navegar para detalhes do checkin
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppCorners.md),
-          ),
-          child: Row(
-            children: [
-              // Avatar do Autor do Check-in
-              Container(
-                width: 36, height: 36,
-                decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle),
-                child: c.author.image != null 
-                    ? ClipOval(child: Image.network(c.author.image!, fit: BoxFit.cover))
-                    : Center(child: Text(c.author.name.isNotEmpty ? c.author.name[0] : '?', style: const TextStyle(color: Colors.white))),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.title, maxLines: 1, overflow: TextOverflow.ellipsis, 
-                        style: AppTextStyles.title.copyWith(fontSize: 15, color: Colors.white, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.textSecondary, shape: BoxShape.circle)),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(c.author.name, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("+${c.points}", style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4)
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GroupCodeWidget extends StatefulWidget {
-  final String code;
-  const _GroupCodeWidget({required this.code});
-
-  @override
-  State<_GroupCodeWidget> createState() => _GroupCodeWidgetState();
-}
-
-class _GroupCodeWidgetState extends State<_GroupCodeWidget> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) => setState(() => _isPressed = false),
-      onTapCancel: () => setState(() => _isPressed = false),
-      onTap: () async {
-        await Clipboard.setData(ClipboardData(text: widget.code));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Código copiado!'), duration: Duration(seconds: 1)),
-          );
-        }
-      },
-      child: IntrinsicWidth(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: _isPressed ? const Color(0xFF7DCDC1).withOpacity(0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppCorners.sm),
-            border: Border.all(color: const Color(0xFF7DCDC1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
-              const SizedBox(width: 8),
-              Text(
-                'Código: ${widget.code}', 
-                style: AppTextStyles.subtitle.copyWith(color: const Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Mantivemos os outros widgets auxiliares (_DescriptionAccordion, _RankingTile, etc)
-// apenas atualizados para aceitar imagens reais se necessário.
-class _DescriptionAccordion extends StatelessWidget {
-  final bool open;
-  final VoidCallback onToggle;
-  final Widget child;
-  const _DescriptionAccordion({required this.open, required this.onToggle, required this.child});
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(AppCorners.sm),
-            child: Row(
-              children: [
-                Expanded(child: Text('Ver Descrição', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary))),
-                Icon(open ? Icons.expand_less : Icons.expand_more, color: AppColors.textSecondary),
-              ],
-            ),
-          ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox(height: 0),
-            secondChild: Padding(padding: const EdgeInsets.only(top: AppSpacing.sm), child: child),
-            crossFadeState: open ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 180),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RankingTile extends StatelessWidget {
-  final String name;
-  final String points;
-  final String pos;
-  final String? imageUrl;
-  const _RankingTile({required this.name, required this.points, required this.pos, this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
-      decoration: BoxDecoration(color: AppColors.surface.withOpacity(.3), borderRadius: BorderRadius.circular(AppCorners.md)),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 18, 
-                  backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
-                  child: imageUrl == null ? Text(name[0]) : null,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(points, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
-                )
-              ],
-            ),
-          ),
-          Text(pos, style: AppTextStyles.title.copyWith(fontSize: 16, color: Colors.white)),
-        ],
-      ),
-    );
-  }
-}
-
-class _RankingChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _RankingChip({required this.label, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.primary.withOpacity(0.2),
-      shape: const StadiumBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: Text(label, style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 11)),
-        ),
-      ),
-    );
-  }
-}
-
-class _DayHeader extends StatelessWidget {
-  final DateTime date;
-  const _DayHeader({required this.date});
-  @override
-  Widget build(BuildContext context) {
-    final formatted = "${date.day.toString().padLeft(2, '0')} de ${_monthName(date.month)}";
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.xs),
-      child: Text(formatted, style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary)),
-    );
-  }
-  String _monthName(int m) => ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][m - 1];
+  _Row.header(this.date)
+      : type = _RowType.header,
+        item = null;
+  _Row.item(this.item)
+      : type = _RowType.item,
+        date = null;
+  _Row.loader()
+      : type = _RowType.loader,
+        date = null,
+        item = null;
 }

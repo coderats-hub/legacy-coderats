@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -22,54 +23,69 @@ public class GroupParticipant {
     @EmbeddedId
     private GroupParticipantId id = new GroupParticipantId();
 
-    // --- Relacionamentos (O "Muitos" de volta para o "Um") ---
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId") // Mapeia o campo 'userId' do @EmbeddedId
+    @MapsId("userId") 
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("groupId") // Mapeia o campo 'groupId' do @EmbeddedId
+    @MapsId("groupId") 
     @JoinColumn(name = "group_id")
     @JsonIgnore
     private Group group;
 
-    // --- Colunas Extras ---
-
     @Column(nullable = false)
     private String role;
 
-    @CreationTimestamp // Usa o padrão do Hibernate para NOW()
+    @Column(nullable = false)
+    private int points = 0; 
+
+    @CreationTimestamp
     @Column(name = "joined_at", nullable = false, updatable = false)
     private OffsetDateTime joinedAt;
 
-    // --- Construtores ---
-    
     public GroupParticipant() {
     }
     
-    // Construtor de conveniência que você já usa
     public GroupParticipant(UUID userId, UUID groupId, String role) {
         this.id = new GroupParticipantId(userId, groupId);
         this.role = role;
+        this.points = 0; 
     }
 
-    // --- Getters e Setters ---
-    
+    public GroupParticipant(User user, Group group, String role) {
+        this.id = new GroupParticipantId(user.getId(), group.getId());
+        this.user = user;
+        this.group = group;
+        this.role = role;
+        this.points = 0;
+    }
+
+    public void addPoints(int pointsToAdd) {
+        if (pointsToAdd > 0) {
+            this.points += pointsToAdd;
+        }
+    }
+
     public GroupParticipantId getId() { return id; }
     public void setId(GroupParticipantId id) { this.id = id; }
+    
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+    
     public Group getGroup() { return group; }
     public void setGroup(Group group) { this.group = group; }
+    
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    
+    public int getPoints() { return points; }
+    public void setPoints(int points) { this.points = points; }
+    
     public OffsetDateTime getJoinedAt() { return joinedAt; }
     public void setJoinedAt(OffsetDateTime joinedAt) { this.joinedAt = joinedAt; }
 
-    // Helpers (opcional, mas muito útil, como você usou no GroupService)
     public UUID getUserId() {
         return (this.id != null) ? this.id.getUserId() : null;
     }

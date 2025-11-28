@@ -22,8 +22,8 @@ import dev.coderats.backend.service.GroupService;
 import dev.coderats.backend.web.dto.request.GroupCreateRequest;
 import dev.coderats.backend.web.dto.request.GroupJoinRequest;
 import dev.coderats.backend.web.dto.request.GroupUpdateRequest;
-import dev.coderats.backend.web.dto.response.GroupResponse;
 import dev.coderats.backend.web.dto.response.GroupJoinResponse;
+import dev.coderats.backend.web.dto.response.GroupResponse;
 import dev.coderats.backend.web.dto.response.GroupWithDetailsResponse;
 
 @RestController
@@ -35,7 +35,6 @@ public class GroupController {
         this.groupService = groupService;
     }
 
-    // POST /groups/join - Entrar em um grupo por código
     @PostMapping("/groups/join")
     public ResponseEntity<GroupJoinResponse> joinGroup(@RequestBody GroupJoinRequest request) {
         try {
@@ -63,7 +62,6 @@ public class GroupController {
         }
     }
 
-    // GET /users/me/groups - Listar meus grupos
     @GetMapping("/users/me/groups")
     public ResponseEntity<List<GroupResponse>> listMyGroups() {
         UUID userId = getCurrentUserId();
@@ -75,7 +73,6 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    // POST /groups - Criar novo grupo
     @PostMapping("/groups")
     public ResponseEntity<GroupResponse> createGroup(@RequestBody GroupCreateRequest request) {
         UUID creatorUserId = getCurrentUserId();
@@ -83,7 +80,6 @@ public class GroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdGroup));
     }
 
-    // GET /groups/{groupId} - Obter detalhes de um grupo
     @GetMapping("/groups/{groupId}")
     public ResponseEntity<GroupWithDetailsResponse> getGroupDetails(@PathVariable String groupId) {
         try {
@@ -100,7 +96,6 @@ public class GroupController {
         }
     }
 
-    // PATCH /groups/{groupId} - Atualizar grupo
     @PatchMapping(value = "/groups/{groupId}", 
                   consumes = "application/json", 
                   produces = "application/json")
@@ -141,13 +136,12 @@ public class GroupController {
             } else if (e.getMessage().contains("administradores")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             } else if (e.getMessage().contains("já está inativo")) {
-                return ResponseEntity.status(HttpStatus.GONE).build(); // 410 Gone
+                return ResponseEntity.status(HttpStatus.GONE).build(); 
             }
             return ResponseEntity.badRequest().build();
         }
     }
 
-    // Método utilitário para extrair o userId do contexto de segurança
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();

@@ -21,14 +21,15 @@ class GroupRemoteService {
   }
 
   Future<GroupDetails> getGroupDetails(String id) async {
-    final resp = await http.get('/groups/$id');
+    final resp = await http.get('/groups/$id/checkins');
 
     if (resp.statusCode != 200) {
       _throwHttp('Erro ao buscar detalhes', resp);
     }
 
-    final map = jsonDecode(resp.body);
-    return GroupDetails.fromJson(map);
+    final list = jsonDecode(resp.body) as List;
+
+    return GroupDetails.fromCheckinList(id, list);
   }
 
   Future<Group> createGroup({
@@ -70,8 +71,7 @@ class GroupRemoteService {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (image != null) 'image': image,
-      if (participantsRemove != null)
-        'participants_remove': participantsRemove,
+      if (participantsRemove != null) 'participants_remove': participantsRemove,
     };
 
     final resp = await http.patch('/groups/$id', body);
@@ -124,10 +124,8 @@ class GroupRemoteService {
     try {
       final Map<String, dynamic> body =
           jsonDecode(resp.body) as Map<String, dynamic>;
-      final details = body['message'] ??
-          body['error'] ??
-          body['detail'] ??
-          body['errors'];
+      final details =
+          body['message'] ?? body['error'] ?? body['detail'] ?? body['errors'];
       if (details != null) {
         message = '$fallback: $details';
       }

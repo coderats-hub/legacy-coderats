@@ -1,4 +1,5 @@
 import 'package:app/core/session_manager.dart';
+import 'package:app/domain/group/group_participant.dart';
 import 'package:app/views/feed/presentation/screens/feed.list.screen.dart';
 import 'package:app/views/group/screens/group.ranking.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
@@ -21,8 +22,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await SessionManager.instance.loadFromStorage();
-  
-  runApp(const App()); 
+
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
@@ -35,18 +36,22 @@ class App extends StatelessWidget {
       theme: AppTheme.dark(),
       home: const TelaInicio(),
       debugShowCheckedModeBanner: false,
-      
       routes: {
         '/feed': (_) => const FeedListScreen(),
         '/join-group': (_) => const JoinGroupScreen(),
-        '/group-ranking': (_) => GroupRankingScreen(),
+        '/group-ranking': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as List<GroupParticipant>;
+          return GroupRankingScreen(participants: args);
+        },
         '/groups': (_) => const GroupListScreen(),
         '/profile': (_) => PrivateProfileScreen(),
         '/started': (_) => const CodeExchangeScreen(),
         '/onboarding': (_) => const OnboardingStartScreen(),
         '/create-group': (_) => const CreateGroupScreen(),
         '/group-details': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
 
           if (args == null || args['groupId'] == null) {
             return Scaffold(
@@ -55,9 +60,9 @@ class App extends StatelessWidget {
             );
           }
           return GroupDetailPage(
-            groupId: args['groupId'], 
+            groupId: args['groupId'],
             groupNamePreview: args['groupNamePreview'],
-            imageUrlPreview: args['imageUrlPreview'],  
+            imageUrlPreview: args['imageUrlPreview'],
           );
         },
       },
