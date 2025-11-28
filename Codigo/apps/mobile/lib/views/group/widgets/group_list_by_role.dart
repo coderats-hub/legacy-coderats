@@ -46,13 +46,16 @@ class _GroupListByRoleState extends State<GroupListByRole> {
         final details = await widget.groupRepository.getGroupDetails(group.id);
         final currentUserId = SessionManager.instance.currentUserId;
         
-        // Encontra o participante atual
-        final currentParticipant = details.participants.firstWhere(
-          (p) => p.id == currentUserId,
-          orElse: () => details.participants.first,
-        );
-        
-        roles[group.id] = currentParticipant.role;
+        if (details.participants.isEmpty) {
+          roles[group.id] = null;
+        } else {
+          // Encontra o participante atual
+          final currentParticipant = details.participants.firstWhere(
+            (p) => p.id == currentUserId,
+            orElse: () => details.participants.first,
+          );
+          roles[group.id] = currentParticipant.role;
+        }
       } catch (e) {
         roles[group.id] = null;
       }

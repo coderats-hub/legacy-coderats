@@ -21,15 +21,14 @@ class GroupRemoteService {
   }
 
   Future<GroupDetails> getGroupDetails(String id) async {
-    final resp = await http.get('/groups/$id/checkins');
+    final resp = await http.get('/groups/$id');
 
     if (resp.statusCode != 200) {
       _throwHttp('Erro ao buscar detalhes', resp);
     }
 
-    final list = jsonDecode(resp.body) as List;
-
-    return GroupDetails.fromCheckinList(id, list);
+    final map = jsonDecode(resp.body) as Map<String, dynamic>;
+    return GroupDetails.fromJson(map);
   }
 
   Future<Group> createGroup({
