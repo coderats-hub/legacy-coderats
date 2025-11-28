@@ -133,9 +133,7 @@ public class CheckinService {
     }
 
     private CheckinResponse toResponse(Checkin checkin) {
-        var author = userRepository.findById(checkin.getUserId())
-            .map(u -> new UserSummary(u.getId(), u.getName(), u.getImage()))
-            .orElse(null);
+        var author = toUserSummary(checkin);
 
         return new CheckinResponse(
             checkin.getId(),
@@ -150,14 +148,32 @@ public class CheckinService {
     }
 
     private CheckinSummary toSummary(Checkin checkin) {
-        var author = userRepository.findById(checkin.getUserId())
-            .map(u -> new UserSummary(u.getId(), u.getName(), u.getImage()))
-            .orElse(null);
+        var author = toUserSummary(checkin);
         return new CheckinSummary(
             checkin.getId(),
             checkin.getTitle(),
             checkin.getCreatedAt(),
             author
+        );
+    }
+
+    private UserSummary toUserSummary(Checkin checkin) {
+        var user = userRepository.findById(checkin.getUserId()).orElse(null);
+        if (user == null) {
+            return null;
+        }
+
+        var role = participantRepository.findByIdUserIdAndIdGroupId(checkin.getUserId(), checkin.getGroupId())
+            .map(participant -> participant.getRole())
+            .orElse(null);
+
+        return new UserSummary(
+            user.getId(),
+            user.getName(),
+            user.getImage(),
+            user.getGithubUser(),
+            Double.valueOf(checkin.getPoints()),
+            role
         );
     }
 }
