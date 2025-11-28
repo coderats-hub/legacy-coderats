@@ -376,10 +376,18 @@ class _PostCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.lg),
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: AppColors.surface,
-                child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
+              GestureDetector(
+                onTap: () {
+                  // TODO: Adicionar ID do usuário quando disponível
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Perfil de $username - ID necessário')),
+                  );
+                },
+                child: const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppColors.surface,
+                  child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
