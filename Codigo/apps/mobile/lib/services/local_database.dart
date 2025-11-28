@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../database/app_database.dart';
 import '../database/group/group.dao.dart';
+import '../database/feed/feed.dao.dart';
 
 class LocalDatabase {
   static LocalDatabase? _instance;
@@ -10,9 +11,11 @@ class LocalDatabase {
   final Database _db;
 
   late final GroupDao groups;
+  late final FeedDao feed;
 
   LocalDatabase._(this._db) {
     groups = GroupDao(_db);
+    feed = FeedDao(_db);
   }
 
   static Future<LocalDatabase> getInstance() async {

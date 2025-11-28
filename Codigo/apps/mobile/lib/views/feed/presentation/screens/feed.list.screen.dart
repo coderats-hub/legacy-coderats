@@ -8,6 +8,7 @@ import '../../../../services/api_service.dart';
 import '../../../../services/http_client.dart';
 import '../../../../core/env.dart';
 import '../../../../core/session_manager.dart';
+import 'package:app/services/local_database.dart';
 
 class FeedListScreen extends StatefulWidget {
   const FeedListScreen({Key? key}) : super(key: key);
