@@ -72,6 +72,31 @@ class FeedItem {
   }
 
   bool get hasGithub => description?.contains('Commits selecionados:') ?? false;
+  
+  // Extrai apenas a descrição antes dos commits
+  String? get cleanDescription {
+    if (description == null) return null;
+    final parts = description!.split('\n\nCommits selecionados:');
+    if (parts.isEmpty) return description;
+    return parts[0].trim().isEmpty ? null : parts[0].trim();
+  }
+  
+  // Extrai a lista de commits
+  List<String> get commits {
+    if (description == null || !hasGithub) return [];
+    final parts = description!.split('Commits selecionados:');
+    if (parts.length < 2) return [];
+    
+    final commitSection = parts[1].trim();
+    return commitSection
+        .split('\n')
+        .where((line) => line.trim().startsWith('-'))
+        .map((line) => line.trim().substring(1).trim())
+        .toList();
+  }
+  
+  // Conta quantos commits foram selecionados
+  int get commitsCount => commits.length;
 }
 
 // Observações:
