@@ -41,10 +41,30 @@ class GroupRemoteService {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
+    String? imageUrl;
+    if (image != null) {
+      try {
+        final bytes = base64Decode(image);
+        final uploadResp = await http.postMultipart(
+          path: '/uploads/images',
+          fileBytes: bytes,
+          filename: 'group-cover.jpg',
+          mimeType: 'image/jpeg',
+        );
+        if (uploadResp.statusCode != 201) {
+          _throwHttp('Erro ao enviar imagem', uploadResp);
+        }
+        final uploadJson = jsonDecode(uploadResp.body);
+        imageUrl = uploadJson['url'] as String?;
+      } catch (e) {
+        throw Exception('Falha ao enviar imagem: $e');
+      }
+    }
+
     final body = {
       'name': name,
       'description': description,
-      'image': image,
+      'image': imageUrl,
       'method': method,
       'repository': repository,
       'start_date': _formatDate(startDate),

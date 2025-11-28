@@ -3,6 +3,9 @@ import 'package:app/views/group/screens/group.scoring.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -93,24 +96,27 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     
     if (source == null) return;
     
-    // Image picker functionality disabled - only UI works
-    /*
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
-        imageQuality: 80,
-        maxWidth: 1280,
+      final params = OpenFileDialogParams(
+        dialogType: OpenFileDialogType.image,
+        mimeTypesFilter: ['image/*'],
       );
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
+      final path = await FlutterFileDialog.pickFile(params: params);
+      if (path == null) return;
+      final bytes = await File(path).readAsBytes();
+      if (!mounted) return;
       setState(() {
         _pickedImageBytes = bytes;
       });
     } catch (e) {
-      // ignore
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar imagem: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
-    */
   }
 
   // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---
@@ -141,9 +147,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 : null,
             startDate: _startDate!,
             endDate: _endDate!,
-            // Como o ImagePicker está desativado, passamos null.
-            // Futuramente, se tiver bytes, você precisaria fazer upload antes ou passar base64 string
-            image: null, 
+            image: _pickedImageBytes != null ? base64Encode(_pickedImageBytes!) : null, 
           ),
         ),
       );
