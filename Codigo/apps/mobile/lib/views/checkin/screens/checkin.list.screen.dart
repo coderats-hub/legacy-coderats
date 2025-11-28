@@ -11,7 +11,9 @@ import '../widgets/shared_widgets.dart';
 
 class CheckinScreen extends StatefulWidget {
   final String? groupId;
-  const CheckinScreen({super.key, this.groupId});
+  final String? groupName;
+  
+  const CheckinScreen({super.key, this.groupId, this.groupName});
 
   @override
   State<CheckinScreen> createState() => _CheckinScreenState();
@@ -63,7 +65,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppHeader(
-          title: 'Check-ins: Code Rats',
+          title: 'Check-ins: ${widget.groupName ?? 'Code Rats'}',
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: AppColors.textPrimary),

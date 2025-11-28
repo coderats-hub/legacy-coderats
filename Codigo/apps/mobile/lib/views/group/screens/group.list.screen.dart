@@ -17,7 +17,10 @@ import 'package:app/services/connectivity_service.dart';
 // --- IMPORTS DE UI/TELAS ---
 import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:app/views/group/widgets/group_list_by_role.dart';
 import 'package:app/views/group/widgets/card.group.dart';
+
+// --- IMPORTS DE UTILS ---
 import 'package:app/shared/utils/string_utils.dart';
 
 // --- IMPORTS DO TEMA E COMPONENTES PADRÃO ---
@@ -174,6 +177,8 @@ class _GroupListScreenState extends State<GroupListScreen> {
                         }
 
                         final groups = snap.data ?? const <Group>[];
+                        // Ordenar grupos por nome em ordem alfabética
+                        groups.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
                         if (groups.isEmpty) {
                           return ListView(
@@ -193,18 +198,10 @@ class _GroupListScreenState extends State<GroupListScreen> {
                           );
                         }
 
-                        return ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 96),
-                          itemCount: groups.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-                          itemBuilder: (context, i) {
-                            final g = groups[i];
-                            return _GroupCard(
-                              group: g,
-                              groupRepository: _groupRepository!,
-                              onGroupChanged: _reload, // Passa o callback de reload
-                            );
-                          },
+                        return GroupListByRole(
+                          groups: groups,
+                          groupRepository: _groupRepository!,
+                          onGroupChanged: _reload,
                         );
                       },
                     ),
@@ -223,209 +220,6 @@ class _GroupListScreenState extends State<GroupListScreen> {
           // Se index == 1, já está na tela de grupos
         },
       ),
-    );
-  }
-}
-
-class _GroupCard extends StatefulWidget {
-  final Group group;
-  final GroupRepository groupRepository;
-  final VoidCallback onGroupChanged; // Callback para notificar mudanças
-
-  const _GroupCard({
-    required this.group,
-    required this.groupRepository,
-    required this.onGroupChanged,
-  });
-
-  @override
-  State<_GroupCard> createState() => _GroupCardState();
-}
-
-class _GroupCardState extends State<_GroupCard> {
-  GroupDetails? _details;
-  bool _loading = false;
-  bool _openedOnce = false;
-
-  Future<void> _onExpandChanged(bool open) async {
-    _openedOnce = open || _openedOnce;
-    if (!open) return;
-    if (_details != null || _loading) return;
-
-    setState(() => _loading = true);
-    
-    try {
-      final d = await widget.groupRepository.getGroupDetails(widget.group.id);
-      if (!mounted) return;
-      setState(() {
-        _details = d;
-        _loading = false;
-      });
-    } catch(e) {
-      if(mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget? expanded;
-
-    if (_loading) {
-      expanded = Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
-            const SizedBox(width: AppSpacing.sm),
-            Text('Carregando ranking...', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-          ],
-        ),
-      );
-    } else if (_details != null) {
-      expanded = _RankingBlock(details: _details!);
-    } else if ((widget.group.description ?? '').isNotEmpty) {
-      expanded = Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Text(widget.group.description!, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-      );
-    } else if (_openedOnce) {
-      expanded = Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Text('Sem cache de ranking.', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
-      );
-    }
-
-    // Este widget vem do 'card.group.dart'
-    return GroupCard(
-      title: widget.group.name,
-      imageUrl: widget.group.image,
-      // Se necessário adapte status/bannerStyle aqui
-      expanded: expanded,
-      onBannerTap: () async {
-        // --- NAVEGAÇÃO PARA A TELA COMPLETA ---
-        final shouldRefresh = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => GroupDetailPage(
-              groupId: widget.group.id,
-              groupNamePreview: widget.group.name,
-              imageUrlPreview: widget.group.image,
-            ),
-          ),
-        );
-
-        // Se o usuário saiu do grupo, notifica o parent para recarregar
-        if (shouldRefresh == true && mounted) {
-          widget.onGroupChanged();
-        }
-      },
-      onExpandChanged: _onExpandChanged,
-    );
-  }
-}
-
-class _RankingBlock extends StatelessWidget {
-  final GroupDetails details;
-  const _RankingBlock({required this.details});
-
-  String _ordinal(int n) {
-    if (n % 100 >= 11 && n % 100 <= 13) return '${n}th';
-    switch (n % 10) {
-      case 1: return '${n}st';
-      case 2: return '${n}nd';
-      case 3: return '${n}rd';
-      default: return '${n}th';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final participants = [...details.participants]
-      ..sort((a, b) => b.points.compareTo(a.points));
-
-    final leader = participants.isNotEmpty ? participants.first : null;
-    final top3 = participants.take(3).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (leader != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
-            child: _pill(
-              context,
-              labelLeft: 'Líder',
-              name: StringUtils.truncateName(leader.name),
-              points: leader.points,
-              color: AppColors.skip,
-            ),
-          ),
-        const SizedBox(height: AppSpacing.sm),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Text('Ranking', style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ...List.generate(top3.length, (i) {
-          final row = top3[i];
-          final pos = i + 1;
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.surface.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(AppCorners.md),
-              border: Border.all(color: AppColors.border.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: row.image != null ? NetworkImage(row.image!) : null,
-                  backgroundColor: AppColors.border,
-                  child: row.image == null 
-                    ? Text(row.name[0], style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)) 
-                    : null,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(StringUtils.truncateName(row.name), style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
-                      Text('${row.points.toStringAsFixed(1)} pontos', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.2), 
-                    borderRadius: BorderRadius.circular(AppCorners.sm),
-                  ),
-                  child: Text(_ordinal(pos), style: AppTextStyles.subtitle.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: AppSpacing.xs),
-      ],
-    );
-  }
-
-  Widget _pill(BuildContext context, {required String labelLeft, required String name, required double points, required Color color}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.emoji_events, size: 16, color: color),
-        const SizedBox(width: AppSpacing.xs),
-        Text(labelLeft, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
-        const SizedBox(width: AppSpacing.sm),
-        Text(name, style: AppTextStyles.title.copyWith(fontSize: 13, fontWeight: FontWeight.bold)),
-        const SizedBox(width: AppSpacing.sm),
-        Text('${points.toStringAsFixed(1)} pts', style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary, fontSize: 12)),
-      ],
     );
   }
 }

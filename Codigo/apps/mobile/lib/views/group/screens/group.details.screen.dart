@@ -411,10 +411,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     // Navega para lista completa de check-ins
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                    builder: (context) => CheckinScreen(groupId: widget.groupId),
-                  ),
-                );
-              },
+                        builder: (context) => CheckinScreen(
+                          groupId: widget.groupId,
+                          groupName: _details?.group.name ?? widget.groupNamePreview ?? 'Grupo',
+                        ),
+                      ),
+                    );
+                  },
                   child: const Text(
                     'Visualizar com detalhes',
                     style: TextStyle(
@@ -460,7 +463,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             MaterialPageRoute(
               builder: (context) => CommitCheckinScreen(
                 groupId: widget.groupId,
-                groupRepository: _details?.group.repository,
+                groupName: _details?.group.name ?? widget.groupNamePreview ?? 'Grupo',
               ),
             ),
           );
@@ -720,39 +723,43 @@ class _GroupCodeWidgetState extends State<_GroupCodeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: () async {
-          await Clipboard.setData(ClipboardData(text: widget.code));
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Código copiado!'), duration: Duration(seconds: 1)),
-            );
-          }
-        },
-        child: IntrinsicWidth(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: _isPressed ? const Color(0xFF7DCDC1).withOpacity(0.1) : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppCorners.sm),
-              border: Border.all(color: const Color(0xFF7DCDC1)),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () async {
+        await Clipboard.setData(ClipboardData(text: widget.code));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Código copiado!',
+                style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+              ),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 1),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
-                const SizedBox(width: 8),
-                Text(
-                  'Código: ${widget.code}', 
-                  style: AppTextStyles.subtitle.copyWith(color: const Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+          );
+        }
+      },
+      child: IntrinsicWidth(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isPressed ? const Color(0xFF7DCDC1).withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppCorners.sm),
+            border: Border.all(color: const Color(0xFF7DCDC1)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.copy_all_rounded, size: 18, color: Color(0xFF7DCDC1)),
+              const SizedBox(width: 8),
+              Text(
+                'Código: ${widget.code}', 
+                style: AppTextStyles.subtitle.copyWith(color: const Color(0xFF7DCDC1), fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ),
       ),

@@ -72,6 +72,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
 
         if (mounted) {
           // 5. Navegar para os detalhes do grupo
+          // Usa pushReplacement em vez de pushAndRemoveUntil para manter a navegação funcionando
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => GroupDetailPage(
