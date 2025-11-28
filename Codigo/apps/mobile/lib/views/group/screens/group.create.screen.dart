@@ -95,24 +95,36 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     
     if (source == null) return;
     
-    // Image picker functionality disabled - only UI works
-    /*
     try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(
-        source: source == 'gallery' ? ImageSource.gallery : ImageSource.camera,
-        imageQuality: 80,
-        maxWidth: 1280,
+      final typeGroup = const XTypeGroup(
+        label: 'images',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
+        mimeTypes: ['image/*'],
       );
+      if (source == 'camera') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Abrindo seletor do sistema para escolher/tirar foto'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null) return;
       final bytes = await file.readAsBytes();
+      if (!mounted) return;
       setState(() {
         _pickedImageBytes = bytes;
       });
     } catch (e) {
-      // ignore
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar imagem: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
-    */
   }
 
   // --- AQUI ESTÁ A CORREÇÃO PRINCIPAL ---

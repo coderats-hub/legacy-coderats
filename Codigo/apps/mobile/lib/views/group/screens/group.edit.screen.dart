@@ -45,7 +45,16 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
       final typeGroup = const XTypeGroup(
         label: 'images',
         extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
+        mimeTypes: ['image/*'],
       );
+      if (source == 'camera') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Abrindo seletor do sistema para escolher/tirar foto'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
       final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null) return;
       final bytes = await file.readAsBytes();
