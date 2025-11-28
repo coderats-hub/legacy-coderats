@@ -41,6 +41,9 @@ public class Checkin {
     @Column(nullable = false)
     private int points = 0;
     
+    @Column(name = "likes_count", nullable = false)
+    private int likesCount = 0;
+    
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
     
@@ -60,6 +63,7 @@ public class Checkin {
         this.image = image;
         this.summaryAi = summaryAi;
         this.points = points;
+        this.likesCount = 0;
     }
     
     @PrePersist
@@ -96,6 +100,9 @@ public class Checkin {
     
     public int getPoints() { return points; }
     public void setPoints(int points) { this.points = points; }
+    
+    public int getLikesCount() { return likesCount; }
+    public void setLikesCount(int likesCount) { this.likesCount = likesCount; }
     
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }

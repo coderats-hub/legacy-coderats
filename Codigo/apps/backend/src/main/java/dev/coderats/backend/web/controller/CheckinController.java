@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import dev.coderats.backend.service.CheckinService;
 import dev.coderats.backend.web.dto.request.CheckinCreateRequest;
 import dev.coderats.backend.web.dto.request.CheckinPreviewRequest;
+import dev.coderats.backend.web.dto.response.CheckinLikeResponse;
 import dev.coderats.backend.web.dto.response.CheckinPreviewResponse;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
 import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
@@ -46,7 +48,8 @@ public class CheckinController {
             @RequestParam(defaultValue = "0") int offset) {
         try {
             UUID gid = UUID.fromString(groupId);
-            var data = checkinService.getGroupCheckins(gid, limit, offset);
+            UUID userId = getCurrentUserId();
+            var data = checkinService.getGroupCheckins(userId, gid, limit, offset);
             return ResponseEntity.ok(data);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -102,6 +105,34 @@ public class CheckinController {
         UUID userId = request.userId() != null ? request.userId() : getCurrentUserId();
         var result = checkinService.previewCheckin(userId, request.commits());
         return ResponseEntity.ok(new CheckinPreviewResponse(result.summary(), result.points()));
+    }
+
+    @PostMapping("/checkins/{checkinId}/like")
+    public ResponseEntity<CheckinLikeResponse> likeCheckin(@PathVariable String checkinId) {
+        try {
+            UUID cid = UUID.fromString(checkinId);
+            UUID userId = getCurrentUserId();
+            var response = checkinService.likeCheckinAndGetResponse(cid, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @DeleteMapping("/checkins/{checkinId}/like")
+    public ResponseEntity<CheckinLikeResponse> unlikeCheckin(@PathVariable String checkinId) {
+        try {
+            UUID cid = UUID.fromString(checkinId);
+            UUID userId = getCurrentUserId();
+            var response = checkinService.unlikeCheckinAndGetResponse(cid, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
 
     private UUID getCurrentUserId() {
