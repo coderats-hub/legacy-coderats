@@ -1,2 +1,0 @@
-ALTER TABLE group_participants 
-ADD COLUMN points INTEGER NOT NULL DEFAULT 0;
