@@ -17,6 +17,9 @@ O objetivo é proporcionar motivação para os estudos por comunidade e metas cl
 
 * Cristiane Neri Nobre
 * Cristiano Neves Rodrigues
+* Rosilane Ribeiro da Mota
+* Pedro Henrique Ramos Costa
+* Ilo Amy Saldanha Rivero
 
 ## Instruções de utilização
 
