@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 
 import dev.coderats.backend.domain.Checkin;
 import dev.coderats.backend.domain.CheckinLike;
+import dev.coderats.backend.domain.CheckinLikeId;
 import dev.coderats.backend.domain.CheckinSummary;
 import dev.coderats.backend.domain.UserSummary;
 import dev.coderats.backend.infra.repository.CheckinLikeRepository;
@@ -183,8 +184,11 @@ public class CheckinService {
             return; // Não curtiu, não faz nada
         }
         
-        // Remover o like
-        checkinLikeRepository.deleteByCheckinIdAndUserId(checkinId, userId);
+        // Remover o like usando deleteById com chave composta
+        CheckinLikeId likeId = new CheckinLikeId();
+        likeId.setCheckinId(checkinId);
+        likeId.setUserId(userId);
+        checkinLikeRepository.deleteById(likeId);
         
         // Decrementar o contador (sem deixar negativo)
         int newCount = Math.max(0, checkin.getLikesCount() - 1);

@@ -6,18 +6,43 @@ import 'github_activity_modal.dart';
 
 class FeedCard extends StatelessWidget {
   final FeedItem item;
-  const FeedCard({Key? key, required this.item}) : super(key: key);
+  final VoidCallback? onLike;
+  final bool isLikeLoading;
+  
+  const FeedCard({
+    Key? key, 
+    required this.item,
+    this.onLike,
+    this.isLikeLoading = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (item.hasGithub) return _GithubCard(item: item);
-    return _RegularCard(item: item);
+    if (item.hasGithub) {
+      return _GithubCard(
+        item: item, 
+        onLike: onLike,
+        isLikeLoading: isLikeLoading,
+      );
+    }
+    return _RegularCard(
+      item: item, 
+      onLike: onLike,
+      isLikeLoading: isLikeLoading,
+    );
   }
 }
 
 class _GithubCard extends StatelessWidget {
   final FeedItem item;
-  const _GithubCard({required this.item});
+  final VoidCallback? onLike;
+  final bool isLikeLoading;
+  
+  const _GithubCard({
+    required this.item,
+    this.onLike,
+    this.isLikeLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +62,19 @@ class _GithubCard extends StatelessWidget {
                 ),
               ),
               Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Botão de like mais proeminente
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _LikeButton(
+                likesCount: item.likesCount,
+                isLiked: item.userHasLiked,
+                onTap: onLike,
+                isLoading: isLikeLoading,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -166,7 +204,14 @@ class _GithubCard extends StatelessWidget {
 
 class _RegularCard extends StatelessWidget {
   final FeedItem item;
-  const _RegularCard({required this.item});
+  final VoidCallback? onLike;
+  final bool isLikeLoading;
+  
+  const _RegularCard({
+    required this.item,
+    this.onLike,
+    this.isLikeLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +234,19 @@ class _RegularCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
+          // Botão de like mais proeminente
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _LikeButton(
+                likesCount: item.likesCount,
+                isLiked: item.userHasLiked,
+                onTap: onLike,
+                isLoading: isLikeLoading,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Text.rich(
             TextSpan(
               children: [
@@ -204,6 +262,56 @@ class _RegularCard extends StatelessWidget {
           Text(_formatDate(item.createdAt), style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
+        ],
+      ),
+    );
+  }
+}
+
+// Widget de botão de like
+class _LikeButton extends StatelessWidget {
+  final int likesCount;
+  final bool isLiked;
+  final VoidCallback? onTap;
+  final bool isLoading;
+
+  const _LikeButton({
+    required this.likesCount,
+    required this.isLiked,
+    this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isLoading)
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            Icon(
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              color: isLiked ? Colors.red : AppColors.textSecondary,
+              size: 18,
+            ),
+          const SizedBox(width: 4),
+          Text(
+            likesCount.toString(),
+            style: AppTextStyles.inputHint.copyWith(
+              fontSize: 12,
+              color: isLiked ? Colors.red : AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
