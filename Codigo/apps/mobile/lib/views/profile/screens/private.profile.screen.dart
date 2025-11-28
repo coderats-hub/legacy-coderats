@@ -5,13 +5,13 @@ import 'package:app/services/badge/badge.service.dart';
 import 'package:app/views/checkin/widgets/shared_widgets.dart';
 import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
-import 'package:app/views/group/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
@@ -56,6 +56,28 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
     }
   }
 
+  Future<void> _openGitHubProfile(String githubUsername) async {
+    final url = 'https://github.com/$githubUsername';
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Não foi possível abrir o perfil do GitHub')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao abrir o perfil do GitHub')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -85,10 +107,14 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                     children: [
                       _ProfileHeader(
                         user: _currentUser,
-                        onAction: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('GitHub já está conectado!')),
-                          );
+                        onAction: () async {
+                          if (_currentUser?.githubUser != null) {
+                            await _openGitHubProfile(_currentUser!.githubUser!);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('GitHub não está conectado!')),
+                            );
+                          }
                         },
                       ),
                       const SizedBox(height: 12),

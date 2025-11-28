@@ -93,7 +93,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
         backgroundColor: AppColors.background,
         appBar: AppHeader(
           title: 'Feed',
-          onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
+          showBackButton: false,
         ),
         body: const AppLoading(),
         bottomNavigationBar: AppNavbar(
@@ -148,7 +148,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
       backgroundColor: AppColors.background,
       appBar: AppHeader(
         title: 'Feed',
-        onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
+        showBackButton: false,
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
