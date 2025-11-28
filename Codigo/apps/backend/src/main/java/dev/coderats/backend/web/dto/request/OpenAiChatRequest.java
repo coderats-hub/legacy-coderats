@@ -1,4 +1,4 @@
-package dev.coderats.backend.service.dto;
+package dev.coderats.backend.web.dto.request;
 
 import java.util.List;
 

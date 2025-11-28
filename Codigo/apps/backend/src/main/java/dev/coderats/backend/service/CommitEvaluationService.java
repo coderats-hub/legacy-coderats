@@ -16,8 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.coderats.backend.service.dto.GitHubCommitDetailPayload;
 import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
+import dev.coderats.backend.web.dto.response.GitHubCommitDetailPayload;
 
 @Service
 public class CommitEvaluationService {

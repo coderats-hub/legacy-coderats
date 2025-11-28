@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import dev.coderats.backend.domain.User;
 import dev.coderats.backend.infra.repository.UserRepository;
-import dev.coderats.backend.service.dto.GitHubCommitDetailPayload;
 import dev.coderats.backend.web.dto.request.CommitSelectionRequest;
+import dev.coderats.backend.web.dto.response.GitHubCommitDetailPayload;
 import dev.coderats.backend.web.dto.response.GitHubCommitFileResponse;
 import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
 

@@ -14,9 +14,9 @@ import org.springframework.web.client.RestClientResponseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.coderats.backend.service.dto.OpenAiChatRequest;
-import dev.coderats.backend.service.dto.OpenAiChatResponse;
-import dev.coderats.backend.service.dto.OpenAiEvaluationResponse;
+import dev.coderats.backend.web.dto.request.OpenAiChatRequest;
+import dev.coderats.backend.web.dto.response.OpenAiChatResponse;
+import dev.coderats.backend.web.dto.response.OpenAiEvaluationResponse;
 
 @Service
 public class OpenAiClient {

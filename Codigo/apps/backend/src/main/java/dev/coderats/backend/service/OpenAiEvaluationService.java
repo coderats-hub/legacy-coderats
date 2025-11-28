@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import dev.coderats.backend.service.dto.OpenAiEvaluationResponse;
+import dev.coderats.backend.web.dto.response.OpenAiEvaluationResponse;
 
 @Service
 public class OpenAiEvaluationService {

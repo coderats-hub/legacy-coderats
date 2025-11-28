@@ -1,4 +1,4 @@
-package dev.coderats.backend.service.dto;
+package dev.coderats.backend.web.dto.response;
 
 import java.time.OffsetDateTime;
 import java.util.List;
