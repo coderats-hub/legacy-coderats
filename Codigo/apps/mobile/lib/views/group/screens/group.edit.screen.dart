@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
-import 'package:file_selector/file_selector.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'dart:io';
 
 class GroupEditScreen extends StatefulWidget {
   final String initialName;
@@ -42,22 +43,13 @@ class _GroupEditScreenState extends State<GroupEditScreen> {
     if (source == null) return;
     
     try {
-      final typeGroup = const XTypeGroup(
-        label: 'images',
-        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
-        mimeTypes: ['image/*'],
+      final params = OpenFileDialogParams(
+        dialogType: OpenFileDialogType.image,
+        mimeTypesFilter: ['image/*'],
       );
-      if (source == 'camera') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Abrindo seletor do sistema para escolher/tirar foto'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
-      if (file == null) return;
-      final bytes = await file.readAsBytes();
+      final path = await FlutterFileDialog.pickFile(params: params);
+      if (path == null) return;
+      final bytes = await File(path).readAsBytes();
       if (!mounted) return;
       setState(() {
         _pickedImageBytes = bytes;
