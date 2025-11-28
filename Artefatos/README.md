@@ -5,8 +5,6 @@ Este diretório reúne os artefatos oficiais produzidos durante o desenvolviment
 A seguir, listam-se os artefatos, suas localizações e descrições:
 
 ---
-
-## `/`
 - [**DER_CodeRats.pdf**](DER_CodeRats.pdf)  
   Documento contendo o Diagrama Entidade-Relacionamento (DER) do sistema CodeRats. Representa as entidades, atributos e relacionamentos do modelo conceitual do banco de dados.
 
