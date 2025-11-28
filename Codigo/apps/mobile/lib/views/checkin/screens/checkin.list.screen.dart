@@ -1,12 +1,10 @@
 
 import 'package:app/core/session_manager.dart';
-import 'package:app/database/checkin/checkin.dao.dart';
 import 'package:app/domain/checkin/checkin.dart';
 import 'package:app/repositories/checkin.repository.dart';
 import 'package:app/services/checkin/checkin_remote_service.dart';
 import 'package:app/services/connectivity_service.dart';
 import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,6 +45,14 @@ class _CheckinScreenState extends State<CheckinScreen> {
           ? await _repository.fetchGroupCheckins(widget.groupId!)
           : await _repository.fetchFeed();
       
+        final session = SessionManager.instance;
+        final httpClient = HttpClient(session);
+        
+        final repository = CheckinRepository(
+          remote: CheckinRemoteService(httpClient),
+          net: ConnectivityService(),
+        );
+      final data = await repository.getFeed();
       if (mounted) {
         setState(() {
           _checkins = data;

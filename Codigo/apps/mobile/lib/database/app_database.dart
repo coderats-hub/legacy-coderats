@@ -6,7 +6,7 @@ import 'group/group.tables.dart';
 
 class AppDatabase {
   static const String _dbName = 'coderats_cache.db';
-  static const int _version = 1;
+  static const int _version = 2;
 
   static Future<Database> open() async {
     final dbPath = await getDatabasesPath();

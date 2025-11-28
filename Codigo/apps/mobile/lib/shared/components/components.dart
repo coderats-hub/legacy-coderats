@@ -19,3 +19,6 @@ export 'app_button.component.dart';
 export 'shared_text_field.component.dart';
 export 'button_primary.component.dart';
 export 'text_field.component.dart';
+
+// Dialogs
+export 'confirmation_dialog.dart';

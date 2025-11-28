@@ -1,5 +1,7 @@
 import 'package:app/domain/user/user.model.dart';
+import 'package:app/domain/badge/badge.model.dart' as badge_model;
 import 'package:app/services/user/user.service.dart';
+import 'package:app/services/badge/badge.service.dart';
 import 'package:app/views/checkin/widgets/shared_widgets.dart';
 import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
@@ -9,6 +11,7 @@ import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
@@ -90,14 +93,12 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       _PrivateActions(),
+                      const SizedBox(height: 16),
+                      _BadgesSection(),
                       // const SizedBox(height: 12),
                       // _CalendarCard(
                       //   currentDate: _currentDate,
                       //   markedDateMap: _markedDateMap,
-                      // ),
-                      // const SizedBox(height: 16),
-                      // _BadgesRow(
-                      //   showSeeAll: false,
                       // ),
                       // const SizedBox(height: 16),
                       // _GroupsInCommon(),
@@ -422,59 +423,432 @@ class _CalendarCard extends StatelessWidget {
   }
 }
 
-class _BadgesRow extends StatelessWidget {
-  final bool showSeeAll;
-  const _BadgesRow({this.showSeeAll = false});
+// Seção de Badges com informações detalhadas
+class _BadgesSection extends StatefulWidget {
+  @override
+  State<_BadgesSection> createState() => _BadgesSectionState();
+}
+
+class _BadgesSectionState extends State<_BadgesSection> {
+  final BadgeService _badgeService = BadgeService();
+  List<badge_model.Badge> _badges = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserBadges();
+  }
+
+  Future<void> _loadUserBadges() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final userBadges = await _badgeService.getBadgesForCurrentUser();
+      final loadedBadges = userBadges
+          .where((ub) => ub.badge != null)
+          .map((ub) => ub.badge!.copyWith(
+                obtainedAt: ub.awardedAt,
+                imageAsset: _getBadgeImage(ub.badge!.id),
+              ))
+          .toList();
+
+      setState(() {
+        _badges = loadedBadges;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Erro ao carregar badges: $e');
+      setState(() {
+        _error = e.toString();
+        _badges = _getMockBadges(); // Fallback para mocks em caso de erro
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getBadgeImage(String badgeId) {
+    // Mapear IDs de badges para assets locais
+    switch (badgeId) {
+      case '0':
+        return 'assets/images/ratoNormal (1).png';
+      default:
+        return 'assets/images/rats_groups.png';
+    }
+  }
+
+  List<badge_model.Badge> _getMockBadges() {
+    // Dados temporários para demonstração (fallback)
+    return [
+      badge_model.Badge(
+        id: '0',
+        name: 'Usuário Cadastrado',
+        description: 'Faça o link com o GitHub pela primeira vez!',
+        imageAsset: 'assets/images/ratoNormal (1).png',
+        obtainedAt: DateTime.now().subtract(const Duration(days: 30)),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Badges', style: AppTextStyles.inputLabel),
-            if (showSeeAll)
-              TextButton(
-                onPressed: () {},
-                child: const Text('Ver todos os badges'),
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppCorners.lg),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.emoji_events,
+                color: AppColors.primary,
+                size: 24,
               ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            _BadgePlaceholder(label: '2x'),
-            const SizedBox(width: 12),
-            _BadgePlaceholder(label: '1x', warning: true),
-          ],
-        ),
-      ],
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Badges Conquistados',
+                style: AppTextStyles.title.copyWith(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: AppLoading(),
+              ),
+            )
+          else if (_badges.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  'Nenhum badge conquistado ainda',
+                  style: AppTextStyles.inputHint.copyWith(color: Colors.white54),
+                ),
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _badges.map((badge) => SizedBox(
+                    width: (constraints.maxWidth - 24) / 3, // 3 badges por linha
+                    child: _BadgeItem(badge: badge),
+                  )).toList(),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _BadgePlaceholder extends StatelessWidget {
-  final String label;
-  final bool warning;
-  const _BadgePlaceholder({required this.label, this.warning = false});
+// Item individual de badge com hover card profissional
+class _BadgeItem extends StatefulWidget {
+  final badge_model.Badge badge;
+
+  const _BadgeItem({required this.badge});
+
+  @override
+  State<_BadgeItem> createState() => _BadgeItemState();
+}
+
+class _BadgeItemState extends State<_BadgeItem> {
+  bool _isHovered = false;
+  final _hoverKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-            color: warning ? AppColors.error : AppColors.surface,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.emoji_events, color: Colors.white),
+    final dateFormatter = DateFormat('dd/MM/yyyy');
+    
+    return GestureDetector(
+      onTap: () {
+        _showBadgeDialog(context, widget.badge, dateFormatter);
+      },
+      child: MouseRegion(
+        key: _hoverKey,
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Badge Image
+            AspectRatio(
+              aspectRatio: 1,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppCorners.lg),
+                  boxShadow: _isHovered
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.4),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : [],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppCorners.lg),
+                  child: Container(
+                    color: AppColors.background,
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      widget.badge.imageAsset ?? 'assets/images/rats_groups.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.emoji_events,
+                            color: AppColors.primary,
+                            size: 40,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Hover Card - Minimalista
+            if (_isHovered)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: -65,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _isHovered ? 1.0 : 0.0,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppCorners.sm),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.badge.name,
+                          style: AppTextStyles.inputLabel.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.badge.description ?? '',
+                          style: AppTextStyles.inputHint.copyWith(
+                            color: Colors.white60,
+                            fontSize: 10,
+                            height: 1.3,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (widget.badge.id != '0' && widget.badge.obtainedAt != null) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            dateFormatter.format(widget.badge.obtainedAt!),
+                            style: AppTextStyles.inputHint.copyWith(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.xs),
-  Text(label, style: AppTextStyles.inputLabel.copyWith(color: Colors.white)),
-      ],
+      ),
+    );
+  }
+
+  void _showBadgeDialog(BuildContext context, badge_model.Badge badge, DateFormat formatter) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 380),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppCorners.xl),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Conteúdo Principal
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Imagem do Badge
+                    Container(
+                      width: 160,
+                      height: 160,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(AppCorners.lg),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppCorners.md),
+                        child: Image.asset(
+                          badge.imageAsset ?? 'assets/images/rats_groups.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.emoji_events,
+                                color: AppColors.primary,
+                                size: 80,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    
+                    // Nome do Badge
+                    Text(
+                      badge.name,
+                      style: AppTextStyles.title.copyWith(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    
+                    const SizedBox(height: AppSpacing.sm),
+                    
+                    // Descrição
+                    Text(
+                      badge.description ?? '',
+                      style: AppTextStyles.inputLabel.copyWith(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    
+                    // Data de obtenção (não mostra para o badge de cadastro)
+                    if (badge.id != '0' && badge.obtainedAt != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(AppCorners.md),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Colors.white60,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Obtido em ${formatter.format(badge.obtainedAt!)}',
+                              style: AppTextStyles.inputLabel.copyWith(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              
+              // Botão de fechar (X)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.background.withOpacity(0.8),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

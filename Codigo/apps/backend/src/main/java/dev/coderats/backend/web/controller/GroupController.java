@@ -56,6 +56,8 @@ public class GroupController {
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("não encontrado")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            } else if (e.getMessage() != null && e.getMessage().contains("inativo")) {
+                return ResponseEntity.status(HttpStatus.GONE).build(); // 410 Gone
             }
             return ResponseEntity.badRequest().build();
         }
@@ -99,7 +101,9 @@ public class GroupController {
     }
 
     // PATCH /groups/{groupId} - Atualizar grupo
-    @PatchMapping("/groups/{groupId}")
+    @PatchMapping(value = "/groups/{groupId}", 
+                  consumes = "application/json", 
+                  produces = "application/json")
     public ResponseEntity<GroupResponse> updateGroup(@PathVariable String groupId, @RequestBody GroupUpdateRequest request) {
         try {
             UUID groupUUID = UUID.fromString(groupId);
@@ -110,9 +114,10 @@ public class GroupController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
+            if (e.getMessage().contains("não encontrado") || e.getMessage().contains("não é membro")) {
                 return ResponseEntity.notFound().build();
-            } else if (e.getMessage().contains("administradores")) {
+            }
+            if (e.getMessage().contains("administradores") || e.getMessage().contains("Membros só podem remover a si mesmos")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             return ResponseEntity.badRequest().build();
@@ -135,6 +140,8 @@ public class GroupController {
                 return ResponseEntity.notFound().build();
             } else if (e.getMessage().contains("administradores")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } else if (e.getMessage().contains("já está inativo")) {
+                return ResponseEntity.status(HttpStatus.GONE).build(); // 410 Gone
             }
             return ResponseEntity.badRequest().build();
         }

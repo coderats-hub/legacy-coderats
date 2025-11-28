@@ -15,10 +15,10 @@ import dev.coderats.backend.domain.Group;
 public interface GroupRepository extends JpaRepository<Group, UUID> {
 
     /**
-     * Encontra todos os grupos dos quais um usuário participa.
+     * Encontra todos os grupos ATIVOS dos quais um usuário participa.
      * (Corrigido para aceitar UUID, como discutimos)
      */
-    @Query("SELECT g FROM Group g JOIN g.participants p WHERE p.id.userId = :userId")
+    @Query("SELECT g FROM Group g JOIN g.participants p WHERE p.id.userId = :userId AND g.status = true")
     List<Group> findGroupsByUserId(@Param("userId") UUID userId);
 
     /**

@@ -94,6 +94,29 @@ class GroupRemoteService {
     return Group.fromJson(map['group']);
   }
 
+  Future<void> leaveGroup(String groupId, String userId) async {
+    final resp = await http.patch('/groups/$groupId', {
+      'remove_participants': [userId],
+    });
+
+    if (resp.statusCode != 200) {
+      _throwHttp('Erro ao sair do grupo', resp);
+    }
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    final resp = await http.delete('/groups/$groupId');
+
+    if (resp.statusCode != 204 && resp.statusCode != 200) {
+      if (resp.statusCode == 410) {
+        throw Exception('Este grupo já está inativo');
+      } else if (resp.statusCode == 403) {
+        throw Exception('Apenas administradores podem excluir o grupo');
+      }
+      _throwHttp('Erro ao excluir grupo', resp);
+    }
+  }
+
   String _formatDate(DateTime date) => date.toUtc().toIso8601String();
 
   Never _throwHttp(String fallback, dynamic resp) {

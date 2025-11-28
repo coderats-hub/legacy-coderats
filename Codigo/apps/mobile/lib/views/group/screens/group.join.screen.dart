@@ -86,6 +86,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         
         if (e.toString().contains('404')) {
           errorMessage = 'Código inválido. Verifique e tente novamente.';
+        } else if (e.toString().contains('410') || e.toString().contains('inativo')) {
+          errorMessage = 'Este grupo está inativo e não aceita novos membros.';
         } else if (e.toString().contains('internet') || e.toString().contains('Conexao')) {
           errorMessage = 'Sem conexão com a internet.';
         } else if (e.toString().contains('401') || e.toString().contains('403')) {
