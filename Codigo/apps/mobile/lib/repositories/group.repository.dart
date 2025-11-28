@@ -23,8 +23,15 @@ class GroupRepository {
 
   Future<void> _syncUsersCache() async {
     if (local == null) return;
-    final users = await userRemote.getAllUsers();
-    await local!.cacheUsers(users);
+    try {
+      final users = await userRemote.getAllUsers();
+      await local!.cacheUsers(users);
+    } catch (_) {
+      final current = session.currentUser;
+      if (current != null) {
+        await local!.cacheUsers([current]);
+      }
+    }
   }
 
   Future<List<Group>> getUserGroups() async {

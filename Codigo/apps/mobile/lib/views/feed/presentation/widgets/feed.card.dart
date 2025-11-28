@@ -29,9 +29,10 @@ class _GithubCard extends StatelessWidget {
             children: [
               Expanded(
                 child: UserAvatarInfo(
-                  label: item.groupName,
-                  subtitle: item.userName,
+                  label: item.author.name,
+                  subtitle: '@${item.author.githubUser}',
                   avatarRadius: 16,
+                  imageUrl: item.author.image,
                 ),
               ),
               Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w600)),
@@ -52,7 +53,7 @@ class _GithubCard extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Abrir: ${item.githubUrl}')));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Visualizar commits do GitHub')));
                 },
                 child: Container(
                   height: 44,
@@ -83,13 +84,15 @@ class _GithubCard extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(text: item.title, style: AppTextStyles.inputLabel.copyWith(fontSize: 14)),
-                const TextSpan(text: ' '),
-                TextSpan(text: item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+                if (item.description != null && item.description!.isNotEmpty) ...[ // Fixed spread operator
+                  const TextSpan(text: ' '),
+                  TextSpan(text: item.description!, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+                ],
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text('Há 2 dias', style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
+          Text(_formatDate(item.createdAt), style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
         ],
@@ -113,9 +116,10 @@ class _RegularCard extends StatelessWidget {
             children: [
               Expanded(
                 child: UserAvatarInfo(
-                  label: item.groupName,
-                  subtitle: item.userName,
+                  label: item.author.name,
+                  subtitle: '@${item.author.githubUser}',
                   avatarRadius: 16,
+                  imageUrl: item.author.image,
                 ),
               ),
               Text('${item.points} pts', style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w600)),
@@ -126,15 +130,36 @@ class _RegularCard extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(text: item.title, style: AppTextStyles.inputLabel.copyWith(fontSize: 14)),
-                TextSpan(text: ' '),
-                TextSpan(text: item.description, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+                if (item.description != null && item.description!.isNotEmpty) ...[ // Fixed spread operator
+                  const TextSpan(text: ' '),
+                  TextSpan(text: item.description!, style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary)),
+                ],
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(_formatDate(item.createdAt), style: AppTextStyles.inputHint.copyWith(fontSize: 12)),
           const SizedBox(height: AppSpacing.md),
           const Divider(color: AppColors.border),
         ],
       ),
     );
+  }
+}
+
+String _formatDate(DateTime date) {
+  final now = DateTime.now();
+  final difference = now.difference(date);
+
+  if (difference.inDays > 30) {
+    return 'Há ${(difference.inDays / 30).floor()} ${(difference.inDays / 30).floor() == 1 ? 'mês' : 'meses'}';
+  } else if (difference.inDays > 0) {
+    return 'Há ${difference.inDays} ${difference.inDays == 1 ? 'dia' : 'dias'}';
+  } else if (difference.inHours > 0) {
+    return 'Há ${difference.inHours} ${difference.inHours == 1 ? 'hora' : 'horas'}';
+  } else if (difference.inMinutes > 0) {
+    return 'Há ${difference.inMinutes} ${difference.inMinutes == 1 ? 'minuto' : 'minutos'}';
+  } else {
+    return 'Agora mesmo';
   }
 }

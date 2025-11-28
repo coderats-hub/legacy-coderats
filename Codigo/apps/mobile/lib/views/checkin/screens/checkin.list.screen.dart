@@ -11,7 +11,9 @@ import '../widgets/shared_widgets.dart';
 
 class CheckinScreen extends StatefulWidget {
   final String? groupId;
-  const CheckinScreen({super.key, this.groupId});
+  final String? groupName;
+  
+  const CheckinScreen({super.key, this.groupId, this.groupName});
 
   @override
   State<CheckinScreen> createState() => _CheckinScreenState();
@@ -63,7 +65,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppHeader(
-          title: 'Check-ins: Code Rats',
+          title: 'Check-ins: ${widget.groupName ?? 'Code Rats'}',
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
@@ -245,10 +247,18 @@ class _PostCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.lg, AppSpacing.sm, AppSpacing.lg),
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: AppColors.surface,
-                child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
+              GestureDetector(
+                onTap: () {
+                  // TODO: Adicionar ID do usuário quando disponível
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Perfil de $username - ID necessário')),
+                  );
+                },
+                child: const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppColors.surface,
+                  child: Icon(Icons.person, color: AppColors.textPrimary, size: 18),
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(username, style: AppTextStyles.subtitle.copyWith(fontWeight: FontWeight.w500)),

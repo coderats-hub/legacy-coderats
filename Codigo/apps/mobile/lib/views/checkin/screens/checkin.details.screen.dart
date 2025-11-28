@@ -13,8 +13,9 @@ import '../widgets/shared_widgets.dart';
 
 class CommitCheckinScreen extends StatefulWidget {
   final String? groupId;
-  final String? groupRepository;
-  const CommitCheckinScreen({super.key, this.groupId, this.groupRepository});
+  final String? groupName;
+  
+  const CommitCheckinScreen({super.key, this.groupId, this.groupName});
 
   @override
   State<CommitCheckinScreen> createState() => _CommitCheckinScreenState();
@@ -53,7 +54,6 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
   void initState() {
     super.initState();
     _titleController.addListener(() => setState(() {}));
-    _groupRepository = widget.groupRepository;
     _loadCommits();
   }
 
@@ -256,8 +256,8 @@ class _CommitCheckinScreenState extends State<CommitCheckinScreen> {
       data: SharedTheme.buildDarkTheme(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const AppHeader(
-          title: 'Code Rats',
+        appBar: AppHeader(
+          title: widget.groupName ?? 'Code Rats',
         ),
         body: SafeArea(
           child: SingleChildScrollView(

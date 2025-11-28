@@ -28,11 +28,23 @@ import 'package:app/views/checkin/widgets/shared_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 // Tela de perfil público de outros usuários (não o próprio)
 class PublicProfileScreen extends StatefulWidget {
-  const PublicProfileScreen({super.key});
+  final String? userId;
+  final String? userName;
+  final String? userImage;
+  final String? githubUser;
+
+  const PublicProfileScreen({
+    super.key,
+    this.userId,
+    this.userName,
+    this.userImage,
+    this.githubUser,
+  });
 
   @override
   State<PublicProfileScreen> createState() => _PublicProfileScreenState();
@@ -43,6 +55,28 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
   final Map<DateTime, List<dynamic>> _markedDateMap = {};  // Mapa de datas com atividades
   bool _isLoading = false;
   Object? _error;
+
+  Future<void> _openGitHubProfile(String githubUsername) async {
+    final url = 'https://github.com/$githubUsername';
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Não foi possível abrir o perfil do GitHub')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao abrir o perfil do GitHub')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +110,18 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
           children: [
             // Header padrão do perfil (avatar + nome + ação)
             ProfileHeader(
-              name: "Alice",           // TODO: Nome dinâmico do usuário
+              name: widget.userName ?? "Usuário",           // Nome do usuário passado como parâmetro
               actionLabel: "Ver GitHub", // Ação para visualizar GitHub
               actionIcon: Icons.link,
-              onAction: () {          // TODO: Implementar abertura do GitHub
-                // Abrir perfil GitHub do usuário
+              imageUrl: widget.userImage, // Imagem do usuário passada como parâmetro
+              onAction: () async {
+                if (widget.githubUser != null) {
+                  await _openGitHubProfile(widget.githubUser!);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('GitHub não está conectado!')),
+                  );
+                }
               },
             ),
             const SizedBox(height: 12),

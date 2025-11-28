@@ -25,6 +25,7 @@ class ProfileHeader extends StatelessWidget {
   final String actionLabel;
   final IconData actionIcon;
   final VoidCallback onAction;
+  final String? imageUrl;
 
   const ProfileHeader({
     super.key,
@@ -32,6 +33,7 @@ class ProfileHeader extends StatelessWidget {
     required this.actionLabel,
     required this.actionIcon,
     required this.onAction,
+    this.imageUrl,
   });
 
   @override
@@ -39,7 +41,24 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       children: [
         // Avatar circular grande
-        const AppAvatar(size: 96),
+        AppAvatar(
+          size: 96,
+          child: imageUrl != null && imageUrl!.isNotEmpty
+              ? ClipOval(
+                  child: Image.network(
+                    imageUrl!,
+                    width: 96,
+                    height: 96,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(Icons.person, color: Colors.white, size: 48),
+                      );
+                    },
+                  ),
+                )
+              : null,
+        ),
         const SizedBox(height: AppSpacing.sm),
         
         // Nome do usuário
