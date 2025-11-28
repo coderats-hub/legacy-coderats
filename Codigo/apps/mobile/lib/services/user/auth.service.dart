@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:app/domain/user/auth_response.model.dart';
+import 'package:app/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app/core/session_manager.dart';
@@ -24,11 +25,16 @@ class AuthService {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         
         final authResponse = AuthResponse.fromJson(responseBody);
-
+        
+        // Salva o token primeiro
         await SessionManager.instance.setSession(
           token: authResponse.token,
-          user: authResponse.user,
+          user: null, // Ainda não temos o user
         );
+        
+        // Agora busca os dados do usuário usando o token
+        await _fetchAndUpdateCurrentUser(authResponse.token, baseUrl);
+        
         return true;
       } else {
         throw Exception('Falha ao trocar o código: ${response.statusCode}');
@@ -36,6 +42,30 @@ class AuthService {
     } catch (e) {
       print('Erro no AuthService: $e');
       rethrow;
+    }
+  }
+
+  Future<void> _fetchAndUpdateCurrentUser(String token, String baseUrl) async {
+    final Uri uri = Uri.parse('$baseUrl/users/me');
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> userData = json.decode(response.body);
+        final user = User.fromJson(userData);
+        
+        // Atualiza o SessionManager com os dados do usuário
+        SessionManager.instance.updateUser(user);
+      }
+    } catch (e) {
+      print('Erro ao buscar dados do usuário: $e');
     }
   }
 }
