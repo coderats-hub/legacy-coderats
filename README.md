@@ -21,6 +21,60 @@ O objetivo é proporcionar motivação para os estudos por comunidade e metas cl
 * Pedro Henrique Ramos Costa
 * Ilo Amy Saldanha Rivero
 
-## Instruções de utilização
+## Instruções de Utilização
 
-[Assim que a primeira versão do sistema estiver disponível, deverá complementar com as instruções de utilização. Descreva como instalar eventuais dependências e como executar a aplicação.]
+### Versão Web
+
+A aplicação Web pode ser acessada pelos ambientes abaixo:
+
+- **Ambiente produtivo:**  
+  http://coderats-web-estatico-dev.s3-website.us-east-2.amazonaws.com/
+
+- **Ambiente de homologação:**  
+  http://coderats-web-estatico-stg.s3-website.us-east-2.amazonaws.com/
+
+---
+
+### Versão Mobile
+
+#### Requisitos
+
+1. Emulador Android que não utilize VMWare nativamente  
+   (recomendado: **Android Studio** ou **BlueStacks 5**),  
+   **OU**  
+2. Dispositivo Android físico para instalação do APK.  
+3. Observação: **iOS ainda não é suportado.**
+
+---
+
+#### Como Baixar
+
+1. Clique no arquivo ZIP contendo o APK:
+
+   ![GIF_funcionamento](https://github.com/user-attachments/assets/9f10e2f8-430d-4014-b9ba-f506c6b34762)
+
+2. O download será iniciado:
+
+   <img width="430" height="99" src="https://github.com/user-attachments/assets/717bdaf3-310d-4ee6-959f-7db093b4c78a" />
+
+3. Extraia o arquivo `.apk` de dentro do `.zip`:
+
+   <img width="690" height="182" src="https://github.com/user-attachments/assets/11684cf3-8619-49e3-849d-608c7f3e9c43" />
+
+---
+
+### Instalação
+
+#### Se estiver usando **Emulador**
+
+- Arraste o arquivo **APK** para dentro do emulador.  
+- A instalação começará automaticamente.
+
+#### Se estiver usando **Dispositivo Android**
+
+1. Envie o arquivo APK para o celular (USB, e-mail, Drive etc.).
+2. Ative a permissão para instalar apps de fontes desconhecidas.
+3. Abra o APK pelo gerenciador de arquivos e instale.
+
+---
+
