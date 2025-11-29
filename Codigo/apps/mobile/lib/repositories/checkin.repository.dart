@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin/checkin.dart';
@@ -46,10 +47,19 @@ class CheckinRepository {
     final resp = await http.get(uri, headers: _headers(token));
     _ensureSuccess(resp, uri);
 
-    final List<dynamic> data = json.decode(resp.body) as List<dynamic>;
-    return data
-        .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
-        .toList();
+    final decoded = json.decode(resp.body);
+    if (decoded is List) {
+      return decoded
+          .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    if (decoded is Map<String, dynamic> && decoded['checkins_recentes'] is List) {
+      final list = decoded['checkins_recentes'] as List<dynamic>;
+      return list
+          .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    throw Exception('Formato inesperado ao carregar check-ins do grupo');
   }
 
   Future<Checkin> createCheckin({
@@ -72,7 +82,10 @@ class CheckinRepository {
       payload['description'] = description;
     }
     if (image != null && image.isNotEmpty) {
-      payload['image'] = image;
+      final uploaded = await _uploadImage(image, token);
+      if (uploaded != null) {
+        payload['image'] = uploaded;
+      }
     }
     if (summaryAi != null && summaryAi.isNotEmpty) {
       payload['summary_ai'] = summaryAi;
@@ -110,5 +123,25 @@ class CheckinRepository {
     }
     throw Exception(
         'Request to ${uri.path} failed with status ${resp.statusCode}');
+  }
+
+  Future<String?> _uploadImage(String base64, String token) async {
+    final bytes = base64Decode(base64);
+    final uri = Uri.parse('$_baseUrl/uploads/images');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: 'checkin-image.jpg',
+      contentType: MediaType.parse('image/jpeg'),
+    ));
+    final streamed = await request.send();
+    final resp = await http.Response.fromStream(streamed);
+    if (resp.statusCode == 201) {
+      final map = json.decode(resp.body) as Map<String, dynamic>;
+      return map['url'] as String?;
+    }
+    throw Exception('Erro ao enviar imagem: HTTP ${resp.statusCode}');
   }
 }

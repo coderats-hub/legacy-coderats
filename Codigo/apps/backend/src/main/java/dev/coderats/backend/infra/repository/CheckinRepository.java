@@ -42,4 +42,25 @@ public interface CheckinRepository extends JpaRepository<Checkin, UUID> {
             ORDER BY c.createdAt DESC
             """)
     List<Checkin> findRecentByGroupId(@Param("groupId") UUID groupId, Pageable pageable);
+
+    @Query(value = """
+            SELECT c.user_id, SUM(c.points) AS total
+            FROM checkins c
+            WHERE c.group_id = :groupId
+              AND c.deleted_at IS NULL
+            GROUP BY c.user_id
+            ORDER BY total DESC
+            """, nativeQuery = true)
+    List<Object[]> findUserPointsByGroup(@Param("groupId") UUID groupId);
+
+    @Query(value = """
+            SELECT u.id, u.name, u.image, u.github_user, SUM(c.points) AS total
+            FROM checkins c
+            JOIN users u ON u.id = c.user_id
+            WHERE c.deleted_at IS NULL
+            GROUP BY u.id, u.name, u.image, u.github_user
+            ORDER BY total DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Object[]> findTopUsersByPoints(@Param("limit") int limit);
 }

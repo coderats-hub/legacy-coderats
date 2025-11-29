@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app/domain/group/group.dart';
 import 'package:app/domain/group/group_details.dart';
 import 'package:app/services/http_client.dart';
+import 'package:http_parser/http_parser.dart';
 
 class GroupRemoteService {
   final HttpClient http;
@@ -86,10 +87,30 @@ class GroupRemoteService {
     String? image,
     List<String>? participantsRemove,
   }) async {
+    String? imageUrl;
+    if (image != null && image.isNotEmpty) {
+      try {
+        final bytes = base64Decode(image);
+        final uploadResp = await http.postMultipart(
+          path: '/uploads/images',
+          fileBytes: bytes,
+          filename: 'group-cover.jpg',
+          mimeType: 'image/jpeg',
+        );
+        if (uploadResp.statusCode != 201) {
+          _throwHttp('Erro ao enviar imagem', uploadResp);
+        }
+        final uploadJson = jsonDecode(uploadResp.body);
+        imageUrl = uploadJson['url'] as String?;
+      } catch (_) {
+        imageUrl = image; // fallback: usa o que veio
+      }
+    }
+
     final body = {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
-      if (image != null) 'image': image,
+      if (imageUrl != null) 'image': imageUrl,
       if (participantsRemove != null) 'participants_remove': participantsRemove,
     };
 

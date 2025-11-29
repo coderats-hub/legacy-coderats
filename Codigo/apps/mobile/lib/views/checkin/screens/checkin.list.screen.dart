@@ -353,7 +353,26 @@ class _CheckinCard extends StatelessWidget {
                   ],
                 ),
                 
-                const SizedBox(height: AppSpacing.md),
+                if (checkin.image != null && checkin.image!.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppCorners.md),
+                    child: Image.network(
+                      checkin.image!,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 180,
+                        width: double.infinity,
+                        color: AppColors.border,
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ] else
+                  const SizedBox(height: AppSpacing.md),
                 
                 // Título do check-in
                 Text(
@@ -511,6 +530,24 @@ class _CheckinDetailModal extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (checkin.image != null && checkin.image!.isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(AppCorners.md),
+                          child: Image.network(
+                            checkin.image!,
+                            height: 240,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              height: 240,
+                              color: AppColors.border,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
                       // Info do autor
                       Row(
                         children: [

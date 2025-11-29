@@ -38,6 +38,26 @@ class GroupRepository {
     final userId = session.currentUserId;
     final online = await net.isOnline();
 
+    // 1) tenta cache imediato
+    if (local != null && userId != null) {
+      final cached = await local!.getGroupsByUser(userId);
+      if (cached.isNotEmpty) {
+        // Retorna cache primeiro (UI pode mostrar de imediato)
+        // mas segue adiante para tentar atualizar se online
+        if (!online) return cached;
+        // se online, faz fetch e atualiza depois
+        try {
+          final groups = await remote.getUserGroups();
+          await _syncUsersCache();
+          await local!.cacheGroups(groups, userId);
+          return groups;
+        } catch (_) {
+          return cached;
+        }
+      }
+    }
+
+    // 2) caminho normal
     if (online) {
       try {
         final groups = await remote.getUserGroups();
@@ -98,6 +118,22 @@ class GroupRepository {
       repository: repository,
       startDate: startDate,
       endDate: endDate,
+    );
+  }
+
+  Future<Group> updateGroup(
+    String id, {
+    String? name,
+    String? description,
+    String? image,
+    List<String>? participantsRemove,
+  }) async {
+    return remote.updateGroup(
+      id,
+      name: name,
+      description: description,
+      image: image,
+      participantsRemove: participantsRemove,
     );
   }
 

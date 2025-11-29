@@ -22,6 +22,7 @@ import dev.coderats.backend.web.dto.response.CheckinLikeResponse;
 import dev.coderats.backend.web.dto.response.CheckinPreviewResponse;
 import dev.coderats.backend.web.dto.response.CheckinResponse;
 import dev.coderats.backend.web.dto.response.GitHubCommitResponse;
+import dev.coderats.backend.domain.UserSummary;
 
 @RestController
 public class CheckinController {
@@ -42,18 +43,27 @@ public class CheckinController {
     }
 
     @GetMapping("/groups/{groupId}/checkins")
-    public ResponseEntity<List<CheckinResponse>> getByGroup(
+    public ResponseEntity<dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse> getByGroup(
             @PathVariable String groupId,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset) {
         try {
             UUID gid = UUID.fromString(groupId);
             UUID userId = getCurrentUserId();
-            var data = checkinService.getGroupCheckins(userId, gid, limit, offset);
+            var data = checkinService.getGroupWithCheckins(userId, gid, limit, offset);
             return ResponseEntity.ok(data);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+    }
+
+    @GetMapping("/checkins/top-users")
+    public ResponseEntity<List<UserSummary>> topUsers(
+            @RequestParam(defaultValue = "3") int limit) {
+        var data = checkinService.getTopUsersByPoints(limit);
+        return ResponseEntity.ok(data);
     }
 
     @PostMapping("/groups/{groupId}/checkins")

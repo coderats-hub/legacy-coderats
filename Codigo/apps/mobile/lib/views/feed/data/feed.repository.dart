@@ -7,14 +7,22 @@
 
 import '../domain/feed.dart';
 import '../../../services/api_service.dart';
-import '../../../core/env.dart';
+import '../../../services/local_database.dart';
+import 'package:app/database/feed/feed.dao.dart';
 
 class FeedRepository {
   final ApiService _apiService;
+  final FeedDao? _local;
 
-  FeedRepository(this._apiService);
+  FeedRepository(this._apiService, {FeedDao? local}) : _local = local;
 
   Future<List<FeedItem>> fetchFeedItems({int limit = 20, int offset = 0}) async {
+    // Tenta cache imediato
+    if (_local != null) {
+      final cached = await _local!.getFeed(limit, offset);
+      if (cached.isNotEmpty) return cached;
+    }
+
     try {
       final response = await _apiService.getJson('/feed?limit=$limit&offset=$offset');
       
@@ -23,9 +31,21 @@ class FeedRepository {
       }
 
       final List<dynamic> feedList = response as List<dynamic>;
-      return feedList.map((json) => FeedItem.fromJson(json as Map<String, dynamic>)).toList();
+      final items = feedList.map((json) => FeedItem.fromJson(json as Map<String, dynamic>)).toList();
+
+      // Cachear
+      if (_local != null) {
+        await _local!.cacheFeed(items);
+      }
+
+      return items;
     } catch (e) {
       print('Erro ao buscar feed: $e');
+      // Se erro, tentar cache
+      if (_local != null) {
+        final fallback = await _local!.getFeed(limit, offset);
+        if (fallback.isNotEmpty) return fallback;
+      }
       rethrow;
     }
   }

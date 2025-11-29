@@ -111,6 +111,70 @@ public class CheckinService {
                 .collect(Collectors.toList());
     }
 
+    public dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse getGroupWithCheckins(UUID requesterId, UUID groupId, int limit, int offset) {
+        if (!participantRepository.existsByUserIdAndGroupId(requesterId, groupId)) {
+            throw new IllegalStateException("Usuário não pertence ao grupo");
+        }
+
+        var group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalStateException("Grupo não encontrado"));
+
+        var checkins = getGroupCheckins(requesterId, groupId, limit, offset);
+
+        var participants = participantRepository.findByIdGroupId(groupId);
+        var ranking = new java.util.ArrayList<dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse.GroupRankingItem>();
+
+        participants.sort((a, b) -> Integer.compare(b.getPoints(), a.getPoints()));
+        for (var p : participants) {
+            var user = userRepository.findById(p.getUserId()).orElse(null);
+            if (user == null) continue;
+            ranking.add(new dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse.GroupRankingItem(
+                    user.getId(),
+                    user.getName(),
+                    user.getImage(),
+                    user.getGithubUser(),
+                    Double.valueOf(p.getPoints()),
+                    p.getRole()
+            ));
+        }
+
+        return new dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse(
+                group.getId(),
+                group.getName(),
+                group.getDescription(),
+                group.getImage(),
+                group.getCode(),
+                group.getRepository(),
+                group.getMethod(),
+                group.isStatus(),
+                group.getStartDate(),
+                group.getEndDate(),
+                group.getCreatedAt(),
+                group.getUpdatedAt(),
+                checkins,
+                ranking
+        );
+    }
+
+    /**
+     * Retorna os top N usuários pelo somatório de pontos em check-ins (desc).
+     */
+    public List<UserSummary> getTopUsersByPoints(int limit) {
+        int lim = Math.max(1, limit);
+        var rows = checkinRepository.findTopUsersByPoints(lim);
+        var result = new java.util.ArrayList<UserSummary>();
+        for (Object[] row : rows) {
+            if (row.length < 5) continue;
+            UUID uid = row[0] instanceof UUID ? (UUID) row[0] : UUID.fromString(row[0].toString());
+            String name = row[1] != null ? row[1].toString() : "";
+            String image = row[2] != null ? row[2].toString() : null;
+            String githubUser = row[3] != null ? row[3].toString() : "";
+            Double points = ((Number) row[4]).doubleValue();
+            result.add(new UserSummary(uid, name, image, githubUser, points, null));
+        }
+        return result;
+    }
+
     public List<CheckinSummary> getRecentSummaries(UUID groupId, int limit) {
         return checkinRepository.findRecentByGroupId(groupId, PageRequest.of(0, limit))
                 .stream()

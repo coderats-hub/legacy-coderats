@@ -3,10 +3,11 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'group/group.tables.dart';
+import 'feed/feed_tables.dart';
 
 class AppDatabase {
   static const String _dbName = 'coderats_cache.db';
-  static const int _version = 2;
+  static const int _version = 3;
 
   static Future<Database> open() async {
     final dbPath = await getDatabasesPath();
@@ -17,6 +18,7 @@ class AppDatabase {
       version: _version,
       onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -26,5 +28,12 @@ class AppDatabase {
 
   static Future<void> _onCreate(Database db, int version) async {
     await GroupTables.createV1(db);
+    await FeedTables.createV1(db);
+  }
+
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      await FeedTables.createV1(db);
+    }
   }
 }
