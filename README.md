@@ -99,7 +99,11 @@ Documentacao/                  → Documentação do projeto
 
 A aplicação Web pode ser acessada pelos ambientes abaixo:
 
-- **Ambiente produtivo:**  
+  - **Ambiente  Produtivo (Em manutenção):**  
+  http://coderats-web-estatico-prd.s3-website.us-east-2.amazonaws.com/
+
+    ``` O ambiente produtivo acabou de ser migrado para uma nova conta da aws onde conseguimos USD 200 em créditos, portanto ainda está com falhas na infraestrutura, portanto utilize STG ou DEV que estão stable```
+- **Ambiente de desenvolvimento:**  
   http://coderats-web-estatico-dev.s3-website.us-east-2.amazonaws.com/
 
 - **Ambiente de homologação:**  
@@ -121,9 +125,11 @@ A aplicação Web pode ser acessada pelos ambientes abaixo:
 
 #### Como Baixar
 
-1. Clique no arquivo ZIP contendo o APK:
+1. Vá até a nossa pipeline CI/CD no github actions do repositório, e então clique no arquivo ZIP contendo o APK:
 
    ![GIF_funcionamento](https://github.com/user-attachments/assets/9f10e2f8-430d-4014-b9ba-f506c6b34762)
+
+   ```O APK a ser baixado deve ser o da run mais recente da pipeline ocorrido com sucesso na branch de Development para garantia de funcionamento correto das funcionalidades ```
 
 2. O download será iniciado:
 
@@ -148,5 +154,8 @@ A aplicação Web pode ser acessada pelos ambientes abaixo:
 2. Ative a permissão para instalar apps de fontes desconhecidas.
 3. Abra o APK pelo gerenciador de arquivos e instale.
 
+#### Se estiver usando **Outros Dispositvos**
+Suporte para outros dispositvios está chegando em breve!
+```O suporte para ios e liberação do app na google store depende da criação de guardrails de segurança, completude da infraestrutura para múltiplos usuários e das estratégias de escalabilidade, adição de ads e criação de planos assinados dentro da plataforma```
 ---
 
