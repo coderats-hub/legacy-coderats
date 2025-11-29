@@ -6,7 +6,12 @@ Em vez de estudar sozinho, os usuários participam de **desafios em grupo**, com
 
 ---
 
-## 🎯 Objetivos
+* Alice Salim Khouri Antunes
+* Felipe Barros Ratton de Almeida
+* Gustavo Henrique Rodrigues de Castro
+* Laura Menezes Heráclito Alves
+* Mariana Almeida Mendonça
+* Raquel de Parde Motta
 
 * Incentivar a **constância nos estudos** por meio de **gamificação**.
 * Facilitar a criação de **grupos com metas definidas**.
@@ -84,28 +89,64 @@ Documentacao/                  → Documentação do projeto
 
 * Cristiane Neri Nobre
 * Cristiano Neves Rodrigues
+* Rosilane Ribeiro da Mota
+* Pedro Henrique Ramos Costa
+* Ilo Amy Saldanha Rivero
 
-**Papéis na equipe:**
+## Instruções de Utilização
 
-* **Product Owner** Raquel de Parde
-* **Tech Lead:** Mariana Almeida
-* **Dev Mobile:**
-* **Dev Backend:** Alice Salim
-* **DevOps:** Gustavo
-* **Trainee:** Laura Menezes
+### Versão Web
 
-> Todos atuam de forma colaborativa e transversal em tarefas críticas.
+A aplicação Web pode ser acessada pelos ambientes abaixo:
 
----
+- **Ambiente produtivo:**  
+  http://coderats-web-estatico-dev.s3-website.us-east-2.amazonaws.com/
 
-## ✅ Status Atual
-
-* Versão do documento de arquitetura: **1.13**
-* Projeto em fase inicial: definição de arquitetura, planejamento e organização de repositório.
-* Funcionalidades principais de **gamificação e check-ins** já em desenvolvimento.
+- **Ambiente de homologação:**  
+  http://coderats-web-estatico-stg.s3-website.us-east-2.amazonaws.com/
 
 ---
 
-## 📖 Contribuição
+### Versão Mobile
 
-Para contribuir, siga nosso **GitHub Flow** descrito em [`docs/doc_gitflow.md`](./docs/doc_gitflow.md) e consulte [`docs/doc_base.md`](./docs/doc_base.md) para referência de arquitetura e padrões.
+#### Requisitos
+
+1. Emulador Android que não utilize VMWare nativamente  
+   (recomendado: **Android Studio** ou **BlueStacks 5**),  
+   **OU**  
+2. Dispositivo Android físico para instalação do APK.  
+3. Observação: **iOS ainda não é suportado.**
+
+---
+
+#### Como Baixar
+
+1. Clique no arquivo ZIP contendo o APK:
+
+   ![GIF_funcionamento](https://github.com/user-attachments/assets/9f10e2f8-430d-4014-b9ba-f506c6b34762)
+
+2. O download será iniciado:
+
+   <img width="430" height="99" src="https://github.com/user-attachments/assets/717bdaf3-310d-4ee6-959f-7db093b4c78a" />
+
+3. Extraia o arquivo `.apk` de dentro do `.zip`:
+
+   <img width="690" height="182" src="https://github.com/user-attachments/assets/11684cf3-8619-49e3-849d-608c7f3e9c43" />
+
+---
+
+### Instalação
+
+#### Se estiver usando **Emulador**
+
+- Arraste o arquivo **APK** para dentro do emulador.  
+- A instalação começará automaticamente.
+
+#### Se estiver usando **Dispositivo Android**
+
+1. Envie o arquivo APK para o celular (USB, e-mail, Drive etc.).
+2. Ative a permissão para instalar apps de fontes desconhecidas.
+3. Abra o APK pelo gerenciador de arquivos e instale.
+
+---
+
