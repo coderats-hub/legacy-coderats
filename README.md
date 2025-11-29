@@ -155,7 +155,9 @@ A aplicação Web pode ser acessada pelos ambientes abaixo:
 3. Abra o APK pelo gerenciador de arquivos e instale.
 
 #### Se estiver usando **Outros Dispositvos**
-Suporte para outros dispositvios está chegando em breve!
-```O suporte para ios e liberação do app na google store depende da criação de guardrails de segurança, completude da infraestrutura para múltiplos usuários e das estratégias de escalabilidade, adição de ads e criação de planos assinados dentro da plataforma```
----
+
+  Suporte para outros dispositvios está chegando em breve!
+  ```O suporte para ios e liberação do app na google store depende da criação de guardrails de segurança, completude da infraestrutura para múltiplos usuários e das estratégias de escalabilidade, adição de ads e criação de planos assinados dentro da plataforma```
+  
+  ---
 
