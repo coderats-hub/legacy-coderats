@@ -1,0 +1,256 @@
+package dev.coderats.backend.service;
+
+import java.security.SecureRandom;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import dev.coderats.backend.domain.CheckinSummary;
+import dev.coderats.backend.domain.Group;
+import dev.coderats.backend.domain.GroupParticipant;
+import dev.coderats.backend.domain.User;
+import dev.coderats.backend.domain.UserSummary;
+import dev.coderats.backend.infra.repository.GroupParticipantRepository;
+import dev.coderats.backend.infra.repository.GroupRepository;
+import dev.coderats.backend.infra.repository.UserRepository;
+import dev.coderats.backend.web.dto.request.GroupCreateRequest;
+import dev.coderats.backend.web.dto.request.GroupUpdateRequest;
+import dev.coderats.backend.web.dto.response.GroupWithDetailsResponse;
+
+@Service
+public class GroupService {
+
+    private final GroupRepository groupRepository;
+    private final GroupParticipantRepository participantRepository;
+    private final UserRepository userRepository;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    public GroupService(GroupRepository groupRepository, GroupParticipantRepository participantRepository, UserRepository userRepository) {
+        this.groupRepository = groupRepository;
+        this.participantRepository = participantRepository;
+        this.userRepository = userRepository;
+    }
+
+    // CORREÇÃO: Removido o .toString()
+    public List<Group> getGroupsForUser(UUID userId) {
+        return groupRepository.findGroupsByUserId(userId);
+    }
+
+    // REMOVIDO: O método findCommonGroups foi movido para o GroupRepository
+    @Transactional
+    public Group createGroup(GroupCreateRequest request, UUID creatorUserId) {
+        // Criar o grupo
+        Group group = new Group();
+        group.setName(request.name());
+        group.setDescription(request.description());
+        group.setImage(request.image());
+        group.setRepository(request.repository());
+        group.setMethod(request.method());
+        group.setStartDate(request.start_date() != null ? request.start_date() : OffsetDateTime.now(ZoneOffset.UTC));
+        group.setEndDate(request.end_date());
+        group.setStatus(true);
+
+        // Gerar código único se não fornecido
+        if (request.code() != null && !request.code().trim().isEmpty()) {
+            group.setCode(request.code().trim());
+        } else {
+            group.setCode(generateUniqueCode());
+        }
+
+        Group savedGroup = groupRepository.save(group);
+
+        User user = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new RuntimeException("Usuário criador não encontrado"));
+
+        GroupParticipant creator = new GroupParticipant(user.getId(), savedGroup.getId(), "admin");
+        creator.setUser(user);
+        creator.setGroup(savedGroup);
+
+        participantRepository.save(creator);
+
+        return savedGroup;
+    }
+
+    public Optional<Group> getGroupById(UUID groupId) {
+        return groupRepository.findById(groupId);
+    }
+
+    @Transactional
+    public GroupJoinResult joinGroupByCode(String code, UUID targetUserId) {
+        if (!StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("Código do grupo é obrigatório");
+        }
+
+        Group group = groupRepository.findByCode(code.trim())
+                .orElseThrow(() -> new RuntimeException("Grupo não encontrado para o código informado"));
+
+        if (!group.isStatus()) {
+            throw new RuntimeException("Este grupo está inativo e não aceita novos membros");
+        }
+
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        GroupParticipant participant = participantRepository
+                .findByIdUserIdAndIdGroupId(user.getId(), group.getId())
+                .orElseGet(() -> {
+                    GroupParticipant gp = new GroupParticipant(user.getId(), group.getId(), "member");
+                    gp.setUser(user);
+                    gp.setGroup(group);
+                    return participantRepository.save(gp);
+                });
+
+        return new GroupJoinResult(group, participant);
+    }
+
+    public GroupWithDetailsResponse getGroupWithDetails(UUID groupId) {
+        Optional<Group> groupOpt = groupRepository.findById(groupId);
+        if (groupOpt.isEmpty()) {
+            return null;
+        }
+        Group group = groupOpt.get();
+
+        List<GroupParticipant> participants = participantRepository.findByGroupIdWithUsers(groupId);
+
+        List<UserSummary> participantSummaries = participants.stream()
+                .map(gp -> {
+                    return new UserSummary(
+                        gp.getUser().getId(), 
+                        gp.getUser().getName(), 
+                        gp.getUser().getImage(),
+                        gp.getUser().getGithubUser(),
+                        (double) gp.getPoints(), 
+                        gp.getRole()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        List<CheckinSummary> recentCheckins = List.of(); 
+
+        return new GroupWithDetailsResponse(
+                group.getId(),
+                group.getName(),
+                group.getDescription(),
+                group.getImage(),
+                group.getCode(),
+                group.getRepository(),
+                group.getMethod(),
+                group.isStatus(),
+                group.getStartDate(),
+                group.getEndDate(),
+                group.getCreatedAt(),
+                group.getUpdatedAt(),
+                participantSummaries,
+                recentCheckins
+        );
+    }
+    @Transactional
+    public Group updateGroup(UUID groupId, GroupUpdateRequest request, UUID userIdFromAuth) {
+        Optional<Group> groupOpt = groupRepository.findById(groupId);
+        if (groupOpt.isEmpty()) {
+            throw new RuntimeException("Grupo não encontrado");
+        }
+
+        Group group = groupOpt.get();
+
+        Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
+        if (participation.isEmpty()) {
+            throw new RuntimeException("Usuário não é membro do grupo");
+        }
+
+        boolean isAdmin = "admin".equals(participation.get().getRole());
+        
+        boolean isSelfRemovalOnly = request.remove_participants() != null 
+            && request.remove_participants().size() == 1
+            && request.remove_participants().get(0).equals(userIdFromAuth.toString())
+            && request.name() == null 
+            && request.description() == null 
+            && request.image() == null
+            && request.repository() == null
+            && request.method() == null
+            && request.status() == null
+            && request.end_date() == null;
+
+        if (!isAdmin && !isSelfRemovalOnly) {
+            throw new RuntimeException("Apenas administradores podem atualizar o grupo");
+        }
+
+        if (request.name() != null) {
+            group.setName(request.name());
+        }
+        if (request.description() != null) {
+            group.setDescription(request.description());
+        }
+        if (request.image() != null) {
+            group.setImage(request.image());
+        }
+        if (request.repository() != null) {
+            group.setRepository(request.repository());
+        }
+        if (request.method() != null) {
+            group.setMethod(request.method());
+        }
+        if (request.status() != null) {
+            group.setStatus(request.status());
+        }
+        if (request.end_date() != null) {
+            group.setEndDate(request.end_date());
+        }
+
+        if (request.remove_participants() != null && !request.remove_participants().isEmpty()) {
+            List<UUID> userIdsToRemove = request.remove_participants().stream()
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList());
+            
+            if (!isAdmin) {
+                for (UUID id : userIdsToRemove) {
+                    if (!id.equals(userIdFromAuth)) {
+                        throw new RuntimeException("Membros só podem remover a si mesmos");
+                    }
+                }
+            }
+            
+            participantRepository.deleteByIdUserIdInAndIdGroupId(userIdsToRemove, groupId);
+        }
+
+        return groupRepository.save(group);
+    }
+
+    @Transactional
+    public void deleteGroup(UUID groupId, UUID userIdFromAuth) {
+        Optional<Group> groupOpt = groupRepository.findById(groupId);
+        if (groupOpt.isEmpty()) {
+            throw new RuntimeException("Grupo não encontrado");
+        }
+
+        Group group = groupOpt.get();
+        
+        if (!group.isStatus()) {
+            throw new RuntimeException("Grupo já está inativo");
+        }
+        Optional<GroupParticipant> participation = participantRepository.findByIdUserIdAndIdGroupId(userIdFromAuth, groupId);
+        if (participation.isEmpty() || !"admin".equals(participation.get().getRole())) {
+            throw new RuntimeException("Apenas administradores podem excluir o grupo");
+        }
+
+        group.setStatus(false);
+        groupRepository.save(group);
+    }
+
+    private String generateUniqueCode() {
+        String code;
+        do {
+            code = String.format("%03d", secureRandom.nextInt(1000));
+        } while (groupRepository.findByCode(code).isPresent());
+        return code;
+    }
+
+    public record GroupJoinResult(Group group, GroupParticipant participant) {}
+}

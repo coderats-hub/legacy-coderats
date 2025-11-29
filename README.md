@@ -1,10 +1,10 @@
-# CodeRats
+# CodeRats 🚀
 
-CodeRats é um aplicativo que transforma a rotina de codificação de estudantes da área de tecnologia em um jogo amistoso. A ideia consiste em registrar progresso, somar pontos e comparar resultados em rankings para criar uma competição saudável que estimula consistência. Em vez de estudar sozinho, a pessoa entra em desafios compartilhados, vê sua evolução ao lado dos colegas e sente aquele empurrão extra para manter o ritmo.
+**CodeRats** é um aplicativo que transforma a rotina de estudo de estudantes de tecnologia em um **jogo motivacional**. Através de check-ins diários, pontuação e rankings, os alunos acompanham sua evolução, competem de forma saudável e transformam consistência em hábito.
 
-O objetivo é proporcionar motivação para os estudos por comunidade e metas claras: grupos com objetivos definidos, check-ins rápidos para marcar presença e um placar que destaca quem está mandando bem na semana. Essa dinâmica de “pequenas vitórias + reconhecimento” torna o estudo mais leve, divertido e contínuo, ajudando cada aluno a transformar disciplina em hábito e hábito em resultados.
+Em vez de estudar sozinho, os usuários participam de **desafios em grupo**, compartilham conquistas e recebem reconhecimento por pequenas vitórias, tornando o aprendizado mais leve, divertido e contínuo.
 
-## Alunos integrantes da equipe
+---
 
 * Alice Salim Khouri Antunes
 * Felipe Barros Ratton de Almeida
@@ -13,7 +13,79 @@ O objetivo é proporcionar motivação para os estudos por comunidade e metas cl
 * Mariana Almeida Mendonça
 * Raquel de Parde Motta
 
-## Professores responsáveis
+* Incentivar a **constância nos estudos** por meio de **gamificação**.
+* Facilitar a criação de **grupos com metas definidas**.
+* Registrar **check-ins com foto e geolocalização**.
+* Destacar evolução em **placares semanais**.
+* Futuras integrações com **GitHub** e **IA** para feedback de código.
+
+---
+
+
+## 🛠 Stack Tecnológica
+
+| Camada         | Tecnologia                    |
+| -------------- | ----------------------------- |
+| Frontend       | Flutter                       |
+| Backend        | SpringBoot                    |
+| Banco de Dados | PostgreSQL + SQLite (offline) |
+| Hospedagem     | AWS                           |
+| CI/CD          | GitHub Actions                |
+| Ambiente Dev   | Docker                        |
+
+---
+
+## 📦 Estrutura do Repositório
+
+O projeto segue o padrão **monorepo**, organizado em:
+
+```
+Codigo/
+├── .github/               → Configurações de automação e workflows
+│   └── workflows/main.yml → Pipeline de build, testes e deploy
+├── apps/                  → Aplicações do projeto
+│   ├── backend            → API em Node.js (NestJS)
+│   └── mobile             → Aplicativo Flutter (Android/iOS)
+├── packages/              → Pacotes e utilitários compartilhados
+├── .gitignore             → Arquivos ignorados pelo Git
+├── docker-compose.yml     → Containers para desenvolvimento
+└── README.md              → Este documento
+
+Documentacao/                  → Documentação do projeto
+├── doc_base.md        → Arquitetura e planejamento
+└── doc_gitflow.md     → Guia de fluxo de trabalho (GitHub Flow)
+```
+
+---
+
+## 🚀 Releases
+
+| Release | Funcionalidade                                         |
+| ------- | ------------------------------------------------------ |
+| **R1**  | Check-ins com foto e geolocalização                    |
+| **R2**  | Integração com GitHub via OAuth                        |
+| **R3**  | Análise de código com IA e feedback automatizado       |
+| **R4**  | Associações de grupos a repositórios para comparativos |
+
+---
+
+## 👥 Equipe
+
+**Integrantes:**
+
+[![Alice](https://img.shields.io/badge/GitHub-Alice-<cor>?style=for-the-badge&logo=github)](https://github.com/alicesalim)
+
+[![Felipe](https://img.shields.io/badge/GitHub-Felipe-<cor>?style=for-the-badge&logo=github)](https://github.com/nkdwon)
+
+[![Gustavo](https://img.shields.io/badge/GitHub-Gustavo-<cor>?style=for-the-badge&logo=github)](https://github.com/GhrCastro)
+
+[![Laura](https://img.shields.io/badge/GitHub-Laura-<cor>?style=for-the-badge&logo=github)](https://github.com/username)
+
+[![Mariana](https://img.shields.io/badge/GitHub-Mariana-<cor>?style=for-the-badge&logo=github)](https://github.com/marialmeida1)
+
+[![Raquel](https://img.shields.io/badge/GitHub-Mariana-<cor>?style=for-the-badge&logo=github)](https://github.com/raksmotta)
+
+**Professores responsáveis:**
 
 * Cristiane Neri Nobre
 * Cristiano Neves Rodrigues

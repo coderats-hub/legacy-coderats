@@ -1,0 +1,909 @@
+openapi: 3.0.3
+info:
+  title: Code Rats API
+  description: |-
+    API social e gamificada para desenvolvedores acompanharem seu progresso de estudos.
+    Análoga ao conceito de "Gym Rats", mas para o mundo do código.
+  version: 1.2.1
+servers:
+  - url: https://virtserver.swaggerhub.com/coderats/code-rats-api/1.2.0
+    description: Servidor de Mock
+
+tags:
+  - name: Autenticação
+    description: Endpoints para registro e login de usuários.
+  - name: Usuários
+    description: Operações relacionadas aos perfis dos usuários.
+  - name: Grupos
+    description: Gerenciamento de grupos de estudo e desafios.
+  - name: Check-ins
+    description: Operações para registrar e visualizar o progresso dos usuários.
+  - name: Badges
+    description: Visualização de badges e conquistas.
+  - name: Mock API
+    description: Endpoints de mock para testes e desenvolvimento.
+
+paths:
+  # =============================================
+  # Autenticação (Novo)
+  # =============================================
+  /auth/github/callback:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar login ou registro via GitHub
+      description: |-
+        Recebe o código temporário 'code' fornecido pelo GitHub OAuth.
+        O backend troca esse código por um token de acesso do GitHub,
+        autentica ou cria o usuário na plataforma Code Rats,
+        e retorna o perfil do usuário e um token JWT da sessão.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  description: O código temporário recebido do GitHub após o consentimento do usuário.
+                  example: "a1b2c3d4e5f6g7h8"
+      responses:
+        '200':
+          description: Autenticação bem-sucedida. Retorna o objeto do usuário e o token JWT.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/PrivateUserResponse'
+                  token:
+                    type: string
+              example:
+                user:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  name: "Ana Coder"
+                  email: "ana.coder@email.com"
+                  image: "https://avatars.githubusercontent.com/u/12345"
+                  github_user: "anacoder"
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtMTIzNC01Njc4OTBhYmNkZWYifQ.token"
+        '400':
+          description: "Código 'code' inválido ou expirado."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 400
+                message: "Código OAuth inválido."
+
+  # =============================================
+  # Usuários (/me)
+  # =============================================
+  /users/me:
+    get:
+      tags:
+        - Usuários
+      summary: Obter meu perfil
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivateUserResponse'
+              example:
+                id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                name: "Ana Coder"
+                email: "ana.coder@email.com"
+                image: "https://example.com/path/to/image.png"
+                github_user: "anacoder"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        
+  /users/me/groups:
+    get:
+      tags:
+        - Grupos
+      summary: Listar meus grupos com detalhes
+      description: Retorna uma lista paginada dos grupos que eu participo, incluindo uma prévia dos participantes e dos check-ins recentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Lista de grupos do usuário com detalhes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupWithDetails'
+              example:
+                - id: "group-uuid-abc"
+                  name: "Desafio 30 Dias de Testes"
+                  description: "Grupo para focar em TDD e testes unitários."
+                  image: "https://coderats.com/image.jpg"
+                  status: true
+                  participants:
+                    - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                      name: "Ana Coder"
+                      image: "https://example.com/path/to/ana_image.png"
+                      points: "10"
+                    - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                      name: "Beto Debugger"
+                      image: "https://example.com/path/to/beto_image.png"
+                      points: "23"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/badges:
+    get:
+      tags:
+        - Badges
+      summary: Listar minhas badges
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de badges que eu conquistei.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Badge'
+              example:
+                - id: "badge-uuid-01"
+                  name: "Rato Iniciante"
+                  image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  description: "Realizou seu primeiro check-in!"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Usuários
+      summary: Obter perfil público de um usuário e grupos em comum
+      description: Retorna os detalhes públicos de um usuário específico, além de uma lista dos grupos que vocês dois participam.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: O ID do usuário a ser consultado.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Perfil público do usuário com a lista de grupos em comum.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserProfileWithGroups'
+              example:
+                profile:
+                  id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                  name: "Beto Debugger"
+                  image: "https://example.com/path/to/beto_image.png"
+                  github_user: "betodebugger"
+                common_groups:
+                  - id: "group-uuid-abc"
+                    name: "Desafio 30 Dias de Testes"
+                    image: "https://coderats.com/image.jpg"
+                  - id: "group-uuid-xyz"
+                    name: "Estudantes de Arquitetura de Software"
+                  - image: "https://coderats.com/image.jpg"
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =============================================
+  # Feed
+  # =============================================
+  # Atualize a rota /feed em 'paths'
+
+  /feed:
+    get:
+      tags:
+        - Check-ins
+      summary: Obter meu feed principal
+      description: Retorna uma lista paginada de check-ins de todos os grupos que eu participo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Lista de check-ins do feed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Checkin'
+              example:
+                - id: "checkin-uuid-123"
+                  title: "Dia 15: Refatorando a API de pagamentos"
+                  description: "Apliquei o padrão Strategy para os gateways de pagamento. O código ficou bem mais limpo e fácil de manter, separando cada lógica de pagamento em sua própria classe. O próximo passo é adicionar testes de integração."
+                  image: "https://example.com/screenshots/refactoring.png"
+                  summary_ai: "Excelente aplicação do padrão Strategy! Separar as responsabilidades torna o código mais escalável e manutenível, o que é uma prática de um desenvolvedor sênior. Adicionar testes de integração é o caminho certo para garantir a robustez da solução. Continue assim!"
+                  points: 150
+                  createdAt: "2025-09-25T22:10:00Z"
+                  author:
+                    id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                  likes_count: 25
+                  liked_by_me: true
+                  comments:
+                    - id: "comment-uuid-xyz"
+                      content: "Belo trabalho! O padrão Strategy é perfeito para isso. Você pensou em usar o padrão Factory para instanciar os gateways?"
+                      author:
+                        id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                        name: "Ana Coder"
+                        image: "https://example.com/path/to/ana_image.png"
+                    - id: "comment-uuid-abc"
+                      content: "Muito bom! Isso vai facilitar muito a adição de novos métodos de pagamento no futuro."
+                      author:
+                        id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+                        name: "Carla Scripter"
+                        image: "https://example.com/path/to/carla_image.png"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  # =============================================
+  # Grupos
+  # =============================================
+  /groups:
+    post:
+      tags:
+        - Grupos
+      summary: Criar um novo grupo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Grupo criado com sucesso.
+          content:
+            application/json:
+              example:
+                name: "Estudando Elixir e Phoenix"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /groups/{groupId}:
+    get:
+      tags:
+        - Grupos
+      summary: Detalhes de um grupo
+      description: Retorna todas as informações de um grupo específico, incluindo a lista de seus participantes e os check-ins mais recentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Detalhes do grupo com participantes e check-ins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWithDetails'
+              example:
+                id: "group-uuid-abc"
+                name: "Desafio 30 Dias de Testes"
+                description: "Grupo para focar em TDD e testes unitários."
+                image: "https://coderats.com/image.jpg"
+                code: "123"
+                method: "streak_images"
+                status: true
+                participants:
+                  - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    name: "Ana Coder"
+                    image: "https://example.com/path/to/ana_image.png"
+                    points: "10"
+                  - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                    points: "12"
+                  - id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+                    name: "Carla Scripter"
+                    image: "https://example.com/path/to/carla_image.png"
+                    points: "14"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Grupos
+      summary: Atualizar um grupo
+      description: |-
+        Permite a Atualizar do name, descrição e image de um grupo.
+        Adicionalmente, permite remover um ou mais participantes através de uma lista de IDs. O usuário deve ser o administrador do grupo para realizar esta ação.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Grupo atualizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupWithDetails' # Retorna o objeto completo para o cliente ver o resultado
+              example:
+                id: "group-uuid-abc"
+                name: "Desafio 30 Dias de Testes (Avançado)"
+                description: "Foco em TDD, BDD e testes de integração."
+                code: "123"
+                image: "https://cdn.coderats.com/groups/new_cover.png"
+                repository: "https://github.com/coderats/desafio-testes"
+                method: "streak_images"
+                status: true
+                start_date: "2025-09-01T00:00:00Z"
+                end_date: "2025-09-30T23:59:59Z"
+                participants: # Exibe a lista de participantes atualizada (sem o usuário removido)
+                  - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    name: "Ana Coder"
+                    image: "https://example.com/path/to/ana_image.png"
+                  - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                    name: "Beto Debugger"
+                    image: "https://example.com/path/to/beto_image.png"
+                recent_checkins: [] # O backend retornaria os check-ins recentes aqui
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Grupos
+      summary: Excluir um grupo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Grupo excluído com sucesso.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /groups/join:
+    post:
+      tags:
+        - Grupos
+      summary: Entrar em um grupo usando código
+      description: |
+        Adiciona o usuário ao grupo correspondente ao `code`.
+        Por padrão, o usuário é identificado pelo JWT em `Authorization: Bearer <token>`.
+        Opcionalmente, `userId` pode ser enviado no corpo para fluxos administrativos (requer permissão).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupJoinRequest'
+            example:
+              code: "123"           # código do grupo
+              userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef"  # opcional (admin)
+      responses:
+        '201':
+          description: Entrada realizada com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupJoinResponse'
+              example:
+                group:
+                  id: "group-uuid-abc"
+                  name: "Desafio 30 Dias de Testes"
+                  image: "https://coderats.com/image.jpg"
+                  status: true
+                membership:
+                  role: "member"
+                  joined_at: "2025-11-05T22:15:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Acesso negado (grupo inativo, privado sem código válido, ou tentativa de usar `userId` sem permissão administrativa).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 403
+                message: "Acesso Negado"
+                details: "Permissão insuficiente para especificar userId."
+        '404':
+          description: Código de grupo não encontrado ou expirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 404
+                message: "Recurso Não Encontrado"
+                details: "Código de grupo inválido."
+        '409':
+          description: Usuário já é participante do grupo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 409
+                message: "Conflito"
+                details: "Usuário já participa deste grupo."
+  # =============================================
+  # Check-ins
+  # =============================================
+  /groups/{groupId}/checkins:
+    post:
+      tags:
+        - Check-ins
+      summary: Criar um novo check-in em um grupo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinCreate'
+      responses:
+        '201':
+          description: Check-in criado com sucesso.
+          content:
+            application/json:
+              example:
+                title: "Finalizei o módulo de GenServer em Elixir"
+                points: 150
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/like:
+    post:
+      tags:
+        - Check-ins
+      summary: Curtir um check-in
+      description: Adiciona a curtida do usuário autenticado a um check-in.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Check-in curtido com sucesso. Retorna o objeto da curtida criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Like'
+              example:
+                id: "like-uuid-2"
+                author:
+                  id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  name: "Ana Coder"
+                  image: "https://example.com/path/to/image.png"
+        '409':
+          description: Conflito. O usuário já curtiu este check-in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                statusCode: 409
+                message: "Usuário já curtiu este check-in."
+    delete:
+      tags:
+        - Check-ins
+      summary: Descurtir um check-in
+      description: Remove a curtida do usuário autenticado de um check-in.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Curtida removida com sucesso.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/comments:
+    post:
+      tags:
+        - Check-ins
+      summary: Adicionar um comentário a um check-in
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  example: "Excelente progresso! Continue assim."
+      responses:
+        '201':
+          description: Comentário adicionado.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /checkins/{checkinId}/comments/{commentId}:
+    delete:
+      tags:
+        - Check-ins
+      summary: Excluir um comentário de um check-in
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: checkinId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '204':
+          description: Comentário excluído.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  # =============================================
+  # Badges
+  # =============================================
+  /badges:
+    get:
+      tags:
+        - Badges
+      summary: Listar todas as badges disponíveis
+      responses:
+        '200':
+          description: Lista de todas as badges.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Badge'
+              example:
+                - id: "badge-uuid-01"
+                  name: "Rato Iniciante"
+                  image: "https://cdn.coderats.com/badges/rato-iniciante.svg"
+                  description: "Realizou seu primeiro check-in!"
+
+components:
+  schemas:
+    UserBase:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        image: { type: string, format: uri, nullable: true }
+        github_user: { type: string }
+    PublicUserProfile:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+    PrivateUserResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserBase'
+        - type: object
+          properties:
+            email: { type: string, format: email }
+    UserSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        image: { type: string, format: uri, nullable: true }
+    UserUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        image: { type: string, format: uri }
+    Group:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        image: {type: string }
+        code: {type: string }
+        method: {type: string}
+        status: {type: boolean}
+        description: { type: string }
+        repository: { type: string, format: uri, nullable: true }
+        start_date: { type: string, format: date-time }
+        end_date: { type: string, format: date-time, nullable: true }
+    GroupCreate:
+      type: object
+      required: [name, start_date, end_date]
+      properties:
+        name: { type: string, example: "Desafio 30 Dias de Testes" }
+        image: {type: string, example: "https://cdn.coderats.com/group/rato-iniciante.svg" }
+        description: { type: string, example: "Grupo para focar em TDD e testes unitários." }
+        method: {type: string, example: "streak_images"}
+        repository: { type: string, format: uri, example: "https://github.com/coderats/desafio-testes" }
+        start_date: { type: string, format: date-time }
+        end_date: { type: string, format: date-time }
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: O novo nome do grupo.
+          example: "Desafio 30 Dias de Testes (Avançado)"
+        description:
+          type: string
+          description: A nova descrição do grupo.
+          example: "Foco em TDD, BDD e testes de integração."
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: A nova URL para a image de capa do grupo.
+        participants_remove:
+          type: array
+          description: Lista com os IDs dos participantes a serem removidos do grupo.
+          items:
+            type: string
+            format: uuid
+          example:
+            - "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+    Checkin:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        image: { type: string, format: uri, nullable: true }
+        summary_ai: { type: string, nullable: true }
+        points: { type: integer }
+        createdAt: { type: string, format: date-time }
+        author: { $ref: '#/components/schemas/UserSummary' }
+        likes_count:
+          type: integer
+          description: "O número total de curtidas no check-in."
+        liked_by_me:
+          type: boolean
+          description: "Indica se o usuário autenticado curtiu este check-in."
+        comments:
+          type: array
+          description: "Pode ser uma lista parcial dos comentários mais recentes."
+          items:
+            $ref: '#/components/schemas/Comment'
+    CheckinCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, example: "Dia 05: Testes Unitários com Jest" }
+        description: { type: string, example: "Foquei em mocks e spies." }
+        image: { type: string, format: uri }
+    Badge:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        image: { type: string, format: uri }
+        points: { type: integer }
+        description: { type: string }
+    Comment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        content: { type: string }
+        author: { $ref: '#/components/schemas/UserSummary' }
+    Like:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        author: { $ref: '#/components/schemas/UserSummary' }
+    Commits: 
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        link: { type: string }
+        titulo: { type: string }
+        hash: { type: string }
+    Error:
+      type: object
+      properties:
+        statusCode: { type: integer }
+        message: { type: string }
+        details: { type: string, nullable: true }
+    GroupSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "group-uuid-abc"
+        name:
+          type: string
+          example: "Desafio 30 Dias de Testes"
+        status:
+          type: boolean
+          example: true
+        image:
+          type: string
+          example: "https://example.com/path/to/image.png"
+    PublicUserProfileWithGroups:
+      type: object
+      properties:
+        profile:
+          $ref: '#/components/schemas/PublicUserProfile'
+        common_groups:
+          type: array
+          description: Lista de grupos que este usuário e você (usuário autenticado) têm em comum.
+          items:
+            $ref: '#/components/schemas/GroupSummary'
+
+    CheckinSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "checkin-uuid-abc"
+        title:
+          type: string
+          example: "Dia 05: Testes Unitários com Jest"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-26T11:00:00Z"
+        author:
+          $ref: '#/components/schemas/UserSummary'
+
+    GroupWithDetails:
+      allOf:
+        - $ref: '#/components/schemas/Group'
+        - type: object
+          properties:
+            participants:
+              type: array
+              description: Uma lista de membros do grupo.
+              items:
+                $ref: '#/components/schemas/UserSummary'
+    GroupJoinRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: Código de ingresso do grupo.
+          example: "123"
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Opcional. Use apenas em fluxos administrativos/serviço. 
+            Se ausente, o backend resolve o usuário a partir do JWT.
+    GroupJoinResponse:
+      type: object
+      properties:
+        group:
+          $ref: '#/components/schemas/GroupSummary'
+        membership:
+          type: object
+          properties:
+            role:
+              type: string
+              enum: [admin, member]
+              example: "member"
+            joined_at:
+              type: string
+              format: date-time
+    
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Número máximo de itens a serem retornados.
+      schema: { type: integer, default: 20 }
+    Offset:
+      name: offset
+      in: query
+      description: Número de itens a serem pulados para paginação.
+      schema: { type: integer, default: 0 }
+  responses:
+    BadRequest:
+      description: Requisição inválida.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 400
+            message: "Erro de Validação"
+            details: "O campo 'email' deve ser um email válido."
+    Unauthorized:
+      description: Não autorizado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 401
+            message: "Token de autenticação não fornecido ou inválido."
+    Forbidden:
+      description: Acesso negado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 403
+            message: "Acesso Negado"
+            details: "Você não tem permissão para excluir este comentário."
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example:
+            statusCode: 404
+            message: "Recurso Não Encontrado"
+            details: "O grupo com o ID 'group-uuid-nao-existe' não foi encontrado."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Insira o token JWT com o prefixo 'Bearer ' (Ex: 'Bearer eyJhbG...')"
+security:
+  - bearerAuth: []
