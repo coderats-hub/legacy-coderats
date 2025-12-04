@@ -136,82 +136,83 @@ class _GroupListScreenState extends State<GroupListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         child: Column(
           children: [
-          if (!_online)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-              color: AppColors.skip.withOpacity(0.15),
-              child: Row(
-                children: [
-                  Icon(Icons.wifi_off, color: AppColors.skip, size: 16),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      'Sem conexão — exibindo cache (somente leitura)',
-                      style: AppTextStyles.subtitle.copyWith(color: AppColors.skip, fontSize: 12),
+            if (!_online)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                color: AppColors.skip.withOpacity(0.15),
+                child: Row(
+                  children: [
+                    Icon(Icons.wifi_off, color: AppColors.skip, size: 16),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Sem conexao - exibindo cache (somente leitura)',
+                        style: AppTextStyles.subtitle.copyWith(color: AppColors.skip, fontSize: 12),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary,
-              backgroundColor: AppColors.surface,
-              onRefresh: _pullToRefresh,
-              child: _futureGroups == null
-                  ? const Center(child: AppLoading())
-                  : FutureBuilder<List<Group>>(
-                      future: _futureGroups!,
-                      builder: (context, snap) {
-                        if (snap.connectionState == ConnectionState.waiting) {
-                          return const Center(child: AppLoading());
-                        }
-                        if (snap.hasError) {
-                           return Center(
-                             child: Padding(
-                               padding: const EdgeInsets.all(AppSpacing.xl),
-                               child: Text(
-                                 'Erro ao carregar: ${snap.error}',
-                                 textAlign: TextAlign.center,
-                                 style: AppTextStyles.subtitle.copyWith(color: AppColors.error),
-                               ),
-                             ),
-                           );
-                        }
-
-                        final groups = snap.data ?? const <Group>[];
-                        // Ordenar grupos por nome em ordem alfabética
-                        groups.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-
-                        if (groups.isEmpty) {
-                          return ListView(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
-                            children: [
-                              const SizedBox(height: AppSpacing.xxl),
-                              Icon(Icons.group_outlined, size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
-                              const SizedBox(height: AppSpacing.lg),
-                              Center(
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: AppColors.surface,
+                onRefresh: _pullToRefresh,
+                child: _futureGroups == null
+                    ? const Center(child: AppLoading())
+                    : FutureBuilder<List<Group>>(
+                        future: _futureGroups!,
+                        builder: (context, snap) {
+                          if (snap.connectionState == ConnectionState.waiting) {
+                            return const Center(child: AppLoading());
+                          }
+                          if (snap.hasError) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppSpacing.xl),
                                 child: Text(
-                                  'Nenhum grupo no momento.\nCrie um novo para começar!',
+                                  'Erro ao carregar: ${snap.error}',
                                   textAlign: TextAlign.center,
-                                  style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+                                  style: AppTextStyles.subtitle.copyWith(color: AppColors.error),
                                 ),
                               ),
-                            ],
-                          );
-                        }
+                            );
+                          }
 
-                        return GroupListByRole(
-                          groups: groups,
-                          groupRepository: _groupRepository!,
-                          onGroupChanged: _reload,
-                        );
-                      },
-                    ),
+                          final groups = snap.data ?? const <Group>[];
+                          // Ordenar grupos por nome em ordem alfabetica
+                          groups.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+                          if (groups.isEmpty) {
+                            return ListView(
+                              padding: const EdgeInsets.all(AppSpacing.xl),
+                              children: [
+                                const SizedBox(height: AppSpacing.xxl),
+                                Icon(Icons.group_outlined, size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
+                                const SizedBox(height: AppSpacing.lg),
+                                Center(
+                                  child: Text(
+                                    'Nenhum grupo no momento.\\nCrie um novo para começar!',
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
+                          return GroupListByRole(
+                            groups: groups,
+                            groupRepository: _groupRepository!,
+                            onGroupChanged: _reload,
+                          );
+                        },
+                      ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
