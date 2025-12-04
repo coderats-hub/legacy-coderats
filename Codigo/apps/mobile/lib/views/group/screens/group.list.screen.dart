@@ -3,6 +3,7 @@ import 'package:app/repositories/group.repository.dart';
 import 'package:app/services/http_client.dart';
 import 'package:app/services/local_database.dart';
 import 'package:flutter/material.dart';
+import 'package:app/shared/ads/ad_banner_footer.dart';
 
 // --- IMPORTS DE DOMÍNIO ---
 import 'package:app/domain/group/group.dart';
@@ -209,16 +210,24 @@ class _GroupListScreenState extends State<GroupListScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: AppNavbar(
-        currentIndex: 1, // Grupos é o índice 1
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.of(context).pushReplacementNamed('/feed');
-          } else if (index == 2) {
-            Navigator.of(context).pushReplacementNamed('/profile');
-          }
-          // Se index == 1, já está na tela de grupos
-        },
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBannerFooter(
+            padding: EdgeInsets.only(top: AppSpacing.xs),
+          ),
+          AppNavbar(
+            currentIndex: 1, // Grupos = index 1
+            onTap: (index) {
+              if (index == 0) {
+                Navigator.of(context).pushReplacementNamed('/feed');
+              } else if (index == 2) {
+                Navigator.of(context).pushReplacementNamed('/profile');
+              }
+              // Se index == 1, ja esta na tela de grupos
+            },
+          ),
+        ],
       ),
     );
   }

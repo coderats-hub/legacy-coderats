@@ -1,26 +1,24 @@
 import 'package:app/core/session_manager.dart';
 import 'package:app/domain/group/group_participant.dart';
 import 'package:app/views/feed/presentation/screens/feed.list.screen.dart';
-import 'package:app/views/group/screens/group.ranking.screen.dart';
+import 'package:app/views/group/screens/group.create.screen.dart';
 import 'package:app/views/group/screens/group.details.screen.dart';
 import 'package:app/views/group/screens/group.join.screen.dart';
 import 'package:app/views/group/screens/group.list.screen.dart';
+import 'package:app/views/group/screens/group.ranking.screen.dart';
 import 'package:app/views/profile/screens/private.profile.screen.dart';
 import 'package:app/views/user/screens/code_exchange.screen.dart';
 import 'package:app/views/user/screens/home.screen.dart';
 import 'package:app/views/user/screens/onboarding.screen.dart';
-import 'package:app/views/group/screens/group.create.screen.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'shared/theme/app.theme.dart';
-
-import 'package:app/core/session_manager.dart';
-import 'package:app/views/group/screens/group.details.screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await MobileAds.instance.initialize();
   await SessionManager.instance.loadFromStorage();
 
   runApp(const App());

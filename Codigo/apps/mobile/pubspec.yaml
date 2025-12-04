@@ -52,6 +52,7 @@ dependencies:
   url_launcher: ^6.2.6
   intl: ^0.18.1
   flutter_file_dialog: ^3.0.2
+  google_mobile_ads: ^3.0.0
 
   # === Platform Compatibility (Dart 3.x) ===
   win32: ^5.5.1

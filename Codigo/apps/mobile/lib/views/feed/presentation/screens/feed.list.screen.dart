@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app/shared/ads/ad_banner_footer.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import '../../domain/feed.dart';
@@ -147,10 +148,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
           showBackButton: false,
         ),
         body: const AppLoading(),
-        bottomNavigationBar: AppNavbar(
-          currentIndex: 0,
-          onTap: (i) => _onNavbarTap(context, i),
-        ),
+        bottomNavigationBar: _buildBottomBar(0),
       );
     }
 
@@ -188,10 +186,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: AppNavbar(
-          currentIndex: 0,
-          onTap: (i) => _onNavbarTap(context, i),
-        ),
+        bottomNavigationBar: _buildBottomBar(0),
       );
     }
 
@@ -250,10 +245,22 @@ class _FeedListScreenState extends State<FeedListScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: AppNavbar(
-        currentIndex: 0,
-        onTap: (i) => _onNavbarTap(context, i),
-      ),
+      bottomNavigationBar: _buildBottomBar(0),
+    );
+  }
+
+  Widget _buildBottomBar(int currentIndex) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const AdBannerFooter(
+          padding: EdgeInsets.only(top: AppSpacing.xs),
+        ),
+        AppNavbar(
+          currentIndex: currentIndex,
+          onTap: (i) => _onNavbarTap(context, i),
+        ),
+      ],
     );
   }
 

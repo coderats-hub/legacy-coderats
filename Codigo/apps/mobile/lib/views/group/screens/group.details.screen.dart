@@ -19,6 +19,7 @@ import 'package:app/services/user/user_remote_service.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/utils/string_utils.dart';
+import 'package:app/shared/ads/ad_banner_footer.dart';
 
 import 'package:app/views/group/widgets/banner.group.dart';
 
@@ -410,13 +411,23 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         icon: Icons.add,
         tooltip: 'Novo check-in',
       ),
-      bottomNavigationBar: AppNavbar(
-        currentIndex: 1,
-        onTap: (i) {
-          if (i == 0)
-            Navigator.of(context).pushNamed('/feed');
-          else if (i == 2) Navigator.of(context).pushNamed('/profile');
-        },
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBannerFooter(
+            padding: EdgeInsets.only(top: AppSpacing.xs),
+          ),
+          AppNavbar(
+            currentIndex: 1,
+            onTap: (i) {
+              if (i == 0) {
+                Navigator.of(context).pushNamed('/feed');
+              } else if (i == 2) {
+                Navigator.of(context).pushNamed('/profile');
+              }
+            },
+          ),
+        ],
       ),
     );
   }
