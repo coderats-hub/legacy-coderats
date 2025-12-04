@@ -10,6 +10,7 @@ import 'package:app/views/profile/screens/private.profile.screen.dart';
 import 'package:app/views/user/screens/code_exchange.screen.dart';
 import 'package:app/views/user/screens/home.screen.dart';
 import 'package:app/views/user/screens/onboarding.screen.dart';
+import 'package:app/shared/ads/ad_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -18,7 +19,9 @@ import 'shared/theme/app.theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  await MobileAds.instance.initialize();
+  if (AdHelper.isSupportedPlatform) {
+    await MobileAds.instance.initialize();
+  }
   await SessionManager.instance.loadFromStorage();
 
   runApp(const App());
