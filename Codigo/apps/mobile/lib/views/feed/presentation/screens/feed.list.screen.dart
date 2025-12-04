@@ -146,6 +146,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
         appBar: AppHeader(
           title: 'Feed',
           showBackButton: false,
+          actions: const [LogoutButton()],
         ),
         body: const AppLoading(),
         bottomNavigationBar: _buildBottomBar(0),
@@ -159,6 +160,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
         appBar: AppHeader(
           title: 'Feed',
           onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
+          actions: const [LogoutButton()],
         ),
         body: Center(
           child: Padding(
@@ -195,6 +197,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
       appBar: AppHeader(
         title: 'Feed',
         showBackButton: false,
+        actions: const [LogoutButton()],
       ),
       body: Column(
         children: [

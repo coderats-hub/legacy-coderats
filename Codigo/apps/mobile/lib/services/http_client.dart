@@ -62,7 +62,7 @@ class HttpClient {
   }
 
   Future<Map<String, String>> _headers() async {
-    final token = await session.token;
+    final token = session.validToken;
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',

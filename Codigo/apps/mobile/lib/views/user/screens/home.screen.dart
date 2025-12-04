@@ -23,7 +23,7 @@ class _TelaInicioState extends State<TelaInicio> {
   }
 
   void _redirectIfAuthenticated() {
-    final token = SessionManager.instance.token;
+    final token = SessionManager.instance.validToken;
     if (token != null) {
       Future.microtask(() {
         if (mounted) {

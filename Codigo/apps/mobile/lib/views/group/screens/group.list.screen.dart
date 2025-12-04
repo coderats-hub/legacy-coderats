@@ -130,6 +130,7 @@ class _GroupListScreenState extends State<GroupListScreen> {
       appBar: const AppHeader(
         title: 'Meus Grupos',
         showBackButton: false,
+        actions: [LogoutButton()],
       ),
       body: Column(
         children: [

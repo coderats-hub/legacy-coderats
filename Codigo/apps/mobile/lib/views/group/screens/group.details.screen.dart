@@ -222,12 +222,17 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         'Sem descrição disponível.';
     final displayCode = _group?.code;
 
+    final headerActions = [
+      ..._buildAppBarActions(),
+      const LogoutButton(),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppHeader(
         title: displayName,
         onBack: () => Navigator.of(context).maybePop(),
-        actions: _buildAppBarActions(),
+        actions: headerActions,
       ),
       body: _isLoading
           ? const Center(child: AppLoading())
