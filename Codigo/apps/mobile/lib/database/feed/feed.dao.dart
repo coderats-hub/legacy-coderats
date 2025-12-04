@@ -31,6 +31,16 @@ class FeedDao {
       );
     }
     await batch.commit(noResult: true);
+
+    // Mantém somente os 10 mais recentes no cache local
+    await db.rawDelete('''
+      DELETE FROM feed_items
+      WHERE id NOT IN (
+        SELECT id FROM feed_items
+        ORDER BY datetime(created_at) DESC
+        LIMIT 10
+      )
+    ''');
   }
 
   Future<List<FeedItem>> getFeed(int limit, int offset) async {

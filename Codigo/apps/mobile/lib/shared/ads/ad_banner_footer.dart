@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_helper.dart';
+import 'web_ad_banner_stub.dart'
+    if (dart.library.html) 'web_ad_banner.dart';
 
 class AdBannerFooter extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
@@ -62,7 +65,11 @@ class _AdBannerFooterState extends State<AdBannerFooter> {
 
   @override
   Widget build(BuildContext context) {
-    if (!AdHelper.isSupportedPlatform || !_isLoaded || _bannerAd == null) {
+    if (kIsWeb) {
+      return WebAdBanner(padding: widget.padding);
+    }
+
+    if (!AdHelper.isMobileSupported || !_isLoaded || _bannerAd == null) {
       return const SizedBox.shrink();
     }
 

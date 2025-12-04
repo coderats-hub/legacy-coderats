@@ -8,6 +8,30 @@ class LogoutButton extends StatelessWidget {
   const LogoutButton({super.key});
 
   Future<void> _logout(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Deseja sair?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Você precisará fazer login novamente.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true) return;
+
     await SessionManager.instance.clearSession();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(

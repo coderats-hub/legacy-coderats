@@ -63,6 +63,7 @@ class GroupDao {
       image: row['u_image'] as String?,
       githubUser: (row['u_github_user'] ?? '') as String,
       points: (row['gp_points'] as num?)?.toDouble() ?? 0.0,
+      role: row['gp_role'] as String?,
     );
   }
 
@@ -82,11 +83,12 @@ class GroupDao {
           'id': _uuid.v4(),
           'group_id': g.id,
           'user_id': userId,
-          'role': 'member', 
+          'role': 'member', // default se nǜo sabemos o papel
           'points': 0.0,   
           'created_at': DateTime.now().toIso8601String(),
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
+      await _trimGroupsForUser(txn, userId);
     });
   }
 
@@ -104,11 +106,33 @@ class GroupDao {
   }
 
   Future<List<Group>> getGroupsByUser(String userId) async {
-    final rows = await _db.query(
-      'groups',
-      orderBy: 'start_date DESC',
-    );
-    return rows.map((r) => _groupFromMap(r)).toList();
+    // 10 primeiros grupos que vocǦ gerencia (admin)
+    final admins = await _db.rawQuery('''
+      SELECT g.* FROM groups g
+      JOIN group_participants gp ON gp.group_id = g.id
+      WHERE gp.user_id = ? AND COALESCE(gp.role, 'member') = 'admin'
+      ORDER BY datetime(g.start_date) DESC
+      LIMIT 10
+    ''', [userId]);
+
+    // 10 primeiros grupos que participa (nǜo admin)
+    final members = await _db.rawQuery('''
+      SELECT g.* FROM groups g
+      JOIN group_participants gp ON gp.group_id = g.id
+      WHERE gp.user_id = ? AND COALESCE(gp.role, 'member') != 'admin'
+      ORDER BY datetime(g.start_date) DESC
+      LIMIT 10
+    ''', [userId]);
+
+    final seen = <String>{};
+    final result = <Group>[];
+    for (final row in [...admins, ...members]) {
+      final id = row['id'] as String;
+      if (seen.add(id)) {
+        result.add(_groupFromMap(row));
+      }
+    }
+    return result;
   }
 
   Future<void> cacheGroupDetails(GroupDetails details) async {
@@ -140,7 +164,7 @@ class GroupDao {
             'id': _uuid.v4(),
             'group_id': details.group.id,
             'user_id': member.id,
-            'role': null, 
+            'role': member.role, 
             'points': member.points,
             'created_at': DateTime.now().toIso8601String(),
           },
@@ -166,6 +190,7 @@ class GroupDao {
     final joined = await db.rawQuery('''
       SELECT 
         gp.points as gp_points,
+        gp.role as gp_role,
         u.id as u_id,
         u.name as u_name,
         u.image as u_image,
@@ -188,5 +213,29 @@ class GroupDao {
       where: 'group_id = ? AND user_id = ?',
       whereArgs: [groupId, userId],
     );
+  }
+
+  Future<void> _trimGroupsForUser(Transaction txn, String userId) async {
+    // Mantém apenas 10 por papel (admin e demais)
+    const roles = ['admin', 'member'];
+    for (final role in roles) {
+      final surplus = await txn.rawQuery('''
+        SELECT g.id FROM groups g
+        JOIN group_participants gp ON gp.group_id = g.id
+        WHERE gp.user_id = ? AND COALESCE(gp.role, 'member') = ?
+        ORDER BY datetime(g.start_date) DESC
+        LIMIT -1 OFFSET 10
+      ''', [userId, role]);
+
+      if (surplus.isEmpty) continue;
+      final ids = surplus.map((r) => r['id'] as String).toList();
+      final placeholders = List.filled(ids.length, '?').join(',');
+      await txn.delete('group_participants',
+          where: 'group_id IN ($placeholders)', whereArgs: ids);
+      await txn.delete('groups',
+          where:
+              'id IN ($placeholders) AND NOT EXISTS (SELECT 1 FROM group_participants gp WHERE gp.group_id = groups.id)',
+          whereArgs: ids);
+    }
   }
 }

@@ -83,7 +83,11 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const AppHeader(title: 'Perfil', showBackButton: false),
+        appBar: const AppHeader(
+          title: 'Perfil',
+          showBackButton: false,
+          actions: [LogoutButton()],
+        ),
         body: const AppLoading(),
         bottomNavigationBar: AppNavbar(
           currentIndex: 2,
@@ -97,6 +101,7 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
       appBar: const AppHeader(
         title: 'Perfil',
         showBackButton: false,
+        actions: [LogoutButton()],
       ),
       body: _error != null
           ? _buildErrorView()

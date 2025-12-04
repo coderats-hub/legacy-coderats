@@ -19,7 +19,7 @@ import 'shared/theme/app.theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  if (AdHelper.isSupportedPlatform) {
+  if (AdHelper.isMobileSupported) {
     await MobileAds.instance.initialize();
   }
   await SessionManager.instance.loadFromStorage();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app/shared/ads/ad_banner_footer.dart';
 import 'package:app/shared/components/components.dart';
 import 'package:app/shared/theme/app_theme.dart';
+import 'package:app/shared/layout/web_max_width.dart';
 import '../../domain/feed.dart';
 import '../../data/feed.repository.dart';
 import '../widgets/feed.card.dart';
@@ -146,7 +147,6 @@ class _FeedListScreenState extends State<FeedListScreen> {
         appBar: AppHeader(
           title: 'Feed',
           showBackButton: false,
-          actions: const [LogoutButton()],
         ),
         body: const AppLoading(),
         bottomNavigationBar: _buildBottomBar(0),
@@ -160,7 +160,6 @@ class _FeedListScreenState extends State<FeedListScreen> {
         appBar: AppHeader(
           title: 'Feed',
           onBack: () => Navigator.pushReplacementNamed(context, '/onboarding'),
-          actions: const [LogoutButton()],
         ),
         body: Center(
           child: Padding(
@@ -197,56 +196,58 @@ class _FeedListScreenState extends State<FeedListScreen> {
       appBar: AppHeader(
         title: 'Feed',
         showBackButton: false,
-        actions: const [LogoutButton()],
       ),
-      body: Column(
-        children: [
-          if (_loading)
-            const LinearProgressIndicator(
-              minHeight: 2,
-              color: AppColors.primary,
-              backgroundColor: AppColors.border,
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary,
-              backgroundColor: AppColors.surface,
-              onRefresh: () async {
-                setState(() {
-                  _items.clear();
-                  _offset = 0;
-                  _hasMore = true;
-                  _errorMessage = null;
-                });
-                await _loadMore();
-              },
-              child: ListView.builder(
-                controller: _ctrl,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                itemCount: _items.length + (_loading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index >= _items.length) {
-                    return const SizedBox(
-                      height: 80,
-                      child: AppLoading(),
-                    );
-                  }
-                  final item = _items[index];
-                  return FeedCard(
-                    item: item,
-                    onLike: () => _toggleLike(item),
-                    isLikeLoading: _likesLoading.contains(item.id),
-                  );
+      body: WebMaxWidth(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: Column(
+          children: [
+            if (_loading)
+              const LinearProgressIndicator(
+                minHeight: 2,
+                color: AppColors.primary,
+                backgroundColor: AppColors.border,
+              ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: AppColors.surface,
+                onRefresh: () async {
+                  setState(() {
+                    _items.clear();
+                    _offset = 0;
+                    _hasMore = true;
+                    _errorMessage = null;
+                  });
+                  await _loadMore();
                 },
+                child: ListView.builder(
+                  controller: _ctrl,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  itemCount: _items.length + (_loading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= _items.length) {
+                      return const SizedBox(
+                        height: 80,
+                        child: AppLoading(),
+                      );
+                    }
+                    final item = _items[index];
+                    return FeedCard(
+                      item: item,
+                      onLike: () => _toggleLike(item),
+                      isLikeLoading: _likesLoading.contains(item.id),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(0),
     );

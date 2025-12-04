@@ -27,6 +27,7 @@ import 'package:app/shared/utils/string_utils.dart';
 // --- IMPORTS DO TEMA E COMPONENTES PADRÃO ---
 import 'package:app/shared/theme/app_theme.dart';
 import 'package:app/shared/components/components.dart';
+import 'package:app/shared/layout/web_max_width.dart';
 
 class GroupListScreen extends StatefulWidget {
   const GroupListScreen({super.key});
@@ -130,10 +131,11 @@ class _GroupListScreenState extends State<GroupListScreen> {
       appBar: const AppHeader(
         title: 'Meus Grupos',
         showBackButton: false,
-        actions: [LogoutButton()],
       ),
-      body: Column(
-        children: [
+      body: WebMaxWidth(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: Column(
+          children: [
           if (!_online)
             Container(
               width: double.infinity,
