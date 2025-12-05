@@ -123,7 +123,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coderats-ipa-${{ github.ref_name }}
-          path: Codigo/apps/mobile/build/ios/ipa/*.ipa
+          path: coderats/Codigo/apps/mobile/build/ios/ipa/*.ipa
 
   # ------------------------------------------------------------
   # 3. Web — Build (Flutter) e Deploy no S3
