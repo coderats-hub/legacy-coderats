@@ -141,10 +141,9 @@ jobs:
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
-        working-directory: Codigo/apps/mobile
         with:
           name: coderats-ipa-${{ steps.sanitize.outputs.branch_name }}
-          path: build/ios/ipa/*.ipa
+          path: Codigo/apps/mobile/build/ios/ipa/*.ipa
           if-no-files-found: error
 
   # ------------------------------------------------------------
