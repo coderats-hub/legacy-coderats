@@ -36,6 +36,20 @@ class GroupListScreen extends StatefulWidget {
   State<GroupListScreen> createState() => _GroupListScreenState();
 }
 
+class _CreateGroupFab extends StatelessWidget {
+  final VoidCallback onCreate;
+  const _CreateGroupFab({required this.onCreate});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: onCreate,
+      backgroundColor: AppColors.accent, // roxo da paleta
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text('Criar grupo', style: TextStyle(color: Colors.white)),
+    );
+  }
+}
 class _GroupListScreenState extends State<GroupListScreen> {
   Future<List<Group>>? _futureGroups;
   bool _online = true;
@@ -132,6 +146,12 @@ class _GroupListScreenState extends State<GroupListScreen> {
         title: 'Meus Grupos',
         showBackButton: false,
       ),
+      floatingActionButton: _CreateGroupFab(onCreate: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+        );
+      }),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: WebMaxWidth(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         child: Column(

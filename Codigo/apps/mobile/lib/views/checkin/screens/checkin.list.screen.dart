@@ -8,12 +8,23 @@ import 'package:app/shared/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
+import 'package:app/core/session_manager.dart';
 
 class CheckinScreen extends StatefulWidget {
   final String? groupId;
   final String? groupName;
+  final bool onlyMine;
+  final String? userId;
+  final String? titleOverride;
   
-  const CheckinScreen({super.key, this.groupId, this.groupName});
+  const CheckinScreen({
+    super.key,
+    this.groupId,
+    this.groupName,
+    this.onlyMine = false,
+    this.userId,
+    this.titleOverride,
+  });
 
   @override
   State<CheckinScreen> createState() => _CheckinScreenState();
@@ -28,8 +39,14 @@ class _CheckinScreenState extends State<CheckinScreen> {
   @override
   void initState() {
     super.initState();
+    // default user id if not provided when filtering mine
+    if (widget.onlyMine && widget.userId == null) {
+      _userId = SessionManager.instance.currentUserId;
+    }
     _loadCheckins();
   }
+
+  String? _userId;
 
   Future<void> _loadCheckins() async {
     setState(() {
@@ -42,9 +59,15 @@ class _CheckinScreenState extends State<CheckinScreen> {
           ? await _repository.fetchGroupCheckins(widget.groupId!)
           : await _repository.fetchFeed();
 
+      List<Checkin> filtered = data;
+      if (widget.onlyMine) {
+        final uid = widget.userId ?? _userId;
+        filtered = data.where((c) => c.author.id == uid).toList();
+      }
+
       if (mounted) {
         setState(() {
-          _checkins = data;
+          _checkins = filtered;
           _isLoading = false;
         });
       }
@@ -65,7 +88,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppHeader(
-          title: 'Check-ins: ${widget.groupName ?? 'Code Rats'}',
+          title: widget.titleOverride ?? 'Check-ins: ${widget.groupName ?? 'Code Rats'}',
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: AppColors.textPrimary),

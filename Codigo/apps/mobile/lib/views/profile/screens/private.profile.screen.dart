@@ -12,6 +12,7 @@ import 'package:app/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:app/views/checkin/screens/checkin.list.screen.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
@@ -124,6 +125,8 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       _PrivateActions(),
+                      const SizedBox(height: 12),
+                      _MyCheckinsButton(),
                       const SizedBox(height: 16),
                       _BadgesSection(),
                       // const SizedBox(height: 12),
@@ -338,6 +341,33 @@ class _PrivateActions extends StatelessWidget {
     } else if (index == 1) {
       Navigator.of(context).pushReplacementNamed('/groups');
     }
+  }
+}
+
+class _MyCheckinsButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.accent,
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppCorners.md)),
+      ),
+      icon: const Icon(Icons.list_alt, color: Colors.white),
+      label: const Text('Listar meus check-ins'),
+      onPressed: () {
+        final userId = SessionManager.instance.currentUserId;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CheckinScreen(
+              onlyMine: true,
+              userId: userId,
+              titleOverride: 'Meus check-ins',
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

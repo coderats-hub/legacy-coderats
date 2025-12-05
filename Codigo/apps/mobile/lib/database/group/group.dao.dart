@@ -27,18 +27,18 @@ class GroupDao {
       };
 
   Group _groupFromMap(Map<String, Object?> m) => Group(
-        id: m['id'] as String,
+        id: (m['id'] ?? '') as String,
         name: (m['name'] ?? '') as String,
-        description: m['description'] as String?,
-        image: m['image'] as String?,
+        description: m.containsKey('description') ? m['description'] as String? : null,
+        image: m.containsKey('image') ? m['image'] as String? : null,
         code: m['code'] as String?,
         method: m['method'] as String?,
         status: (m['status'] ?? 1) == 1,
         repository: m['repository'] as String?,
-        startDate: m['start_date'] != null 
-            ? DateTime.parse(m['start_date'] as String) 
-            : null, 
-        endDate: m['end_date'] != null
+        startDate: m['start_date'] != null && (m['start_date'] as String).isNotEmpty
+            ? DateTime.parse(m['start_date'] as String)
+            : null,
+        endDate: m['end_date'] != null && (m['end_date'] as String).isNotEmpty
             ? DateTime.parse(m['end_date'] as String)
             : null,
       );
@@ -108,7 +108,8 @@ class GroupDao {
   Future<List<Group>> getGroupsByUser(String userId) async {
     // 10 primeiros grupos que vocǦ gerencia (admin)
     final admins = await _db.rawQuery('''
-      SELECT g.* FROM groups g
+      SELECT g.id, g.name, g.code, g.method, g.status, g.repository, g.start_date, g.end_date
+      FROM groups g
       JOIN group_participants gp ON gp.group_id = g.id
       WHERE gp.user_id = ? AND COALESCE(gp.role, 'member') = 'admin'
       ORDER BY datetime(g.start_date) DESC
@@ -117,7 +118,8 @@ class GroupDao {
 
     // 10 primeiros grupos que participa (nǜo admin)
     final members = await _db.rawQuery('''
-      SELECT g.* FROM groups g
+      SELECT g.id, g.name, g.code, g.method, g.status, g.repository, g.start_date, g.end_date
+      FROM groups g
       JOIN group_participants gp ON gp.group_id = g.id
       WHERE gp.user_id = ? AND COALESCE(gp.role, 'member') != 'admin'
       ORDER BY datetime(g.start_date) DESC
@@ -139,6 +141,11 @@ class GroupDao {
     final db = _db;
 
     await db.transaction((txn) async {
+      await txn.delete(
+        'group_participants',
+        where: 'group_id = ?',
+        whereArgs: [details.group.id],
+      );
       await txn.insert(
         'groups',
         _groupToMap(details.group),
@@ -164,7 +171,7 @@ class GroupDao {
             'id': _uuid.v4(),
             'group_id': details.group.id,
             'user_id': member.id,
-            'role': member.role, 
+            'role': member.role,
             'points': member.points,
             'created_at': DateTime.now().toIso8601String(),
           },
