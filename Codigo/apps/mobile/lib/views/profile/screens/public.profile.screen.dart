@@ -23,11 +23,11 @@
  * - Foco em visualização, não em ações
  */
 
-import 'package:app/views/profile/widgets/profile_components.dart';
-import 'package:app/views/checkin/widgets/shared_widgets.dart';
+import 'package:coderats/views/profile/widgets/profile_components.dart';
+import 'package:coderats/views/checkin/widgets/shared_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:table_calendar/table_calendar.dart';
 

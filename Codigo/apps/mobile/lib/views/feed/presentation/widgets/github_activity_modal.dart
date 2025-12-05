@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
 
 class GitHubActivityModal extends StatelessWidget {
   final String title;

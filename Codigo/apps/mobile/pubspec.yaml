@@ -1,5 +1,5 @@
-name: app
-description: A new Flutter project.
+name: coderats
+description: Coderats mobile application.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -52,6 +52,7 @@ dependencies:
   url_launcher: ^6.2.6
   intl: ^0.18.1
   flutter_file_dialog: ^3.0.2
+  google_mobile_ads: ^3.0.0
 
   # === Platform Compatibility (Dart 3.x) ===
   win32: ^5.5.1
@@ -67,6 +68,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  remove_alpha_ios: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

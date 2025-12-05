@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin/checkin.dart';
 import '../domain/checkin/github_commit.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/shared/services/storage.service.dart';
 
 class CheckinRepository {
   final StorageService _storage = StorageService();
@@ -27,6 +27,33 @@ class CheckinRepository {
     return data
         .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
+  }
+
+  Future<List<Checkin>> fetchMyCheckins({
+    String? userId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final token = await _storage.getToken();
+    if (token == null) throw Exception('Token nǜo encontrado');
+
+    final qp = {
+      'limit': '$limit',
+      'offset': '$offset',
+      if (userId != null) 'author_id': userId,
+    };
+    final uri = Uri.parse('$_baseUrl/checkins').replace(queryParameters: qp);
+
+    final resp = await http.get(uri, headers: _headers(token));
+    _ensureSuccess(resp, uri);
+
+    final decoded = json.decode(resp.body);
+    if (decoded is List) {
+      return decoded
+          .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    throw Exception('Formato inesperado ao carregar meus check-ins');
   }
 
   Future<List<Checkin>> fetchGroupCheckins(

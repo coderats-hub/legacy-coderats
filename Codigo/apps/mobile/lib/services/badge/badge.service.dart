@@ -1,10 +1,10 @@
 /// Serviço HTTP para consumir endpoints de badges
 /// Segue padrão do user.service.dart (StorageService, dotenv, http, timeouts)
 import 'dart:convert';
-import 'package:app/domain/badge/badge.model.dart';
+import 'package:coderats/domain/badge/badge.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/shared/services/storage.service.dart';
 
 class BadgeService {
   final StorageService _storageService = StorageService();

@@ -1,5 +1,5 @@
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_participant.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_participant.dart';
 
 class GroupDetails {
   final Group group;

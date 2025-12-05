@@ -1,17 +1,19 @@
-import 'package:app/domain/user/user.model.dart';
-import 'package:app/domain/badge/badge.model.dart' as badge_model;
-import 'package:app/services/user/user.service.dart';
-import 'package:app/services/badge/badge.service.dart';
-import 'package:app/views/checkin/widgets/shared_widgets.dart';
-import 'package:app/views/group/screens/group.create.screen.dart';
-import 'package:app/views/group/screens/group.join.screen.dart';
+import 'package:coderats/domain/user/user.model.dart';
+import 'package:coderats/domain/badge/badge.model.dart' as badge_model;
+import 'package:coderats/services/user/user.service.dart';
+import 'package:coderats/services/badge/badge.service.dart';
+import 'package:coderats/views/checkin/widgets/shared_widgets.dart';
+import 'package:coderats/views/group/screens/group.create.screen.dart';
+import 'package:coderats/views/group/screens/group.join.screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:coderats/views/checkin/screens/checkin.list.screen.dart';
+import 'package:coderats/core/session_manager.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
@@ -83,7 +85,11 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: const AppHeader(title: 'Perfil', showBackButton: false),
+        appBar: const AppHeader(
+          title: 'Perfil',
+          showBackButton: false,
+          actions: [LogoutButton()],
+        ),
         body: const AppLoading(),
         bottomNavigationBar: AppNavbar(
           currentIndex: 2,
@@ -97,6 +103,7 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
       appBar: const AppHeader(
         title: 'Perfil',
         showBackButton: false,
+        actions: [LogoutButton()],
       ),
       body: _error != null
           ? _buildErrorView()
@@ -119,6 +126,8 @@ class _PrivateProfileScreenState extends State<PrivateProfileScreen> {
                       ),
                       const SizedBox(height: 12),
                       _PrivateActions(),
+                      const SizedBox(height: 12),
+                      _MyCheckinsButton(),
                       const SizedBox(height: 16),
                       _BadgesSection(),
                       // const SizedBox(height: 12),
@@ -333,6 +342,37 @@ class _PrivateActions extends StatelessWidget {
     } else if (index == 1) {
       Navigator.of(context).pushReplacementNamed('/groups');
     }
+  }
+}
+
+class _MyCheckinsButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const iconColor = Colors.white;
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.accent,
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppCorners.md)),
+      ),
+      icon: const Icon(Icons.list_alt, color: iconColor),
+      label: const Text(
+        'Ver meus check-ins',
+        style: TextStyle(color: iconColor),
+      ),
+      onPressed: () {
+        final userId = SessionManager.instance.currentUserId;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CheckinScreen(
+              onlyMine: true,
+              userId: userId,
+              titleOverride: 'Meus check-ins',
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

@@ -4,15 +4,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/domain/group/group_participant.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/connectivity_service.dart';
-import 'package:app/services/user/user_remote_service.dart';
-import 'package:app/core/session_manager.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/domain/group/group_participant.dart';
+import 'package:coderats/repositories/group.repository.dart';
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/connectivity_service.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
+import 'package:coderats/core/session_manager.dart';
 
 class GroupEditScreen extends StatefulWidget {
   final String groupId;

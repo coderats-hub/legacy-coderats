@@ -1,4 +1,4 @@
-import 'package:app/domain/user/user.model.dart';
+import 'package:coderats/domain/user/user.model.dart';
 
 class AuthResponse {
   final String token;

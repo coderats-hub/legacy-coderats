@@ -1,31 +1,32 @@
 import 'dart:async';
-import 'package:app/views/group/widgets/group_widgets.dart';
+import 'package:coderats/views/group/widgets/group_widgets.dart';
 import 'package:flutter/material.dart';
 
-import 'package:app/core/session_manager.dart';
-import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_participant.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_participant.dart';
 
-import 'package:app/repositories/checkin.repository.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/services/checkin/checkin_remote_service.dart';
-import 'package:app/services/connectivity_service.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
-import 'package:app/services/user/user_remote_service.dart';
+import 'package:coderats/repositories/checkin.repository.dart';
+import 'package:coderats/repositories/group.repository.dart';
+import 'package:coderats/services/checkin/checkin_remote_service.dart';
+import 'package:coderats/services/connectivity_service.dart';
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/local_database.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
 
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
+import 'package:coderats/shared/ads/ad_banner_footer.dart';
 
-import 'package:app/views/group/widgets/banner.group.dart';
+import 'package:coderats/views/group/widgets/banner.group.dart';
 
-import 'package:app/views/checkin/screens/checkin.details.screen.dart';
-import 'package:app/views/checkin/screens/checkin.list.screen.dart';
-import 'package:app/views/group/screens/group.edit.screen.dart';
-import 'package:app/views/group/screens/group.ranking.screen.dart';
+import 'package:coderats/views/checkin/screens/checkin.details.screen.dart';
+import 'package:coderats/views/checkin/screens/checkin.list.screen.dart';
+import 'package:coderats/views/group/screens/group.edit.screen.dart';
+import 'package:coderats/views/group/screens/group.ranking.screen.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -220,6 +221,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         widget.descriptionPreview ??
         'Sem descrição disponível.';
     final displayCode = _group?.code;
+    final displayRepo = _group?.repository;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -246,6 +248,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
+
+                if (displayRepo != null && displayRepo.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: _RepositoryInfo(repo: displayRepo),
+                  ),
+                if (displayRepo != null && displayRepo.isNotEmpty)
+                  const SizedBox(height: AppSpacing.sm),
 
                 if (displayCode != null && displayCode.isNotEmpty)
                   Padding(
@@ -410,13 +420,23 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         icon: Icons.add,
         tooltip: 'Novo check-in',
       ),
-      bottomNavigationBar: AppNavbar(
-        currentIndex: 1,
-        onTap: (i) {
-          if (i == 0)
-            Navigator.of(context).pushNamed('/feed');
-          else if (i == 2) Navigator.of(context).pushNamed('/profile');
-        },
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AdBannerFooter(
+            padding: EdgeInsets.only(top: AppSpacing.xs),
+          ),
+          AppNavbar(
+            currentIndex: 1,
+            onTap: (i) {
+              if (i == 0) {
+                Navigator.of(context).pushNamed('/feed');
+              } else if (i == 2) {
+                Navigator.of(context).pushNamed('/profile');
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -575,4 +595,66 @@ class _Row {
       : type = _RowType.loader,
         date = null,
         item = null;
+}
+
+
+class _RepositoryInfo extends StatelessWidget {
+  final String repo;
+  const _RepositoryInfo({required this.repo});
+
+  @override
+  Widget build(BuildContext context) {
+    final parsed = _parseRepo(repo);
+    final owner = parsed.$1;
+    final name = parsed.$2;
+
+    if (owner == null || name == null) {
+      return Text(
+        'Repositorio associado ao grupo: $repo',
+        style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Repositorio associado ao grupo: $name',
+          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'De $owner',
+          style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  (String?, String?) _parseRepo(String raw) {
+    try {
+      final normalized = raw.trim();
+      final cleaned = normalized.endsWith('.git')
+          ? normalized.substring(0, normalized.length - 4)
+          : normalized;
+
+      Uri? uri;
+      if (cleaned.startsWith('http')) {
+        uri = Uri.tryParse(cleaned);
+      } else if (cleaned.contains('/')) {
+        uri = Uri.tryParse('https://$cleaned');
+      }
+      if (uri == null) return (null, null);
+
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+      if (segments.length >= 2) {
+        final name = segments.last;
+        final owner = segments[segments.length - 2];
+        return (owner, name);
+      }
+      return (null, null);
+    } catch (_) {
+      return (null, null);
+    }
+  }
 }

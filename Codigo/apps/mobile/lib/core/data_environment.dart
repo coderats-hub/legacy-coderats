@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:app/core/session_manager.dart';
-import 'package:app/services/connectivity_service.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/services/connectivity_service.dart';
 
 class DataEnvironment {
   final bool isWeb;

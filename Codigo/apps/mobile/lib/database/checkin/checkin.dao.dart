@@ -1,6 +1,6 @@
-import 'package:app/domain/checkin/checkin_author.dart';
+import 'package:coderats/domain/checkin/checkin_author.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:app/domain/checkin/checkin.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
 
 class CheckinDao {
   final Database _db;

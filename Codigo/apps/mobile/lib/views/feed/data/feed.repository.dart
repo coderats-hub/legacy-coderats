@@ -8,7 +8,7 @@
 import '../domain/feed.dart';
 import '../../../services/api_service.dart';
 import '../../../services/local_database.dart';
-import 'package:app/database/feed/feed.dao.dart';
+import 'package:coderats/database/feed/feed.dao.dart';
 
 class FeedRepository {
   final ApiService _apiService;

@@ -1,14 +1,14 @@
-import 'package:app/repositories/group.repository.dart'; // Importe seu repo
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
-import 'package:app/services/connectivity_service.dart';
-import 'package:app/core/session_manager.dart';
-import 'package:app/services/user/user_remote_service.dart';
+import 'package:coderats/repositories/group.repository.dart'; // Importe seu repo
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/local_database.dart';
+import 'package:coderats/services/connectivity_service.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/views/group/screens/group.details.screen.dart';
 
 class JoinGroupScreen extends StatefulWidget {
   const JoinGroupScreen({super.key});

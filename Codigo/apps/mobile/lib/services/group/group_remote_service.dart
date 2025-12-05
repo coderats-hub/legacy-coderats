@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/services/http_client.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_details.dart';
+import 'package:coderats/services/http_client.dart';
 import 'package:http_parser/http_parser.dart';
 
 class GroupRemoteService {
@@ -111,7 +111,8 @@ class GroupRemoteService {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (imageUrl != null) 'image': imageUrl,
-      if (participantsRemove != null) 'participants_remove': participantsRemove,
+      // backend espera remove_participants (mesmo usado no leaveGroup)
+      if (participantsRemove != null) 'remove_participants': participantsRemove,
     };
 
     final resp = await http.patch('/groups/$id', body);

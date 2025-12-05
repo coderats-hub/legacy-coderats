@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:app/core/session_manager.dart';
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/utils/string_utils.dart';
-import 'package:app/views/group/widgets/card.group.dart';
-import 'package:app/views/group/screens/group.details.screen.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_details.dart';
+import 'package:coderats/repositories/group.repository.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
+import 'package:coderats/views/group/widgets/card.group.dart';
+import 'package:coderats/views/group/screens/group.details.screen.dart';
 
 /// Widget que separa e exibe grupos por role (admin vs member)
 /// Carrega os detalhes de cada grupo para determinar o role do usuário atual

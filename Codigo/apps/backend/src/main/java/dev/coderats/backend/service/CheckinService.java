@@ -111,6 +111,16 @@ public class CheckinService {
                 .collect(Collectors.toList());
     }
 
+    public List<CheckinResponse> getUserCheckins(UUID requesterId, UUID authorId, int limit, int offset) {
+        if (!requesterId.equals(authorId)) {
+            throw new IllegalStateException("Nao permitido visualizar check-ins de outro usuario");
+        }
+        return checkinRepository.findByUserId(authorId, limit, offset)
+                .stream()
+                .map(checkin -> toResponse(checkin, requesterId))
+                .collect(Collectors.toList());
+    }
+
     public dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse getGroupWithCheckins(UUID requesterId, UUID groupId, int limit, int offset) {
         if (!participantRepository.existsByUserIdAndGroupId(requesterId, groupId)) {
             throw new IllegalStateException("Usuário não pertence ao grupo");

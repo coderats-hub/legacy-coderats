@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/ads/ad_banner_footer.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/layout/web_max_width.dart';
 import '../../domain/feed.dart';
 import '../../data/feed.repository.dart';
 import '../widgets/feed.card.dart';
@@ -8,7 +10,7 @@ import '../../../../services/api_service.dart';
 import '../../../../services/http_client.dart';
 import '../../../../core/env.dart';
 import '../../../../core/session_manager.dart';
-import 'package:app/services/local_database.dart';
+import 'package:coderats/services/local_database.dart';
 
 class FeedListScreen extends StatefulWidget {
   const FeedListScreen({Key? key}) : super(key: key);
@@ -33,10 +35,12 @@ class _FeedListScreenState extends State<FeedListScreen> {
   void initState() {
     super.initState();
     _initRepo();
+    _ctrl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_onScroll);
     _ctrl.dispose();
     super.dispose();
   }
@@ -147,10 +151,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
           showBackButton: false,
         ),
         body: const AppLoading(),
-        bottomNavigationBar: AppNavbar(
-          currentIndex: 0,
-          onTap: (i) => _onNavbarTap(context, i),
-        ),
+        bottomNavigationBar: _buildBottomBar(0),
       );
     }
 
@@ -188,10 +189,7 @@ class _FeedListScreenState extends State<FeedListScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: AppNavbar(
-          currentIndex: 0,
-          onTap: (i) => _onNavbarTap(context, i),
-        ),
+        bottomNavigationBar: _buildBottomBar(0),
       );
     }
 
@@ -201,59 +199,74 @@ class _FeedListScreenState extends State<FeedListScreen> {
         title: 'Feed',
         showBackButton: false,
       ),
-      body: Column(
-        children: [
-          if (_loading)
-            const LinearProgressIndicator(
-              minHeight: 2,
-              color: AppColors.primary,
-              backgroundColor: AppColors.border,
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary,
-              backgroundColor: AppColors.surface,
-              onRefresh: () async {
-                setState(() {
-                  _items.clear();
-                  _offset = 0;
-                  _hasMore = true;
-                  _errorMessage = null;
-                });
-                await _loadMore();
-              },
-              child: ListView.builder(
-                controller: _ctrl,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                itemCount: _items.length + (_loading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index >= _items.length) {
-                    return const SizedBox(
-                      height: 80,
-                      child: AppLoading(),
-                    );
-                  }
-                  final item = _items[index];
-                  return FeedCard(
-                    item: item,
-                    onLike: () => _toggleLike(item),
-                    isLikeLoading: _likesLoading.contains(item.id),
-                  );
+      body: WebMaxWidth(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: Column(
+          children: [
+            if (_loading)
+              const LinearProgressIndicator(
+                minHeight: 2,
+                color: AppColors.primary,
+                backgroundColor: AppColors.border,
+              ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: AppColors.surface,
+                onRefresh: () async {
+                  setState(() {
+                    _items.clear();
+                    _offset = 0;
+                    _hasMore = true;
+                    _errorMessage = null;
+                  });
+                  await _loadMore();
                 },
+                child: ListView.builder(
+                  controller: _ctrl,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  itemCount: _items.length + (_loading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >= _items.length) {
+                      return const SizedBox(
+                        height: 80,
+                        child: AppLoading(),
+                      );
+                    }
+                    final item = _items[index];
+                    return FeedCard(
+                      item: item,
+                      onLike: () => _toggleLike(item),
+                      isLikeLoading: _likesLoading.contains(item.id),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: AppNavbar(
-        currentIndex: 0,
-        onTap: (i) => _onNavbarTap(context, i),
-      ),
+      bottomNavigationBar: _buildBottomBar(0),
+    );
+  }
+
+  Widget _buildBottomBar(int currentIndex) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const AdBannerFooter(
+          padding: EdgeInsets.only(top: AppSpacing.xs),
+        ),
+        AppNavbar(
+          currentIndex: currentIndex,
+          onTap: (i) => _onNavbarTap(context, i),
+        ),
+      ],
     );
   }
 
