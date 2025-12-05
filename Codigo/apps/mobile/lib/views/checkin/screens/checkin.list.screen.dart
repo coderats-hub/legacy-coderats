@@ -259,7 +259,6 @@ class _CheckinScreenState extends State<CheckinScreen> {
     }
     if (widget.onlyMine) {
       final uid = _userId ?? SessionManager.instance.currentUserId;
-      if (uid == null) return [];
       return _repository.fetchMyCheckins(
         userId: uid,
         limit: _limit,
