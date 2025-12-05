@@ -35,6 +35,12 @@ class _CheckinScreenState extends State<CheckinScreen> {
   Object? _error;
   List<Checkin> _checkins = [];
   final _repository = CheckinRepository();
+  final ScrollController _scrollCtrl = ScrollController();
+  int _offset = 0;
+  final int _limit = 20;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  String? _userId;
 
   @override
   void initState() {
@@ -42,32 +48,35 @@ class _CheckinScreenState extends State<CheckinScreen> {
     // default user id if not provided when filtering mine
     if (widget.onlyMine && widget.userId == null) {
       _userId = SessionManager.instance.currentUserId;
+    } else {
+      _userId = widget.userId;
     }
+    _scrollCtrl.addListener(_onScroll);
     _loadCheckins();
   }
 
-  String? _userId;
+  @override
+  void dispose() {
+    _scrollCtrl.removeListener(_onScroll);
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _loadCheckins() async {
     setState(() {
       _isLoading = true;
       _error = null;
+      _checkins.clear();
+      _offset = 0;
+      _hasMore = true;
     });
 
     try {
-      final data = widget.groupId != null
-          ? await _repository.fetchGroupCheckins(widget.groupId!)
-          : await _repository.fetchFeed(limit: widget.onlyMine ? 200 : 20);
-
-      List<Checkin> filtered = data;
-      if (widget.onlyMine) {
-        final uid = widget.userId ?? _userId;
-        filtered = data.where((c) => c.author.id == uid).toList();
-      }
-
+      final data = await _fetchPage(0);
       if (mounted) {
         setState(() {
-          _checkins = filtered;
+          _checkins = data;
+          _hasMore = data.length == _limit;
           _isLoading = false;
         });
       }
@@ -192,9 +201,16 @@ class _CheckinScreenState extends State<CheckinScreen> {
       backgroundColor: AppColors.surface,
       onRefresh: _loadCheckins,
       child: ListView.builder(
+        controller: _scrollCtrl,
         padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: _checkins.length,
+        itemCount: _checkins.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index >= _checkins.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Center(child: AppLoading()),
+            );
+          }
           final checkin = _checkins[index];
           return _CheckinCard(
             checkin: checkin,
@@ -203,6 +219,54 @@ class _CheckinScreenState extends State<CheckinScreen> {
         },
       ),
     );
+  }
+
+  void _onScroll() {
+    if (_isLoadingMore || !_hasMore) return;
+    if (_scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextOffset = _offset + _limit;
+      final data = await _fetchPage(nextOffset);
+      if (!mounted) return;
+      setState(() {
+        _checkins.addAll(data);
+        _offset = nextOffset;
+        _hasMore = data.length == _limit;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
+    }
+  }
+
+  Future<List<Checkin>> _fetchPage(int offset) async {
+    if (widget.groupId != null) {
+      return _repository.fetchGroupCheckins(
+        widget.groupId!,
+        limit: _limit,
+        offset: offset,
+      );
+    }
+    if (widget.onlyMine) {
+      final uid = _userId ?? SessionManager.instance.currentUserId;
+      if (uid == null) return [];
+      return _repository.fetchMyCheckins(
+        userId: uid,
+        limit: _limit,
+        offset: offset,
+      );
+    }
+    return _repository.fetchFeed(limit: _limit, offset: offset);
   }
 
   void _showCheckinDetails(Checkin checkin) {

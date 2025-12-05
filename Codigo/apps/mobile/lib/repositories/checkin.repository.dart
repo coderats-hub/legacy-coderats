@@ -29,6 +29,33 @@ class CheckinRepository {
         .toList();
   }
 
+  Future<List<Checkin>> fetchMyCheckins({
+    required String userId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final token = await _storage.getToken();
+    if (token == null) throw Exception('Token nǜo encontrado');
+
+    final uri = Uri.parse('$_baseUrl/checkins').replace(queryParameters: {
+      'limit': '$limit',
+      'offset': '$offset',
+      'author_id': userId,
+    });
+
+    final resp = await http.get(uri, headers: _headers(token));
+    _ensureSuccess(resp, uri);
+
+    final decoded = json.decode(resp.body);
+    if (decoded is List) {
+      return decoded
+          .map((e) => Checkin.fromJson(Map<String, dynamic>.from(e as Map)))
+          .where((c) => c.author.id == userId)
+          .toList();
+    }
+    throw Exception('Formato inesperado ao carregar meus check-ins');
+  }
+
   Future<List<Checkin>> fetchGroupCheckins(
     String groupId, {
     int limit = 20,

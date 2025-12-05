@@ -35,10 +35,12 @@ class _FeedListScreenState extends State<FeedListScreen> {
   void initState() {
     super.initState();
     _initRepo();
+    _ctrl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_onScroll);
     _ctrl.dispose();
     super.dispose();
   }
