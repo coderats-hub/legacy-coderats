@@ -13,6 +13,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app/views/checkin/screens/checkin.list.screen.dart';
+import 'package:app/core/session_manager.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});
