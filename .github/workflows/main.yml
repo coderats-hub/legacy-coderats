@@ -122,13 +122,12 @@ jobs:
       - name: Create unsigned IPA from archive
         working-directory: Codigo/apps/mobile
         run: |
+          rm -rf build/ios/Payload
           mkdir -p build/ios/ipa
-          cd build/ios/archive
-          rm -rf Payload
-          mkdir Payload
-          cp -R Runner.xcarchive/Products/Applications/Runner.app Payload/
-          cd ..
-          /usr/bin/zip -r ios/ipa/Runner.ipa Payload
+          mkdir build/ios/Payload
+          cp -R build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app build/ios/Payload/
+          cd build/ios
+          /usr/bin/zip -r ipa/Runner.ipa Payload
 
       - name: List IPA outputs (debug)
         working-directory: Codigo/apps/mobile
