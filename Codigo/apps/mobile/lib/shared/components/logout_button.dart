@@ -1,5 +1,5 @@
-import 'package:app/core/session_manager.dart';
-import 'package:app/views/user/screens/home.screen.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/views/user/screens/home.screen.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';

@@ -1,8 +1,8 @@
-import 'package:app/views/group/screens/group.create.screen.dart';
-import 'package:app/views/group/screens/group.join.screen.dart';
-import 'package:app/views/group/screens/group.list.screen.dart';
+import 'package:coderats/views/group/screens/group.create.screen.dart';
+import 'package:coderats/views/group/screens/group.join.screen.dart';
+import 'package:coderats/views/group/screens/group.list.screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
 
 class OnboardingStartScreen extends StatelessWidget {
   const OnboardingStartScreen({super.key});

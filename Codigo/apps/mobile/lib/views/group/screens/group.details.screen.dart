@@ -1,32 +1,32 @@
 import 'dart:async';
-import 'package:app/views/group/widgets/group_widgets.dart';
+import 'package:coderats/views/group/widgets/group_widgets.dart';
 import 'package:flutter/material.dart';
 
-import 'package:app/core/session_manager.dart';
-import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_participant.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_participant.dart';
 
-import 'package:app/repositories/checkin.repository.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/services/checkin/checkin_remote_service.dart';
-import 'package:app/services/connectivity_service.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
-import 'package:app/services/user/user_remote_service.dart';
+import 'package:coderats/repositories/checkin.repository.dart';
+import 'package:coderats/repositories/group.repository.dart';
+import 'package:coderats/services/checkin/checkin_remote_service.dart';
+import 'package:coderats/services/connectivity_service.dart';
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/local_database.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
 
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/utils/string_utils.dart';
-import 'package:app/shared/ads/ad_banner_footer.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
+import 'package:coderats/shared/ads/ad_banner_footer.dart';
 
-import 'package:app/views/group/widgets/banner.group.dart';
+import 'package:coderats/views/group/widgets/banner.group.dart';
 
-import 'package:app/views/checkin/screens/checkin.details.screen.dart';
-import 'package:app/views/checkin/screens/checkin.list.screen.dart';
-import 'package:app/views/group/screens/group.edit.screen.dart';
-import 'package:app/views/group/screens/group.ranking.screen.dart';
+import 'package:coderats/views/checkin/screens/checkin.details.screen.dart';
+import 'package:coderats/views/checkin/screens/checkin.list.screen.dart';
+import 'package:coderats/views/group/screens/group.edit.screen.dart';
+import 'package:coderats/views/group/screens/group.ranking.screen.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;

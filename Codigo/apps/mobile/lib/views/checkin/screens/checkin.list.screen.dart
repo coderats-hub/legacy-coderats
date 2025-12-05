@@ -1,14 +1,14 @@
 
-import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/repositories/checkin.repository.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
+import 'package:coderats/repositories/checkin.repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'checkin.details.screen.dart';
 import '../widgets/shared_widgets.dart';
-import 'package:app/core/session_manager.dart';
+import 'package:coderats/core/session_manager.dart';
 
 class CheckinScreen extends StatefulWidget {
   final String? groupId;

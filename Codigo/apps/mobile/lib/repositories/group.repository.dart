@@ -1,10 +1,10 @@
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/database/group/group.dao.dart';
-import 'package:app/services/connectivity_service.dart';
-import 'package:app/core/session_manager.dart';
-import 'package:app/services/user/user_remote_service.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_details.dart';
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/database/group/group.dao.dart';
+import 'package:coderats/services/connectivity_service.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
 
 class GroupRepository {
   final GroupRemoteService remote;

@@ -1,33 +1,33 @@
-import 'package:app/database/group/group.dao.dart';
-import 'package:app/repositories/group.repository.dart';
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
+import 'package:coderats/database/group/group.dao.dart';
+import 'package:coderats/repositories/group.repository.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/local_database.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/ads/ad_banner_footer.dart';
+import 'package:coderats/shared/ads/ad_banner_footer.dart';
 
 // --- IMPORTS DE DOMÍNIO ---
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_details.dart';
 
 // --- IMPORTS DE INFRAESTRUTURA ---
-import 'package:app/core/session_manager.dart';
-import 'package:app/services/group/group_remote_service.dart';
-import 'package:app/services/user/user_remote_service.dart';
-import 'package:app/services/connectivity_service.dart';
+import 'package:coderats/core/session_manager.dart';
+import 'package:coderats/services/group/group_remote_service.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
+import 'package:coderats/services/connectivity_service.dart';
 
 // --- IMPORTS DE UI/TELAS ---
-import 'package:app/views/group/screens/group.create.screen.dart';
-import 'package:app/views/group/screens/group.details.screen.dart';
-import 'package:app/views/group/widgets/group_list_by_role.dart';
-import 'package:app/views/group/widgets/card.group.dart';
+import 'package:coderats/views/group/screens/group.create.screen.dart';
+import 'package:coderats/views/group/screens/group.details.screen.dart';
+import 'package:coderats/views/group/widgets/group_list_by_role.dart';
+import 'package:coderats/views/group/widgets/card.group.dart';
 
 // --- IMPORTS DE UTILS ---
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
 
 // --- IMPORTS DO TEMA E COMPONENTES PADRÃO ---
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/layout/web_max_width.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/layout/web_max_width.dart';
 
 class GroupListScreen extends StatefulWidget {
   const GroupListScreen({super.key});

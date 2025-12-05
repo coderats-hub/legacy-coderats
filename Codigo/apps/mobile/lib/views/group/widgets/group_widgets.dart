@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
 
 class CheckinTile extends StatelessWidget {
   final Checkin c;

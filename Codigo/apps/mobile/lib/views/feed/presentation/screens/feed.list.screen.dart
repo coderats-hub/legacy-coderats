@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:app/shared/ads/ad_banner_footer.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/layout/web_max_width.dart';
+import 'package:coderats/shared/ads/ad_banner_footer.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/layout/web_max_width.dart';
 import '../../domain/feed.dart';
 import '../../data/feed.repository.dart';
 import '../widgets/feed.card.dart';
@@ -10,7 +10,7 @@ import '../../../../services/api_service.dart';
 import '../../../../services/http_client.dart';
 import '../../../../core/env.dart';
 import '../../../../core/session_manager.dart';
-import 'package:app/services/local_database.dart';
+import 'package:coderats/services/local_database.dart';
 
 class FeedListScreen extends StatefulWidget {
   const FeedListScreen({Key? key}) : super(key: key);

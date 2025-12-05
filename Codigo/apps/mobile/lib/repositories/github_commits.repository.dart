@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:app/domain/checkin/github_commit.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/domain/checkin/github_commit.dart';
+import 'package:coderats/shared/services/storage.service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 

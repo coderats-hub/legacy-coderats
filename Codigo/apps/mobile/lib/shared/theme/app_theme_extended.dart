@@ -16,7 +16,7 @@
  */
 
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
 
 // Estilos de texto pré-definidos para evitar copyWith excessivos
 class AppTextStylesExtended {

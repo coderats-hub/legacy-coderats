@@ -1,4 +1,4 @@
-/*import 'package:app/domain/checkin/checkin_author.dart';
+/*import 'package:coderats/domain/checkin/checkin_author.dart';
 
 class CheckinComment {
   final String id;

@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin/checkin.dart';
 import '../domain/checkin/github_commit.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/shared/services/storage.service.dart';
 
 class CheckinRepository {
   final StorageService _storage = StorageService();

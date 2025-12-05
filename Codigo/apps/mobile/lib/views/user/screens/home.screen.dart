@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'onboarding.screen.dart';
 import 'code_exchange.screen.dart';
-import 'package:app/core/session_manager.dart';
+import 'package:coderats/core/session_manager.dart';
 
 // Tela inicial da aplicação - splash/welcome screen com login GitHub
 class TelaInicio extends StatefulWidget {

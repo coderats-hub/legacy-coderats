@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:app/domain/user/user.model.dart';
+import 'package:coderats/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/shared/services/storage.service.dart';
 
 class UserService {
   final StorageService _storageService = StorageService();

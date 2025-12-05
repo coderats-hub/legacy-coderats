@@ -1,7 +1,7 @@
-import 'package:app/shared/components/components.dart';
-import 'package:app/views/group/screens/group.scoring.screen.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/views/group/screens/group.scoring.screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'dart:convert';

@@ -1,4 +1,4 @@
-import 'package:app/views/feed/domain/feed.dart';
+import 'package:coderats/views/feed/domain/feed.dart';
 import 'package:sqflite/sqflite.dart';
 
 class FeedDao {

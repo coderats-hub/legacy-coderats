@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:app/domain/user/user.model.dart' as domain;
-import 'package:app/shared/services/storage.service.dart';
+import 'package:coderats/domain/user/user.model.dart' as domain;
+import 'package:coderats/shared/services/storage.service.dart';
 
 class SessionState {
   final domain.User? user;

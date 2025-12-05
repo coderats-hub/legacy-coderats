@@ -1,19 +1,19 @@
-import 'package:app/domain/user/user.model.dart';
-import 'package:app/domain/badge/badge.model.dart' as badge_model;
-import 'package:app/services/user/user.service.dart';
-import 'package:app/services/badge/badge.service.dart';
-import 'package:app/views/checkin/widgets/shared_widgets.dart';
-import 'package:app/views/group/screens/group.create.screen.dart';
-import 'package:app/views/group/screens/group.join.screen.dart';
+import 'package:coderats/domain/user/user.model.dart';
+import 'package:coderats/domain/badge/badge.model.dart' as badge_model;
+import 'package:coderats/services/user/user.service.dart';
+import 'package:coderats/services/badge/badge.service.dart';
+import 'package:coderats/views/checkin/widgets/shared_widgets.dart';
+import 'package:coderats/views/group/screens/group.create.screen.dart';
+import 'package:coderats/views/group/screens/group.join.screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:app/views/checkin/screens/checkin.list.screen.dart';
-import 'package:app/core/session_manager.dart';
+import 'package:coderats/views/checkin/screens/checkin.list.screen.dart';
+import 'package:coderats/core/session_manager.dart';
 
 class PrivateProfileScreen extends StatefulWidget {
   PrivateProfileScreen({super.key});

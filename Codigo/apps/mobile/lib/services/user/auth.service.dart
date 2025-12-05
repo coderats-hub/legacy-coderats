@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'package:app/domain/user/auth_response.model.dart';
-import 'package:app/domain/user/user.model.dart';
+import 'package:coderats/domain/user/auth_response.model.dart';
+import 'package:coderats/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:app/core/session_manager.dart';
+import 'package:coderats/core/session_manager.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:app/services/http_client.dart';
-import 'package:app/services/local_database.dart';
-import 'package:app/services/user/user_remote_service.dart';
+import 'package:coderats/services/http_client.dart';
+import 'package:coderats/services/local_database.dart';
+import 'package:coderats/services/user/user_remote_service.dart';
 
 class AuthService {
   Future<bool> exchangeCodeForToken(String code) async {

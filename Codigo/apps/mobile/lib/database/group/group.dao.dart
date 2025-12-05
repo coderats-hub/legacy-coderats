@@ -1,11 +1,11 @@
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/domain/group/group_participant.dart';
+import 'package:coderats/domain/group/group_details.dart';
+import 'package:coderats/domain/group/group_participant.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:app/database/app_database.dart';
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/user/user.model.dart';
+import 'package:coderats/database/app_database.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/user/user.model.dart';
 
 const _uuid = Uuid();
 

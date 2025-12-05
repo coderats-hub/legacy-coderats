@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:app/domain/user/user.model.dart';
-import 'package:app/services/http_client.dart';
+import 'package:coderats/domain/user/user.model.dart';
+import 'package:coderats/services/http_client.dart';
 
 class UserRemoteService {
   final HttpClient http;

@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:app/domain/checkin/checkin.dart';
-import 'package:app/services/http_client.dart';
+import 'package:coderats/domain/checkin/checkin.dart';
+import 'package:coderats/services/http_client.dart';
 
 class CheckinRemoteService {
   final HttpClient http;

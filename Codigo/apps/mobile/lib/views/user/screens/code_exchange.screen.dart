@@ -1,7 +1,7 @@
-import 'package:app/services/user/auth.service.dart'; 
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/views/user/screens/onboarding.screen.dart';
+import 'package:coderats/services/user/auth.service.dart'; 
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/views/user/screens/onboarding.screen.dart';
 import 'package:flutter/material.dart';
 
 class CodeExchangeScreen extends StatefulWidget {

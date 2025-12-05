@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:app/domain/group/group.dart';
-import 'package:app/domain/group/group_details.dart';
-import 'package:app/services/http_client.dart';
+import 'package:coderats/domain/group/group.dart';
+import 'package:coderats/domain/group/group_details.dart';
+import 'package:coderats/services/http_client.dart';
 import 'package:http_parser/http_parser.dart';
 
 class GroupRemoteService {

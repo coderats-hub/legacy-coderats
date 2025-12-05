@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:app/domain/group/group_participant.dart';
-import 'package:app/shared/theme/app_theme.dart';
-import 'package:app/shared/components/components.dart';
-import 'package:app/shared/utils/string_utils.dart';
+import 'package:coderats/domain/group/group_participant.dart';
+import 'package:coderats/shared/theme/app_theme.dart';
+import 'package:coderats/shared/components/components.dart';
+import 'package:coderats/shared/utils/string_utils.dart';
 
 class GroupRankingScreen extends StatelessWidget {
   final List<GroupParticipant> participants; 
