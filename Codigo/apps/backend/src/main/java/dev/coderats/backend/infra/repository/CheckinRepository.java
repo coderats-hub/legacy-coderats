@@ -63,4 +63,14 @@ public interface CheckinRepository extends JpaRepository<Checkin, UUID> {
             LIMIT :limit
             """, nativeQuery = true)
     List<Object[]> findTopUsersByPoints(@Param("limit") int limit);
+
+    @Query(value = """
+            SELECT c.*
+            FROM checkins c
+            WHERE c.user_id = :userId
+              AND c.deleted_at IS NULL
+            ORDER BY c.created_at DESC
+            LIMIT :limit OFFSET :offset
+            """, nativeQuery = true)
+    List<Checkin> findByUserId(@Param("userId") UUID userId, @Param("limit") int limit, @Param("offset") int offset);
 }

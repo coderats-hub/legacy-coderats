@@ -42,6 +42,28 @@ public class CheckinController {
         return ResponseEntity.ok(data);
     }
 
+    @GetMapping("/checkins")
+    public ResponseEntity<List<CheckinResponse>> getMyCheckins(
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(value = "author_id", required = false) String authorId) {
+        UUID currentUser = getCurrentUserId();
+        UUID author = currentUser;
+        if (authorId != null && !authorId.isBlank()) {
+            try {
+                author = UUID.fromString(authorId);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        try {
+            var data = checkinService.getUserCheckins(currentUser, author, limit, offset);
+            return ResponseEntity.ok(data);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
     @GetMapping("/groups/{groupId}/checkins")
     public ResponseEntity<dev.coderats.backend.web.dto.response.GroupCheckinsWithRankingResponse> getByGroup(
             @PathVariable String groupId,
