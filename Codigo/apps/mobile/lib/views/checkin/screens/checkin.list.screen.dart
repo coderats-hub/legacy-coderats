@@ -57,7 +57,7 @@ class _CheckinScreenState extends State<CheckinScreen> {
     try {
       final data = widget.groupId != null
           ? await _repository.fetchGroupCheckins(widget.groupId!)
-          : await _repository.fetchFeed();
+          : await _repository.fetchFeed(limit: widget.onlyMine ? 200 : 20);
 
       List<Checkin> filtered = data;
       if (widget.onlyMine) {

@@ -111,7 +111,8 @@ class GroupRemoteService {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (imageUrl != null) 'image': imageUrl,
-      if (participantsRemove != null) 'participants_remove': participantsRemove,
+      // backend espera remove_participants (mesmo usado no leaveGroup)
+      if (participantsRemove != null) 'remove_participants': participantsRemove,
     };
 
     final resp = await http.patch('/groups/$id', body);

@@ -348,14 +348,18 @@ class _PrivateActions extends StatelessWidget {
 class _MyCheckinsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    const iconColor = Colors.white;
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.accent,
         minimumSize: const Size.fromHeight(48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppCorners.md)),
       ),
-      icon: const Icon(Icons.list_alt, color: Colors.white),
-      label: const Text('Listar meus check-ins'),
+      icon: const Icon(Icons.list_alt, color: iconColor),
+      label: const Text(
+        'Ver meus check-ins',
+        style: TextStyle(color: iconColor),
+      ),
       onPressed: () {
         final userId = SessionManager.instance.currentUserId;
         Navigator.of(context).push(
