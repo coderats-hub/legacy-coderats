@@ -221,6 +221,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         widget.descriptionPreview ??
         'Sem descrição disponível.';
     final displayCode = _group?.code;
+    final displayRepo = _group?.repository;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -247,6 +248,14 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
+
+                if (displayRepo != null && displayRepo.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: _RepositoryInfo(repo: displayRepo),
+                  ),
+                if (displayRepo != null && displayRepo.isNotEmpty)
+                  const SizedBox(height: AppSpacing.sm),
 
                 if (displayCode != null && displayCode.isNotEmpty)
                   Padding(
@@ -586,4 +595,66 @@ class _Row {
       : type = _RowType.loader,
         date = null,
         item = null;
+}
+
+
+class _RepositoryInfo extends StatelessWidget {
+  final String repo;
+  const _RepositoryInfo({required this.repo});
+
+  @override
+  Widget build(BuildContext context) {
+    final parsed = _parseRepo(repo);
+    final owner = parsed.$1;
+    final name = parsed.$2;
+
+    if (owner == null || name == null) {
+      return Text(
+        'Repositorio associado ao grupo: $repo',
+        style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Repositorio associado ao grupo: $name',
+          style: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'De $owner',
+          style: AppTextStyles.inputHint.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  (String?, String?) _parseRepo(String raw) {
+    try {
+      final normalized = raw.trim();
+      final cleaned = normalized.endsWith('.git')
+          ? normalized.substring(0, normalized.length - 4)
+          : normalized;
+
+      Uri? uri;
+      if (cleaned.startsWith('http')) {
+        uri = Uri.tryParse(cleaned);
+      } else if (cleaned.contains('/')) {
+        uri = Uri.tryParse('https://$cleaned');
+      }
+      if (uri == null) return (null, null);
+
+      final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+      if (segments.length >= 2) {
+        final name = segments.last;
+        final owner = segments[segments.length - 2];
+        return (owner, name);
+      }
+      return (null, null);
+    } catch (_) {
+      return (null, null);
+    }
+  }
 }
