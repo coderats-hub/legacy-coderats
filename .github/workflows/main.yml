@@ -119,11 +119,22 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build ipa --release --no-codesign
 
+      - name: List IPA outputs (debug)
+        working-directory: Codigo/apps/mobile
+        run: ls -R build/ios
+
+      - name: Sanitize branch name
+        id: sanitize
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coderats-ipa-${{ github.ref_name }}
-          path: coderats/Codigo/apps/mobile/build/ios/ipa/*.ipa
+          name: coderats-ipa-${{ steps.sanitize.outputs.branch_name }}
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: error
 
   # ------------------------------------------------------------
   # 3. Web — Build (Flutter) e Deploy no S3
