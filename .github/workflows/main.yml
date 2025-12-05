@@ -119,6 +119,17 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build ipa --release --no-codesign
 
+      - name: Create unsigned IPA from archive
+        working-directory: Codigo/apps/mobile
+        run: |
+          mkdir -p build/ios/ipa
+          cd build/ios/archive
+          rm -rf Payload
+          mkdir Payload
+          cp -R Runner.xcarchive/Products/Applications/Runner.app Payload/
+          cd ..
+          /usr/bin/zip -r ios/ipa/Runner.ipa Payload
+
       - name: List IPA outputs (debug)
         working-directory: Codigo/apps/mobile
         run: ls -R build/ios
