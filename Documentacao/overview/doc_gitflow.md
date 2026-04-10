@@ -1,17 +1,17 @@
-# Documentação do GitHub Flow para o Projeto CodeRats
+# Fluxo GitHub e Governança
 
-## 1) Introdução
+## 1. Introdução
 
-Este documento descreve a estratégia de **GitHub Flow** adotada para o desenvolvimento do projeto CodeRats, garantindo integração contínua, revisão de código estruturada e entregas consistentes em ambiente acadêmico.
+Este documento descreve a estratégia de branches e revisão adotada no projeto CodeRats. O objetivo é manter entregas pequenas, rastreáveis e fáceis de revisar, sem perder velocidade de evolução.
 
-## 2) Branches Principais
+## 2. Branches Principais
 
 * **main**: Branch de produção. Contém sempre a versão estável do sistema.
 * **develop**: Branch de integração. Aqui são mescladas as features prontas antes de ir para o main.
 * **feature/**\*: Branches de funcionalidades. Cada nova feature ou bug fix possui uma branch derivada da develop, nomeada conforme `feature/nome-da-feature`.
 * **hotfix/**\*: Branches rápidas para correção de problemas críticos em produção, derivadas de main.
 
-## 3) Fluxo de Trabalho
+## 3. Fluxo de Trabalho
 
 1. Criar branch a partir de **develop**: `feature/nome-da-feature`.
 2. Implementar a funcionalidade, realizando commits frequentes e descritivos.
@@ -22,7 +22,7 @@ Este documento descreve a estratégia de **GitHub Flow** adotada para o desenvol
 7. Quando a develop estiver estável e pronta para release, merge em main.
 8. Deploy automatizado através do pipeline CI/CD.
 
-## 4) Boas Práticas
+## 4. Boas Práticas
 
 * Commits pequenos e atômicos.
 * Mensagens de commit descritivas e no padrão: `tipo: descrição` (ex.: `feat: adicionar autenticação OAuth GitHub`).
@@ -31,13 +31,13 @@ Este documento descreve a estratégia de **GitHub Flow** adotada para o desenvol
 * Atualizar develop antes de iniciar uma nova branch de feature para evitar conflitos.
 * Testes automatizados devem ser incluídos sempre que possível.
 
-## 5) Integração com CI/CD
+## 5. Integração com CI/CD
 
 * Cada PR dispara execução de testes via **GitHub Actions**.
 * Build automatizado do container para validação da integração.
-* Após merge em main, deploy automático em ambiente de produção (AWS ECS Fargate ou Azure Web App).
+* Após merge em main, deploy automático em ambiente de produção.
 
-## 6) RACI Aplicado ao GitHub Flow
+## 6. RACI Aplicado ao GitHub Flow
 
 | Papel         | Responsabilidade                                                       |
 | ------------- | ---------------------------------------------------------------------- |
@@ -45,6 +45,6 @@ Este documento descreve a estratégia de **GitHub Flow** adotada para o desenvol
 | Tech Lead     | Revisar PRs críticos, aprovar merges para develop/main.                |
 | DevOps        | Configurar e manter pipelines de CI/CD e deploy.                       |
 
-## 7) Conclusão
+## 7. Conclusão
 
 A adoção do GitHub Flow assegura entregas contínuas, qualidade de código e colaboração eficiente em equipe, mesmo em contexto acadêmico. Este fluxo pode ser adaptado e escalado conforme o projeto evolui para releases mais complexas.

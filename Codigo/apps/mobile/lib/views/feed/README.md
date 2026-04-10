@@ -1,14 +1,18 @@
-# Feature: feed
+# Feed
 
-Esta pasta segue a padronização usada nas demais features do projeto.
-Estrutura padrão criada automaticamente:
+Esta pasta concentra a feature de feed do app CodeRats.
 
-- data/
-  - repositórios e serviços para acesso a dados
-- domain/
-  - modelos e lógica do domínio
-- presentation/
-  - screens/ : telas da feature
-  - widgets/ : widgets reutilizáveis da feature
+## Estrutura atual
 
-Adicione implementações reais nos arquivos gerados em domain, data e presentation/screens/widgets.
+* `domain` - modelo de feed
+* `data` - repositório do feed
+* `presentation/screens` - tela principal do feed
+* `presentation/widgets` - cartão de feed, modais e componentes auxiliares
+
+## Papel da feature
+
+O feed agrega os check-ins dos grupos do usuário e exibe o conteúdo com interações sociais e elementos visuais próprios.
+
+## Observação
+
+O texto antigo descrevia uma estrutura genérica de feature. Este README agora resume o que existe de fato no projeto.

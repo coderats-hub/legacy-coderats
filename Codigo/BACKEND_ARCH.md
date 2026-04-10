@@ -1,238 +1,143 @@
-# Code Rats API — Backend (Spring Boot, DDD-lite)
-
-Bem-vindo(a)! 🎉 Este README explica **a arquitetura**, **como rodar**, **como contribuir** e **onde estudar** os conceitos usados. A ideia é um **DDD-lite em camadas** simples de manter:
-
-```
-Controller/API → Application/Use Cases → Domain → Infrastructure
-```
-
-Cada **feature** (ex.: auth, users, groups, checkins, badges) vive no seu **próprio pacote** (package-by-feature). O domínio é **puro Java** (sem Spring/JPA). A infraestrutura (JPA, JWT, etc.) implementa **adapters** para as **ports** definidas na camada de aplicação.
-
----
-
-## ✨ Visão geral
-
-* **Stack**: Java 21, Spring Boot, Spring Web, Spring Data JPA, Spring Security (JWT), Flyway, PostgreSQL.
-* **Estilo**: DDD-lite + Camadas, package-by-feature, monólito modular (fácil de evoluir).
-* **API**: definida por **OpenAPI 3.0** (arquivo `openapi.yaml`).
-
----
-
-## 🗂 Estrutura de pastas (package-by-feature)
-
-```
-src/
- └─ main/
-    ├─ java/com/coderats/
-    │  ├─ shared/
-    │  │  ├─ api/           # Ex: ErrorHandler, paginação, DTOs base
-    │  │  ├─ domain/        # Tipos utilitários (Identifier, DomainEvent, Clock)
-    │  │  └─ infra/         # Config Jackson, Validation, etc.
-    │  ├─ auth/
-    │  │  ├─ api/           # AuthController, DTOs
-    │  │  ├─ app/           # RegisterUseCase, LoginUseCase, ports (TokenProvider)
-    │  │  ├─ domain/        # PasswordPolicy, Credentials (puro Java)
-    │  │  └─ infra/         # JwtTokenProvider, PasswordEncoder, filtros
-    │  ├─ users/
-    │  │  ├─ api/           # MeController, UsersController
-    │  │  ├─ app/           # GetMe, UpdateMe, ListMyGroups, ports (UserRepository)
-    │  │  ├─ domain/        # User, Profile, Value Objects
-    │  │  └─ infra/         # UserEntity, UserJpa, mappers
-    │  ├─ groups/
-    │  │  ├─ api/           # GroupsController
-    │  │  ├─ app/           # CreateGroup, GetGroupDetails, UpdateGroup, DeleteGroup
-    │  │  ├─ domain/        # Group, Membership, GroupPolicy
-    │  │  └─ infra/         # GroupEntity, MembershipEntity, repos
-    │  ├─ checkins/
-    │  │  ├─ api/           # FeedController, CheckinsController
-    │  │  ├─ app/           # GetFeed, CreateCheckin, Like/Unlike, Comments, ports
-    │  │  ├─ domain/        # Checkin, Like, Comment, regras
-    │  │  └─ infra/         # Entities, repos, mappers
-    │  └─ badges/
-    │     ├─ api/           # BadgesController
-    │     ├─ app/           # ListAllBadges, ListMyBadges
-    │     ├─ domain/        # Badge, BadgeService
-    │     └─ infra/         # Entities, repos
-    └─ resources/
-       ├─ application.yaml   # configs Spring
-       ├─ db/migration/      # Flyway (V001__init.sql, ...)
-       └─ openapi.yaml       # contrato OpenAPI
-```
-
-> **Regra de dependência**: `api → app → domain`; `infra` **implementa** as ports do `app`. O **domain não depende** de Spring ou JPA.
-
----
-
-## 🧭 Mapeamento OpenAPI → Casos de uso
-
-| Endpoint                               | Caso de Uso                        | Observações                                |
-| -------------------------------------- | ---------------------------------- | ------------------------------------------ |
-| `POST /auth/register`                  | `RegisterUseCase`                  | Cria usuário, retorna perfil privado + JWT |
-| `POST /auth/login`                     | `LoginUseCase`                     | Autentica, retorna perfil privado + JWT    |
-| `GET /users/me`                        | `GetMe`                            | Requer Bearer JWT                          |
-| `PATCH /users/me`                      | `UpdateMe`                         | Atualiza nome/imagem/github_user           |
-| `GET /users/me/groups`                 | `ListMyGroups`                     | Paginado (`limit`, `offset`)               |
-| `GET /users/me/badges`                 | `ListMyBadges`                     | Badges do usuário                          |
-| `GET /users/{id}`                      | `GetPublicProfileWithCommonGroups` | Perfil público + grupos em comum           |
-| `GET /feed`                            | `GetFeed`                          | Feed paginado dos grupos que participo     |
-| `POST /groups`                         | `CreateGroup`                      | Dono = usuário autenticado                 |
-| `GET /groups/{id}`                     | `GetGroupDetails`                  | Participantes + check-ins recentes         |
-| `PATCH /groups/{id}`                   | `UpdateGroup`                      | Atualiza e remove participantes (admin)    |
-| `DELETE /groups/{id}`                  | `DeleteGroup`                      | Admin; 204                                 |
-| `POST /groups/{id}/checkins`           | `CreateCheckin`                    | Só membro do grupo                         |
-| `POST/DELETE /checkins/{id}/like`      | `LikeCheckin` / `UnlikeCheckin`    | 409 se já curtiu                           |
-| `GET /checkins/{id}/likes`             | `ListLikes`                        | Paginado                                   |
-| `POST /checkins/{cid}/comments`        | `AddComment`                       | 201                                        |
-| `DELETE /checkins/{cid}/comments/{id}` | `DeleteComment`                    | Autor/admin; 204                           |
-| `GET /badges`                          | `ListAllBadges`                    | Catálogo público                           |
+# Arquitetura do Backend
 
----
+Este documento descreve a implementação atual do backend do CodeRats no diretório `apps/backend`.
 
-## 📄 Contrato da API (OpenAPI)
+## 1. Visão geral
 
-* Arquivo: `Codigo/apps/docs/apidocs.ymal`
-* Recomendações:
+O backend foi implementado em Java 21 com Spring Boot 3.4.10 e segue uma estrutura modular por responsabilidade, não por feature isolada. O desenho atual é mais próximo de uma arquitetura em camadas com serviços centrais do que de um DDD completo.
 
-  * Importar no **Swagger UI/Insomnia/Postman** para testar.
-  * Mantemos **DTOs** alinhados ao contrato.
+As camadas reais do projeto são:
 
----
+`web -> service -> domain -> infra`
 
-## 🧱 Padrões e Convenções
+Além disso, existem pacotes de `security` e `config` para autenticação, autorização e configuração de integrações.
 
-### Camadas
+## 2. Stack atual
 
-* **Controller/API**: valida DTO com Bean Validation, chama **um** caso de uso.
-* **Application/Use Case**: orquestra transação (`@Transactional`), aplica **políticas**, fala com **ports** (repositórios, TokenProvider, etc.).
-* **Domain**: **regras de negócio**, entidades e value objects. **Sem Spring/JPA**.
-* **Infrastructure**: JPA, JWT, mappers **domain ↔ entity**, adapters que implementam **ports**.
+O que está efetivamente em uso hoje:
 
-### Erros
+* Java 21
+* Spring Boot 3.4.10
+* Spring Web
+* Spring Data JPA
+* Spring Security
+* Flyway
+* PostgreSQL
+* JJWT para tokens JWT
+* Springdoc OpenAPI / Swagger UI
+* AWS SDK para S3
+* spring-dotenv para variáveis de ambiente
 
-* `@ControllerAdvice` centraliza respostas do tipo:
+## 3. Estrutura real do código
 
-  ```json
-  { "statusCode": 400, "message": "Erro de Validação", "details": "..." }
-  ```
-* Mapeamos:
+Os pacotes principais do backend são:
 
-  * 400 (Domain/Validation)
-  * 401 (JWT inválido)
-  * 403 (sem permissão, ex.: não é admin)
-  * 404 (não encontrado)
-  * 409 (conflito: like duplicado)
+* `web` - controllers, DTOs e `@ControllerAdvice`
+* `service` - regras de negócio e orquestração
+* `domain` - entidades e modelos persistidos
+* `infra` - repositórios, cliente OAuth do GitHub, cache efêmero e segurança JWT
+* `security` - filtro JWT e configuração de segurança
+* `config` - configuração de S3 e outros beans
 
-### Paginação
+Isso é diferente do modelo antigo de `application/use cases`; esse padrão não existe hoje no código.
 
-* Query params `limit` e `offset` → convertidos para `PageRequest/Slice`.
-* Respostas retornam arrays e, quando necessário, metadados simples (total opcional).
+## 4. Fluxo de requisição
 
-### Estilo de código
+O fluxo atual de uma requisição é:
 
-* Java 21 (records quando fizer sentido para DTOs).
-* Mappers simples (estáticos) no início; **pode migrar para MapStruct** depois.
-* Nomes em inglês no código (consistente) e payloads conforme o OpenAPI.
+1. O controller recebe a chamada HTTP.
+2. O DTO é validado.
+3. O service executa a regra de negócio.
+4. O repository acessa o banco via JPA.
+5. A resposta é montada e devolvida ao cliente.
 
----
+## 5. Segurança
 
-## 🔁 Fluxos de exemplo (end-to-end)
+A autenticação é feita com JWT.
 
-### Criar grupo
+O backend possui:
 
-1. `POST /groups` (Controller) → `CreateGroup.exec(userId, cmd)`
-2. `GroupPolicy` valida regras (datas, método).
-3. `GroupRepository.save` (adapter JPA)
-4. Retorna `201` com `Group` criado.
+* `JwtService` para gerar e validar tokens
+* `JwtAuthFilter` para aplicar autenticação nas requisições protegidas
+* `SecurityConfig` para definir rotas liberadas e rotas autenticadas
 
-### Like em check-in
+Os tokens são usados principalmente nos fluxos de usuário, grupo e check-in.
 
-1. `POST /checkins/{id}/like` → `LikeCheckin.exec(userId, checkinId)`
-2. Repositório verifica se já existe like (UNIQUE `checkin_id + author_id`).
-3. Se já existir → `409 Conflict`. Senão, cria like e retorna `201`.
+## 6. Funcionalidades presentes
 
----
+O backend já tem suporte para:
 
-## 👩‍💻 Como contribuir
+* autenticação e perfil de usuário
+* grupos e participantes
+* check-ins e feed
+* likes e comentários em check-ins
+* integração com GitHub via OAuth
+* armazenamento de imagens em S3
+* avaliação de commits com OpenAI
 
-1. **Crie branch**: `feature/<escopo>` ou `fix/<escopo>`
+Os controllers existentes refletem isso:
 
-   * Exemplos: `feature/auth-register`, `fix/checkins-like-409`
-2. **Commits** (Conventional Commits opcional):
+* `AuthController`
+* `UserController`
+* `GroupController`
+* `CheckinController`
+* `GitHubIntegrationController`
+* `ImageUploadController`
+* `RootController`
 
-   * `feat: criar endpoint de login`
-   * `fix: corrigir 409 de like duplicado`
-3. **Pull Request**:
+## 7. Integrações externas
 
-   * Descreva o caso de uso, endpoints, decisões de domínio, migrações Flyway.
-   * Inclua testes quando possível.
+### GitHub
 
----
+A integração com GitHub está implementada em `infra/http/github` e usa OAuth para autenticar o usuário e coletar dados básicos de perfil.
 
-## 🛣️ Roadmap de evolução
+### OpenAI
 
-* [ ] MapStruct para mappers (performance e menos boilerplate)
-* [ ] Outbox + eventos de domínio (para futuros serviços assíncronos)
-* [ ] Cache (feed, badges) e métricas com Actuator/Prometheus
-* [ ] Segurança granular (roles por grupo; admin/owner/member)
-* [ ] Modo “read model” para consultas ricas (ex.: feed com joins otimizados)
+O backend também possui serviços de avaliação de commits com OpenAI. A configuração da API está em `application.properties`, junto com o prompt de sistema usado na análise.
 
----
+### S3
 
-## 📚 Materiais de referência (recomendados para o time)
+O upload de imagens é integrado ao AWS S3 via `ImageStorageService` e `S3Config`.
 
-* **DDD (leve e prático)**
+## 8. Documentação da API
 
-  * *Implementing Domain-Driven Design* — Vaughn Vernon (cap. Aggregates)
-  * *Domain-Driven Design Quickly* (resumo grátis da InfoQ)
-* **Arquitetura em camadas / Hexagonal**
+Não existe um arquivo `openapi.yaml` versionado dentro deste diretório no estado atual.
 
-  * *Ports & Adapters (Hexagonal Architecture)* — Alistair Cockburn (artigo)
-  * *Clean Architecture* — Robert C. Martin (cap. boundaries)
-* **Spring**
+A documentação da API é exposta pelo Springdoc em:
 
-  * Spring Boot Reference (docs oficiais)
-  * *Testing with Spring Boot* (guia oficial)
-  * *Spring Data JPA — Reference*
-* **JWT**
+* `/swagger-ui`
+* `/v3/api-docs`
 
-  * *RFC 7519 — JSON Web Token*
-  * Documentação da lib JJWT/Nimbus
-* **OpenAPI/Swagger**
+## 9. Banco e migrações
 
-  * *OpenAPI Specification 3.0* (docs)
-  * Swagger Editor / Swagger UI (para inspecionar `openapi.yaml`)
-* **Migrations**
+O banco usado é PostgreSQL, com validação do schema via Flyway.
 
-  * Flyway Docs (conceitos de versionamento de schema)
+Configurações importantes que já estão no projeto:
 
-> Dica: comece pelos **capítulos de Aggregates** (Vernon) e o artigo de **Ports & Adapters**. Eles “clicam” com o que estamos fazendo aqui.
+* `spring.jpa.hibernate.ddl-auto=validate`
+* `spring.flyway.enabled=true`
+* `spring.flyway.locations=classpath:db/migration`
 
----
+## 10. Configuração por ambiente
 
-## ❓FAQ rápido
+O backend lê variáveis do ambiente e também pode importar `.env`.
 
-**Por que “DDD-lite”?**
-Porque mantemos o que dá mais retorno (limpeza do domínio, casos de uso explícitos, boundaries claros) **sem** sobrecarregar com patterns avançados (event sourcing, CQRS completo, etc.).
+Os perfis de execução hoje estão organizados em:
 
-**Por que “package-by-feature” e não “package-by-layer”?**
-Porque você encontra tudo de uma feature em um só lugar (API, app, domain, infra). Facilita manutenção e onboard.
+* `application.properties`
+* `application-dev.properties`
+* `application-staging.properties`
+* `application-prod.properties`
+* `application-local.properties`
 
-**Domain sem anotações?**
-Sim. Entidades e regras ficam independentes do framework. Testa rápido, troca infra sem dor.
+## 11. Correções em relação à versão anterior
 
----
+Este documento não descreve mais uma arquitetura fictícia com `package-by-feature` e camada `app`.
 
-## ✅ Checklist para abrir uma nova feature
+O que foi atualizado para a realidade do projeto:
 
-* [ ] Endpoint definido no `openapi.yaml`
-* [ ] DTOs de request/response criados
-* [ ] Caso de uso na camada **Application** (+ portas)
-* [ ] Regras no **Domain** (com teste unitário)
-* [ ] Adapter JPA na **Infra** (+ mapeamento)
-* [ ] Controller chamando **um** caso de uso
-* [ ] Erros mapeados (400/401/403/404/409)
-* [ ] Migração Flyway (se mexeu em schema)
+* removido o modelo `Controller -> Application -> Domain -> Infrastructure`
+* substituído por `web -> service -> domain -> infra`
+* removida a referência a `openapi.yaml` inexistente no repositório
+* incluídas as integrações reais com GitHub, OpenAI e S3
 
----
-
-Se ficar qualquer dúvida, manda no chat do time. Bora construir isso junto! 🐀💙

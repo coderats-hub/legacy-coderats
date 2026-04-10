@@ -1,141 +1,149 @@
-# Documentação de Arquitetura Flutter
+# Arquitetura do Front-End
 
-## 1. Objetivo
+Este documento descreve a implementação atual do aplicativo Flutter do CodeRats.
 
-Esta documentação tem como objetivo guiar o time na construção de aplicações Flutter usando um padrão **reduzido de Clean Architecture** com **Riverpod** para gerenciamento de estado.
+## 1. Visão geral
 
-Ela serve tanto como **manual de implementação** quanto **introdução teórica** aos conceitos usados, permitindo que todos compreendam o motivo das escolhas e consigam evoluir o projeto de forma organizada.
+O app foi implementado com Flutter e Dart 3.2+, usando uma estrutura modular por responsabilidade, mas não segue a versão formal de Clean Architecture com Riverpod que estava no texto antigo.
 
-Se você não entendeu muito bem o que é Clean Architecture, Observer Pattern, ou SOLID, recomendamos uma rápida pesquisa sobre esses conceitos:
+Na prática, o projeto usa:
 
-* Clean Architecture: Robert C. Martin (Uncle Bob)
-* Observer Pattern: comportamento de “assinar e ser notificado”
-* SOLID: princípios de design orientado a objetos
+* telas em `views`
+* entidades e modelos em `domain`
+* acesso a API em `repositories` e `services`
+* persistência local em `database`
+* configuração e sessão em `core`
+* componentes compartilhados em `shared`
 
----
+## 2. Stack atual
 
-## 2. Estrutura do Projeto
+As dependências presentes no projeto são:
 
-### 2.1 Pastas principais
+* Flutter SDK
+* `http`
+* `connectivity_plus`
+* `sqflite`
+* `shared_preferences`
+* `flutter_dotenv`
+* `google_fonts`
+* `google_mobile_ads`
+* `flutter_file_dialog`
+* `url_launcher`
+* `intl`
+* `table_calendar`
+* `uuid`
+* `path`
 
-```
-lib/
- ├─ main.dart
- ├─ core/              # Utilidades e constantes compartilhadas
- │   ├─ exceptions.dart
- │   └─ app_config.dart
- ├─ shared/            # Widgets reutilizáveis
- │   ├─ app_button.dart
- │   ├─ app_input.dart
- │   └─ theme.dart
- └─ features/          # Cada funcionalidade do app
-     ├─ auth/
-     │   ├─ data/         # Repositórios e fontes de dados (API, SQLite)
-     │   ├─ domain/       # Modelos e regras de negócio
-     │   └─ presentation/ # UI + Providers (estado)
-     └─ checkin/
-         ├─ data/
-         ├─ domain/
-         └─ presentation/
-```
+## 3. Estrutura real do código
 
-**Dica**: Se não entendeu a diferença entre domínio, dados e apresentação, veja sobre **camadas de Clean Architecture**.
+As pastas existentes em `lib/` são:
 
----
+* `core`
+* `database`
+* `domain`
+* `repositories`
+* `services`
+* `shared`
+* `views`
 
-## 3. Camadas e responsabilidades
+Essa é a organização realmente usada hoje. Não existe uma pasta `features/` no estado atual do repositório.
 
-| Camada                                      | O que contém                                                          | Observações                                                                                                                                   |
-| ------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **UI (presentation/screens/widgets)**       | Widgets visuais, telas, componentes pequenos                          | Não deve conter regras de negócio nem acesso direto a banco/API. Use **providers** para ler e atualizar estado.                               |
-| **Provider/State (presentation/providers)** | Estado da tela, ações que modificam o estado, chamadas a repositórios | Aqui aplica-se o **Observer Pattern**: widgets “assistem” mudanças de estado via `ref.watch`. Evite colocar regras complexas de negócio aqui. |
-| **Domínio (domain)**                        | Modelos, entidades, serviços de regras de negócio                     | Aplicam princípios do **SRP e OCP do SOLID**. Se não entendeu, veja sobre **Use Cases** em Clean Architecture.                                |
-| **Dados (data/repositories/datasources)**   | Comunicação com API, SQLite, cache local                              | Aplicam **Repository Pattern**. Não deve ter lógica de UI ou estado.                                                                          |
+## 4. Inicialização do app
 
----
+O ponto de entrada está em `main.dart`.
 
-## 4. Providers e gerenciamento de estado
+O que acontece na inicialização:
 
-* **Provider/Riverpod** é responsável por **gerenciar o estado da tela** e **notificar a UI** quando algo muda.
-* Use `ref.watch(provider)` quando o widget precisa **observar mudanças de estado**.
-* Use `ref.read(provider.notifier)` quando quiser **disparar ações** sem reconstruir o widget.
-* **Exemplo**: estado de check-ins (`loading`, `sucesso`, `erro`) deve estar no provider, não no widget.
+1. `WidgetsFlutterBinding.ensureInitialized()`
+2. carregamento do `.env`
+3. inicialização do Google Mobile Ads quando suportado
+4. carregamento da sessão pelo `SessionManager`
+5. execução do `MaterialApp`
 
-**Se não entendeu bem o Provider**, veja sobre **Observer Pattern e State Management no Flutter**.
+## 5. Navegação e telas
 
----
+O app usa rotas nomeadas definidas no `MaterialApp`.
 
-## 5. Implementação prática de uma feature (ex.: Check-in)
+As telas principais hoje são:
 
-### 5.1 Data
+* onboarding
+* login / início
+* home
+* feed
+* grupos
+* criação de grupo
+* entrada em grupo
+* detalhes de grupo
+* ranking de grupo
+* perfil privado
+* code exchange
 
-* Arquivos: `checkin_repository.dart`, `checkin_api.dart`, `checkin_local.dart`
-* Responsabilidade: buscar, salvar, atualizar dados.
-* Deve expor **interfaces** simples, não detalhes da API ou SQLite.
+## 6. Estado e padrão de desenvolvimento
 
-### 5.2 Domain
+O documento antigo citava Riverpod, mas isso não reflete o código atual.
 
-* Arquivos: `checkin.dart`, `checkin_service.dart`
-* Responsabilidade: regras de negócio da feature (ex.: validar check-in antes de salvar).
-* Não deve se preocupar com UI ou estado da tela.
+O que existe hoje é uma abordagem mais simples, baseada em:
 
-### 5.3 Presentation
+* `StatefulWidget`
+* serviços e repositórios
+* sessão persistida localmente
+* detecção de conectividade
 
-* **Screens**: containers que exibem widgets e observam provider
-* **Widgets**: componentes que recebem dados prontos e callbacks
-* **Provider**: concentra estado, chama repositório, notifica widgets
+Ou seja: o estado não está centralizado em providers de Riverpod no código atual.
 
-**Exemplo visual de hierarquia:**
+## 7. Camada de dados
 
-```
-CheckinScreen (Container)
- ├─ CheckinFeedWidget
- │    ├─ CheckinCardWidget
- ├─ RankingWidget
- └─ FilterBarWidget
-```
+O app trabalha com dois modos de acesso:
 
----
+* remoto, via API HTTP
+* local, via SQLite e preferências salvas
 
-## 6. Boas práticas para manter o padrão
+Os arquivos mais importantes desse fluxo são:
 
-1. **Separation of Concerns**
+* `services/api_service.dart`
+* `services/http_client.dart`
+* `services/local_database.dart`
+* `repositories/*`
+* `database/*`
 
-   * Não misture UI, estado e lógica de negócio.
-2. **Provider é o cérebro da tela**
+## 8. Offline e ambiente
 
-   * Ele manipula o estado e dispara ações.
-   * Evite colocar regras complexas dentro dele.
-3. **Repositórios isolam a fonte de dados**
+O projeto já tem uma abstração para detectar o ambiente de dados.
 
-   * Mudou a API ou banco local? Só o repositório precisa mudar.
-4. **Widgets pequenos e reaproveitáveis**
+O arquivo `core/data_environment.dart` identifica:
 
-   * Cada widget deve ter **uma única responsabilidade visual**.
-5. **Nomenclatura consistente**
+* se está rodando na web
+* se há conectividade
+* se existe banco local disponível
+* qual é o usuário atual da sessão
 
-   * Ex.: `*_screen.dart` para telas, `*_widget.dart` para componentes, `*_provider.dart` para providers.
-6. **Teste sempre**
+Na prática, isso separa bem os cenários:
 
-   * Teste use cases e repositórios isoladamente. UI é testada via integração.
+* web tende a operar remoto
+* mobile pode operar com base local e sincronização parcial
 
-**Se não entendeu bem essas boas práticas**, veja sobre **SOLID e Clean Architecture na prática**.
+## 9. Componentes e visual
 
----
+O app possui uma camada de componentes compartilhados em `shared/components` e temas em `shared/theme`.
 
-## 7. Evolução futura
+Isso inclui:
 
-Mesmo usando essa versão reduzida:
+* botões
+* avatares
+* barras de navegação
+* modais
+* alertas e diálogos
+* tipografia e tokens de tema
 
-* É fácil adicionar **Use Cases** ou camadas mais formais.
-* Pode migrar para **arquitetura completa MVVM + Clean Architecture** sem reescrever a UI.
-* Providers podem ser trocados ou refinados sem quebrar o app.
+## 10. Correções em relação à versão anterior
 
----
+O texto antigo foi ajustado porque ele descrevia um padrão de arquitetura que não está implementado hoje.
 
-## 8. Referências para estudo
+O que foi corrigido:
 
-* [Clean Architecture – Uncle Bob](https://www.amazon.com.br/Clean-Architecture-Craftsmans-Software-Structure/dp/0134494164)
-* [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-* [Riverpod Documentation](https://riverpod.dev/)
-* [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+* removida a referência a Riverpod
+* removida a pasta `features/` inexistente
+* substituída a estrutura teórica por `core/database/domain/repositories/services/shared/views`
+* descrita a inicialização real do app em `main.dart`
+* descritos os fluxos reais de conectividade, sessão e ads
+

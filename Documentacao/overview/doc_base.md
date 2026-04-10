@@ -1,25 +1,19 @@
-# Documento de Arquitetura e Planejamento
+# Documento Base da Arquitetura
 
-**Projeto:** CodeRats para Desenvolvedores (Mobile + API)
-**Versão do Documento:** 1.13
-**Responsáveis:** Equipe (6 integrantes) — coordenação compartilhada
+## 1. Objetivo
 
----
+Este documento reúne a base conceitual da arquitetura do CodeRats. Ele descreve o sistema como uma solução mobile-first apoiada por backend em Spring Boot, persistência principal em PostgreSQL e suporte local em SQLite para cenários offline.
 
-## 0) Sumário Executivo
+O foco aqui é explicar o racional técnico das decisões, não detalhar a implementação de cada módulo. Os documentos da pasta overview aprofundam as camadas específicas.
 
-Este documento descreve a arquitetura proposta para um aplicativo mobile desenvolvido em **Flutter**, sustentado por um backend **SpringBoot** e persistência primária em **PostgreSQL**, complementada por armazenamento local **SQLite** para operações offline.
-
-O sistema visa oferecer uma plataforma de acompanhamento de atividades de desenvolvedores, incluindo registro de check-ins com fotografia e geolocalização, definição de métodos avaliativos e integração futura com métricas de produtividade oriundas do GitHub.
-
-### Objetivos Estratégicos
+## 2. Objetivos Estratégicos
 
 * **Release 1 (R1 – Check-ins):** Registro individual de atividades com evidências visuais e geoespaciais, gerenciamento de grupos e convites, implementação de método avaliativo inicial.
 * **Release 2 (R2 – GitHub):** Integração via OAuth com GitHub para coleta de métricas de contribuição (commits, pull requests, issues), com persistência temporária em cache e agregação no backend.
 * **Release 3 (R3 – Avaliação com IA):** Utilização de inteligência artificial para análise de código submetido pelos usuários, gerando feedback automatizado e reportado ao grupo participante.
 * **Release 4 (R4 – Times/Repos específicos):** Associação de grupos a repositórios específicos, habilitando visualizações comparativas e análise de desempenho coletivo.
 
-### Stack Tecnológica
+## 3. Stack Tecnológica
 
 * **Frontend:** Flutter (Android/iOS).
 * **Backend:** SpringBoot.
@@ -29,7 +23,7 @@ O sistema visa oferecer uma plataforma de acompanhamento de atividades de desenv
 * **CI/CD:** GitHub Actions.
 * **Ambiente Dev:** Docker.
 
-### Abordagem Organizacional
+## 4. Abordagem Organizacional
 
 Monorepo estruturado por módulos de aplicação e infraestrutura, **GitHub Flow** para PRs e revisões, convenções de código, lints e versionamento semântico.
 Ferramentas recomendadas para o ambiente de desenvolvimento: **Prettier**, **ESLint**, **Husky** (hooks para commits), e **Commitlint** (padrão de mensagens de commit).
@@ -37,7 +31,7 @@ Equipe reduzida (6 integrantes), com responsabilidades primárias, mas todos atu
 
 ---
 
-## 1) Escopo
+## 2. Escopo
 
 * Aplicativo Flutter com paradigma **offline-first**, integrando cache e fila de sincronização.
 * API RESTful em SpringBoot cobrindo autenticação, gerenciamento de grupos e convites, registro de check-ins, métodos avaliativos e integração GitHub.
@@ -47,7 +41,7 @@ Equipe reduzida (6 integrantes), com responsabilidades primárias, mas todos atu
 * Observabilidade básica com logs estruturados e métricas de healthcheck.
 
 
-## 2) Stakeholders e Papéis
+## 3. Stakeholders e Papéis
 
 | Papel                    | Responsabilidades                                                                 | Nome(s) |
 | ------------------------ | --------------------------------------------------------------------------------- | ------- |
@@ -61,7 +55,7 @@ Equipe reduzida (6 integrantes), com responsabilidades primárias, mas todos atu
 
 ---
 
-## 3) Glossário
+## 4. Glossário
 
 * **Check-in:** Registro de atividade do usuário contendo fotografia, geolocalização e timestamp vinculado a um grupo.
 * **Método avaliativo:** Conjunto de regras para atribuição de pontuação periódica.
@@ -72,7 +66,7 @@ Equipe reduzida (6 integrantes), com responsabilidades primárias, mas todos atu
 
 ---
 
-## 4) Decisões de Arquitetura
+## 5. Decisões de Arquitetura
 
 * **Monorepo** para colaboração e gestão integrada.
 * * modular**, com injeção de dependência e validação robusta.
@@ -80,12 +74,12 @@ Equipe reduzida (6 integrantes), com responsabilidades primárias, mas todos atu
 * **REST** como protocolo inicial; GraphQL avaliado apenas se necessário.
 * **JWT** com refresh tokens, assegurando autenticação segura.
 * **Docker** para padronização de ambiente e deploy consistente.
-* **CI/CD** via GitHub Actions, com deploy no AWS App Service ou AWS Container Instances.
+* **CI/CD** via GitHub Actions, com deploy no ambiente de nuvem definido pelo projeto.
 * **Frontend Flutter:** Arquitetura modular por features, gerenciamento de estado (Bloc/Provider/Riverpod), camadas de apresentação e dados, cache offline e fila de sincronização.
 
 ---
 
-## 5) Conclusão
+## 6. Conclusão
 
 A arquitetura proposta equilibra simplicidade, escalabilidade e consistência técnica, garantindo um ambiente unificado para todos os integrantes do time.
-A mudança para **PostgreSQL** como banco primário, a centralização da hospedagem no **AWS** e a inclusão de **IA para análise de código** fortalecem o alinhamento estratégico do projeto.s
+A mudança para **PostgreSQL** como banco primário, a centralização da hospedagem no **AWS** e a inclusão de **IA para análise de código** fortalecem o alinhamento estratégico do projeto.
