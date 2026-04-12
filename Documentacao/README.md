@@ -2,6 +2,10 @@
 
 Este diretório centraliza os artefatos de planejamento, requisitos e especificações técnicas do projeto CodeRats. Os arquivos aqui contidos documentam desde a visão macro do produto até regras de negócio, integrações e detalhamentos táticos.
 
+## Produto
+
+1. [Produto, GitHub e Microsoft Grader](overview/00-produto-github-grader.md)
+
 ## Série técnica
 
 1. [Documento Base da Arquitetura](overview/doc_base.md)

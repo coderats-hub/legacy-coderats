@@ -4,13 +4,14 @@ Esta pasta concentra toda a documentação em Markdown do projeto CodeRats.
 
 ## Documentos em Markdown
 
-1. [Documento Base da Arquitetura](doc_base.md)
-2. [Fluxo GitHub e Governança](doc_gitflow.md)
-3. [Visão Geral da Arquitetura](01-visao-geral-tecnica.md)
-4. [Arquitetura do Backend](02-arquitetura-backend.md)
-5. [Arquitetura do Mobile](03-arquitetura-mobile.md)
-6. [Dados, Offline e Integrações](04-dados-integracao-e-offline.md)
-7. [Operação, Docker e CI/CD](05-devops-ci-cd-e-operacao.md)
+1. [Produto, GitHub e Microsoft Grader](00-produto-github-grader.md)
+2. [Documento Base da Arquitetura](doc_base.md)
+3. [Fluxo GitHub e Governança](doc_gitflow.md)
+4. [Visão Geral da Arquitetura](01-visao-geral-tecnica.md)
+5. [Arquitetura do Backend](02-arquitetura-backend.md)
+6. [Arquitetura do Mobile](03-arquitetura-mobile.md)
+7. [Dados, Offline e Integrações](04-dados-integracao-e-offline.md)
+8. [Operação, Docker e CI/CD](05-devops-ci-cd-e-operacao.md)
 
 ## Documentos em PDF
 
