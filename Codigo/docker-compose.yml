@@ -53,6 +53,7 @@ services:
       args:
         BASE_API_URL: ${BASE_API_URL:-http://localhost:8080}
         USE_MOCK_API: ${USE_MOCK_API:-false}
+        DEV_AUTH_BYPASS: ${DEV_AUTH_BYPASS:-false}
     container_name: coderats-mobile
     ports:
       - "8081:8080"

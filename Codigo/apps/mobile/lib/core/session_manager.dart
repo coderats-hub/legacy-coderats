@@ -39,6 +39,23 @@ class SessionManager {
     _state = SessionState(user: null, token: storedToken);
   }
 
+  Future<void> enableDevSession() async {
+    final now = DateTime.now();
+    await setSession(
+      token: 'dev-auth-bypass-token',
+      user: domain.User(
+        id: 'dev-user',
+        name: 'Dev User',
+        email: 'dev@coderats.local',
+        image: null,
+        githubUser: 'dev-coderats',
+        githubId: 0,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
   Future<void> setSession({
     required String token,
     domain.User? user,

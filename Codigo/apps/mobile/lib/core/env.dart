@@ -28,6 +28,16 @@ class Env {
     return _isTruthy(v);
   }
 
+  static bool get devAuthBypass {
+    const fromBuild = String.fromEnvironment('DEV_AUTH_BYPASS');
+    if (fromBuild.isNotEmpty) {
+      return _isTruthy(fromBuild);
+    }
+
+    final v = dotenv.env['DEV_AUTH_BYPASS'];
+    return _isTruthy(v);
+  }
+
   static String get mockApiBaseUrl =>
       'https://virtserver.swaggerhub.com/coderats/code-rats-api/1.2.0';
 

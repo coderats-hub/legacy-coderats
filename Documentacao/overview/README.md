@@ -14,6 +14,7 @@ Esta pasta concentra toda a documentação em Markdown do projeto CodeRats.
 8. [Operação, Docker e CI/CD](05-devops-ci-cd-e-operacao.md)
 9. [Migracao AWS para Azure - Infraestrutura](06-migracao-aws-azure-infra.md)
 10. [Configuracao por Ambiente](07-configuracao-ambientes.md)
+11. [Migrations PostgreSQL](08-migrations-postgresql.md)
 
 ## Documentos em PDF
 

@@ -1,5 +1,6 @@
 import 'package:coderats/core/session_manager.dart';
 import 'package:coderats/domain/group/group_participant.dart';
+import 'package:coderats/core/env.dart';
 import 'package:coderats/views/feed/presentation/screens/feed.list.screen.dart';
 import 'package:coderats/views/group/screens/group.create.screen.dart';
 import 'package:coderats/views/group/screens/group.details.screen.dart';
@@ -23,6 +24,9 @@ Future<void> main() async {
     await MobileAds.instance.initialize();
   }
   await SessionManager.instance.loadFromStorage();
+  if (Env.devAuthBypass) {
+    await SessionManager.instance.enableDevSession();
+  }
 
   runApp(const App());
 }
@@ -38,6 +42,8 @@ class App extends StatelessWidget {
       home: const TelaInicio(),
       debugShowCheckedModeBanner: false,
       routes: {
+        '/home': (_) => const TelaInicio(),
+        '/login': (_) => const TelaInicio(),
         '/feed': (_) => const FeedListScreen(),
         '/join-group': (_) => const JoinGroupScreen(),
         '/group-ranking': (context) {
@@ -67,6 +73,9 @@ class App extends StatelessWidget {
           );
         },
       },
+      onUnknownRoute: (_) => MaterialPageRoute(
+        builder: (_) => const TelaInicio(),
+      ),
     );
   }
 }

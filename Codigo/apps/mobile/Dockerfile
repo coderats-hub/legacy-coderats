@@ -18,11 +18,13 @@ COPY . .
 
 ARG BASE_API_URL=
 ARG USE_MOCK_API=false
+ARG DEV_AUTH_BYPASS=false
 
 # Build Flutter web to a dedicated folder
 RUN flutter build web --release --web-renderer=html --output /app/build/web \
   --dart-define=BASE_API_URL="${BASE_API_URL}" \
-  --dart-define=USE_MOCK_API="${USE_MOCK_API}"
+  --dart-define=USE_MOCK_API="${USE_MOCK_API}" \
+  --dart-define=DEV_AUTH_BYPASS="${DEV_AUTH_BYPASS}"
 
 ############
 # Runtime  #
