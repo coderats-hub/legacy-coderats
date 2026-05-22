@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3Config {
 
-    @Value("${aws.region:us-east-2}")
+    @Value("${aws.region:us-east-1}")
     private String region;
 
     @Bean

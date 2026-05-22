@@ -1,12 +1,12 @@
 import 'dart:convert';
+import 'package:coderats/core/env.dart';
 import 'package:coderats/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:coderats/shared/services/storage.service.dart';
 
 class UserService {
   final StorageService _storageService = StorageService();
-  final String _baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+  final String _baseUrl = Env.baseApiUrl;
 
   /// Busca os dados do usuário logado atual
   Future<User?> getCurrentUser() async {

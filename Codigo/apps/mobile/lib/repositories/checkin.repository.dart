@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:coderats/core/env.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../domain/checkin/checkin.dart';
 import '../domain/checkin/github_commit.dart';
@@ -9,7 +9,7 @@ import 'package:coderats/shared/services/storage.service.dart';
 
 class CheckinRepository {
   final StorageService _storage = StorageService();
-  final String _baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+  final String _baseUrl = Env.baseApiUrl;
 
   Future<List<Checkin>> fetchFeed({int limit = 20, int offset = 0}) async {
     final token = await _storage.getToken();

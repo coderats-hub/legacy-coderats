@@ -1,5 +1,7 @@
 <network-security-config>
+  <base-config cleartextTrafficPermitted="false" />
   <domain-config cleartextTrafficPermitted="true">
-    <domain includeSubdomains="true">coderats-dev-alb-687982124.us-east-2.elb.amazonaws.com</domain>
+    <domain includeSubdomains="true">localhost</domain>
+    <domain includeSubdomains="true">10.0.2.2</domain>
   </domain-config>
 </network-security-config>

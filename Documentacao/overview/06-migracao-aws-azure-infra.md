@@ -54,12 +54,13 @@ Caracteristicas principais:
 - Porta do NGINX: `8080`.
 - SPA fallback configurado com `try_files $uri $uri/ /index.html`.
 
-O arquivo `Codigo/apps/mobile/.env` define hoje:
+O arquivo `Codigo/apps/mobile/.env` deve apontar para o backend do ambiente. Para desenvolvimento local, o valor esperado e:
 
 ```env
-BASE_API_URL=http://coderats-dev-alb-687982124.us-east-2.elb.amazonaws.com
-ADMOB_BANNER_ANDROID=ca-app-pub-6868801328578373/2384167905
+BASE_API_URL=http://localhost:8080
 ```
+
+Para dev, staging e producao, `BASE_API_URL` deve ser configurado no `.env` do app ou no build via `--dart-define=BASE_API_URL=...`.
 
 ### Banco de dados
 
@@ -69,10 +70,12 @@ Configuracoes atuais:
 
 - Docker Compose local usa `postgres:16`.
 - Backend usa `DB_URL`, `DB_USER` e `DB_PASS`.
-- Perfis `application-dev.properties`, `application-local.properties` e `application-prod.properties` possuem default apontando para:
+- Os perfis Spring leem `DB_URL`, `DB_USER` e `DB_PASS` por ambiente.
+- O perfil local usa fallback para PostgreSQL local.
+- Os perfis staging/prod exigem `DB_URL`, `DB_USER` e `DB_PASS` configurados no ambiente.
 
 ```text
-jdbc:postgresql://3.128.30.149:5432/coderats_db
+jdbc:postgresql://localhost:5432/coderats_db
 ```
 
 Ponto de atencao:
@@ -87,10 +90,10 @@ O storage atual usa AWS S3.
 
 Configuracoes atuais:
 
-- Regiao default: `us-east-2`.
-- Bucket default: `coderats-files-starter`.
+- Regiao default local: `us-east-1`.
+- Bucket default local: `coderats-local-files`.
 - Base path default: `public/images/`.
-- Public base URL default: `https://coderats-files-starter.s3.us-east-2.amazonaws.com`.
+- Public base URL default local: `http://localhost:4566/coderats-local-files`.
 
 O backend usa `S3Client` da AWS SDK e envia objetos com ACL `PUBLIC_READ`.
 
@@ -159,16 +162,22 @@ SECURITY_JWT_EXPIRATION_MS=86400000
 ### GitHub OAuth
 
 ```env
-GITHUB_OAUTH_CLIENT_ID_DEV=<secret>
-GITHUB_OAUTH_CLIENT_SECRET_DEV=<secret>
-GITHUB_OAUTH_REDIRECT_URI_DEV=<url-publica>/auth/github/callback
-
 GITHUB_OAUTH_CLIENT_ID_LOCAL=<secret>
 GITHUB_OAUTH_CLIENT_SECRET_LOCAL=<secret>
 GITHUB_OAUTH_REDIRECT_URI_LOCAL=http://localhost:8080/auth/github/callback
-```
 
-Observacao: o perfil `prod` atualmente referencia variaveis com sufixo `_DEV`. Isso deve ser corrigido ou padronizado antes da migracao.
+GITHUB_OAUTH_CLIENT_ID_DEV=<secret>
+GITHUB_OAUTH_CLIENT_SECRET_DEV=<secret>
+GITHUB_OAUTH_REDIRECT_URI_DEV=https://<dev-backend-host>/auth/github/callback
+
+GITHUB_OAUTH_CLIENT_ID_STAGING=<secret>
+GITHUB_OAUTH_CLIENT_SECRET_STAGING=<secret>
+GITHUB_OAUTH_REDIRECT_URI_STAGING=https://<staging-backend-host>/auth/github/callback
+
+GITHUB_OAUTH_CLIENT_ID_PROD=<secret>
+GITHUB_OAUTH_CLIENT_SECRET_PROD=<secret>
+GITHUB_OAUTH_REDIRECT_URI_PROD=https://<prod-backend-host>/auth/github/callback
+```
 
 ### OpenAI
 
@@ -183,10 +192,10 @@ OPENAI_SYSTEM_PROMPT=<prompt>
 ### AWS S3 atual
 
 ```env
-AWS_REGION=us-east-2
-AWS_S3_BUCKET=coderats-files-starter
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=coderats-local-files
 AWS_S3_BASE_PATH=public/images/
-AWS_S3_PUBLIC_BASE_URL=https://coderats-files-starter.s3.us-east-2.amazonaws.com
+AWS_S3_PUBLIC_BASE_URL=http://localhost:4566/coderats-local-files
 ```
 
 ### Azure Blob Storage alvo

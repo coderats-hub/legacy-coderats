@@ -24,9 +24,9 @@ public class ImageStorageService {
 
     public ImageStorageService(
             S3Client s3Client,
-            @Value("${aws.s3.bucket-name:coderats-files-starter}") String bucketName,
+            @Value("${aws.s3.bucket-name:coderats-local-files}") String bucketName,
             @Value("${aws.s3.base-path:public/images/}") String basePath,
-            @Value("${aws.s3.public-base-url:https://coderats-files-starter.s3.us-east-2.amazonaws.com}") String publicBaseUrl) {
+            @Value("${aws.s3.public-base-url:http://localhost:4566/coderats-local-files}") String publicBaseUrl) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
         this.basePath = normalizeBasePath(basePath);

@@ -1,13 +1,12 @@
 import 'dart:convert';
 
+import 'package:coderats/core/env.dart';
 import 'package:coderats/domain/checkin/github_commit.dart';
 import 'package:coderats/shared/services/storage.service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 class GithubCommitsRepository {
-  GithubCommitsRepository()
-      : _baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+  GithubCommitsRepository() : _baseUrl = Env.baseApiUrl;
 
   final StorageService _storage = StorageService();
   final String _baseUrl;

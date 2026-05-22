@@ -1,14 +1,14 @@
 /// Serviço HTTP para consumir endpoints de badges
-/// Segue padrão do user.service.dart (StorageService, dotenv, http, timeouts)
+/// Segue padrão do user.service.dart (StorageService, Env, http, timeouts)
 import 'dart:convert';
+import 'package:coderats/core/env.dart';
 import 'package:coderats/domain/badge/badge.model.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:coderats/shared/services/storage.service.dart';
 
 class BadgeService {
   final StorageService _storageService = StorageService();
-  final String _baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+  final String _baseUrl = Env.baseApiUrl;
 
   /// Busca todos os badges do sistema
   Future<List<Badge>> getAllBadges() async {

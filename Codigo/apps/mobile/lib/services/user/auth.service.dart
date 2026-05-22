@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'package:coderats/core/env.dart';
 import 'package:coderats/domain/user/auth_response.model.dart';
 import 'package:coderats/domain/user/user.model.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:coderats/core/session_manager.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:coderats/services/http_client.dart';
@@ -11,7 +11,7 @@ import 'package:coderats/services/user/user_remote_service.dart';
 
 class AuthService {
   Future<bool> exchangeCodeForToken(String code) async {
-    final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+    final String baseUrl = Env.baseApiUrl;
     final Uri uri = Uri.parse('$baseUrl/auth/exchange');
 
     try {
@@ -27,22 +27,19 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
-        
         final authResponse = AuthResponse.fromJson(responseBody);
-        
-        // Salva o token primeiro
+
         await SessionManager.instance.setSession(
           token: authResponse.token,
-          user: null, // Ainda não temos o user
+          user: null,
         );
-        
-        // Agora busca os dados do usuário usando o token
+
         await _fetchAndUpdateCurrentUser(authResponse.token, baseUrl);
         await _refreshLocalUsersCache();
-        
+
         return true;
       } else {
-        throw Exception('Falha ao trocar o código: ${response.statusCode}');
+        throw Exception('Falha ao trocar o codigo: ${response.statusCode}');
       }
     } catch (e) {
       print('Erro no AuthService: $e');
@@ -65,14 +62,13 @@ class AuthService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> userData = json.decode(response.body);
         final user = User.fromJson(userData);
-        
-        // Atualiza o SessionManager com os dados do usuário
         SessionManager.instance.updateUser(user);
       }
     } catch (e) {
-      print('Erro ao buscar dados do usuário: $e');
+      print('Erro ao buscar dados do usuario: $e');
     }
   }
+
   Future<void> _refreshLocalUsersCache() async {
     if (kIsWeb) return;
     try {
@@ -83,7 +79,7 @@ class AuthService {
       final users = await userRemote.getAllUsers();
       await localDb.groups.cacheUsers(users);
     } catch (e) {
-      print('Erro ao sincronizar usu�rios locais: ');
+      print('Erro ao sincronizar usuarios locais: $e');
     }
   }
 }

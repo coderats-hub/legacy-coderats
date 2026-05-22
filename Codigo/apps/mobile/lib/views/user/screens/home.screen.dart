@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:coderats/core/env.dart';
 import 'package:coderats/shared/theme/app_theme.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'onboarding.screen.dart';
 import 'code_exchange.screen.dart';
@@ -34,7 +34,7 @@ class _TelaInicioState extends State<TelaInicio> {
   }
   
   Future<void> _launchGitHubLogin() async {
-    final String baseUrl = dotenv.env['BASE_API_URL'] ?? 'http://localhost:8080';
+    final String baseUrl = Env.baseApiUrl;
     final String githubLoginUrl = '$baseUrl/auth/github/login';
     final Uri uri = Uri.parse(githubLoginUrl);
 

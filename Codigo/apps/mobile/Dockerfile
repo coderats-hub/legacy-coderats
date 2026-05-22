@@ -16,8 +16,13 @@ RUN flutter pub get
 # Copy the rest of the source
 COPY . .
 
+ARG BASE_API_URL=
+ARG USE_MOCK_API=false
+
 # Build Flutter web to a dedicated folder
-RUN flutter build web --release --web-renderer=html --output /app/build/web
+RUN flutter build web --release --web-renderer=html --output /app/build/web \
+  --dart-define=BASE_API_URL="${BASE_API_URL}" \
+  --dart-define=USE_MOCK_API="${USE_MOCK_API}"
 
 ############
 # Runtime  #
