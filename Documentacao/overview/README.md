@@ -12,6 +12,7 @@ Esta pasta concentra toda a documentação em Markdown do projeto CodeRats.
 6. [Arquitetura do Mobile](03-arquitetura-mobile.md)
 7. [Dados, Offline e Integrações](04-dados-integracao-e-offline.md)
 8. [Operação, Docker e CI/CD](05-devops-ci-cd-e-operacao.md)
+9. [Migracao AWS para Azure - Infraestrutura](06-migracao-aws-azure-infra.md)
 
 ## Documentos em PDF
 
