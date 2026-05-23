@@ -11,6 +11,7 @@ Este diretório centraliza os artefatos de planejamento, requisitos e especifica
 1. [Documento Base da Arquitetura](overview/doc_base.md)
 2. [Fluxo GitHub e Governança](overview/doc_gitflow.md)
 3. [Índice da Série Técnica](overview/README.md)
+4. [Storage de imagens — Azure Blob](09-storage-imagens-azure-blob.md)
 
 ## PDF
 
