@@ -89,7 +89,8 @@ jobs:
           docker push "${image}"
           docker push "${alias_image}"
 
-          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          short_image="${BACKEND_IMAGE_NAME}:${{ steps.meta.outputs.tag }}"
+          echo "image=${short_image}" >> "$GITHUB_OUTPUT"
 
   start-postgres:
     name: Start PostgreSQL for Deploy
@@ -113,6 +114,7 @@ jobs:
       SECURITY_JWT_SECRET: ${{ secrets.SECURITY_JWT_SECRET }}
       OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
     steps:
       - name: Azure login
         uses: azure/login@v2
@@ -151,6 +153,18 @@ jobs:
               openai-api-key="${OPENAI_API_KEY}" \
             --output none
 
+      - name: Resolve ACR login server
+        id: acr
+        shell: bash
+        run: |
+          set -euo pipefail
+          login_server="$(az acr show \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --name "${AZURE_ACR_NAME}" \
+            --query loginServer \
+            --output tsv)"
+          echo "login_server=${login_server}" >> "$GITHUB_OUTPUT"
+
       - name: Deploy image to Container App
         shell: bash
         run: |
@@ -160,6 +174,9 @@ jobs:
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --name "${AZURE_CONTAINER_APP_NAME}" \
             --image "${{ needs.backend.outputs.image }}" \
+            --registry-server "${{ steps.acr.outputs.login_server }}" \
+            --registry-username "${AZURE_ACR_NAME}" \
+            --registry-password "${ACR_PASSWORD}" \
             --set-env-vars \
               DB_PASS=secretref:db-pass \
               SECURITY_JWT_SECRET=secretref:security-jwt-secret \
