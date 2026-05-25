@@ -10,7 +10,7 @@ resource "azurerm_postgresql_flexible_server" "main" {
   backup_retention_days         = 7
   geo_redundant_backup_enabled  = false
   public_network_access_enabled = true
-  zone                          = "1"
+  zone                          = var.postgres_zone
   tags                          = local.common_tags
 
   lifecycle {

@@ -102,6 +102,12 @@ variable "postgres_sku_name" {
   default     = "B_Standard_B1ms"
 }
 
+variable "postgres_zone" {
+  description = "Optional availability zone for PostgreSQL Flexible Server. Leave null for Azure/provider default, especially when importing a server created manually."
+  type        = string
+  default     = null
+}
+
 variable "postgres_storage_mb" {
   description = "PostgreSQL storage size in MB."
   type        = number

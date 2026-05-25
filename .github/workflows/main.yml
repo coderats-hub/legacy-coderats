@@ -107,7 +107,7 @@ jobs:
     env:
       DB_PASS: ${{ secrets.DB_PASS }}
       SECURITY_JWT_SECRET: ${{ secrets.SECURITY_JWT_SECRET }}
-      GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.GITHUB_OAUTH_CLIENT_SECRET }}
+      OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - name: Azure login
@@ -121,7 +121,7 @@ jobs:
           set -euo pipefail
 
           missing=0
-          for name in DB_PASS SECURITY_JWT_SECRET GITHUB_OAUTH_CLIENT_SECRET OPENAI_API_KEY; do
+          for name in DB_PASS SECURITY_JWT_SECRET OAUTH_CLIENT_SECRET OPENAI_API_KEY; do
             if [[ -z "${!name:-}" ]]; then
               echo "::error::Missing required secret: ${name}"
               missing=1
@@ -143,7 +143,7 @@ jobs:
             --secrets \
               db-pass="${DB_PASS}" \
               security-jwt-secret="${SECURITY_JWT_SECRET}" \
-              github-oauth-client-secret="${GITHUB_OAUTH_CLIENT_SECRET}" \
+              github-oauth-client-secret="${OAUTH_CLIENT_SECRET}" \
               openai-api-key="${OPENAI_API_KEY}" \
             --output none
 
@@ -159,8 +159,8 @@ jobs:
             --set-env-vars \
               DB_PASS=secretref:db-pass \
               SECURITY_JWT_SECRET=secretref:security-jwt-secret \
-              GITHUB_OAUTH_CLIENT_SECRET_DEV=secretref:github-oauth-client-secret \
-              GITHUB_OAUTH_CLIENT_SECRET_PROD=secretref:github-oauth-client-secret \
+              OAUTH_CLIENT_SECRET_DEV=secretref:github-oauth-client-secret \
+              OAUTH_CLIENT_SECRET_PROD=secretref:github-oauth-client-secret \
               OPENAI_API_KEY=secretref:openai-api-key \
             --output none
 

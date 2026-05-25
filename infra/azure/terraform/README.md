@@ -111,6 +111,7 @@ Nao execute `terraform apply` ou `terraform destroy` sem revisar o plano. `destr
 - `postgres_database_name`
 - `postgres_location`
 - `postgres_name_suffix`
+- `postgres_zone`
 - `storage_container_name`
 - `storage_base_path`
 - `cors_allowed_origins`
@@ -172,6 +173,8 @@ postgres_name_suffix = "gug04"
 ```
 
 Isso altera apenas o nome do PostgreSQL. Os nomes de ACR, Storage Account e Key Vault continuam usando `name_suffix`.
+
+`postgres_zone` fica `null` por padrao. Evite alterar zona depois que o Flexible Server existir, pois o Azure nao permite mudar essa configuracao diretamente em servidores sem alta disponibilidade.
 
 ## Controle de Custo do PostgreSQL
 
