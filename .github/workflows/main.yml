@@ -65,11 +65,9 @@ jobs:
 
       - name: Login to ACR
         shell: bash
-        env:
-          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         run: |
           set -euo pipefail
-          echo "${ACR_PASSWORD}" | docker login "${{ steps.acr.outputs.login_server }}" -u "${AZURE_ACR_NAME}" --password-stdin
+          az acr login --name "${AZURE_ACR_NAME}"
 
       - name: Build and push backend image
         id: image
