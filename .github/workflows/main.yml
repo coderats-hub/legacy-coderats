@@ -165,8 +165,7 @@ jobs:
               SECURITY_JWT_SECRET=secretref:security-jwt-secret \
               OAUTH_CLIENT_SECRET_DEV=secretref:github-oauth-client-secret \
               OAUTH_CLIENT_SECRET_PROD=secretref:github-oauth-client-secret \
-              OPENAI_API_KEY=secretref:openai-api-key \
-            --output none
+              OPENAI_API_KEY=secretref:openai-api-key
 
   mobile-android:
     name: Build Android APK
