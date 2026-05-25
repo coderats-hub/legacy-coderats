@@ -226,10 +226,9 @@ jobs:
 
       - name: Sanitize branch name
         id: sanitize
-        shell: bash
         run: |
-          branch_name="${GITHUB_REF_NAME//\//-}"
-          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
+          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
