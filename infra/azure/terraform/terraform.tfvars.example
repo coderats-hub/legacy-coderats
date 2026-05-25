@@ -1,0 +1,49 @@
+# Copy to terraform.tfvars for local use.
+# Never commit terraform.tfvars or real secret values.
+
+project_name = "coderats"
+environment  = "dev"
+location     = "eastus"
+name_suffix  = "dev01"
+
+tags = {
+  project    = "coderats"
+  owner      = "platform"
+  costcenter = "dev"
+}
+
+acr_sku           = "Basic"
+acr_admin_enabled = false
+
+postgres_admin_username = "coderats_admin"
+postgres_admin_password = "CHANGE_ME_DO_NOT_COMMIT_REAL_VALUE"
+postgres_database_name  = "coderats_db"
+postgres_version        = "16"
+postgres_location       = "northcentralus"
+postgres_name_suffix    = ""
+postgres_sku_name       = "B_Standard_B1ms"
+postgres_storage_mb     = 32768
+
+storage_container_name = "coderats-images"
+storage_base_path      = "public/images/"
+
+backend_image        = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+backend_port         = 8080
+backend_cpu          = 0.25
+backend_memory       = "0.5Gi"
+backend_min_replicas = 0
+backend_max_replicas = 1
+
+cors_allowed_origins = [
+  "http://localhost:8081"
+]
+
+github_oauth_client_id    = "CHANGE_ME"
+github_oauth_redirect_uri = "https://CHANGE_ME/auth/github/callback"
+
+openai_base_url      = "https://api.openai.com/v1"
+openai_chat_endpoint = "/chat/completions"
+openai_model         = "gpt-4.1-mini"
+openai_system_prompt = ""
+
+security_jwt_expiration_ms = 86400000

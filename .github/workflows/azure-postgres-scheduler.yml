@@ -1,0 +1,166 @@
+name: Azure PostgreSQL Scheduler
+
+on:
+  schedule:
+    # Stop the dev database every hour unless a manual/deploy keep-alive window is active.
+    - cron: "15 * * * *"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "PostgreSQL action"
+        required: true
+        type: choice
+        default: status
+        options:
+          - status
+          - start
+          - stop
+          - auto-stop
+      keep_running_minutes:
+        description: "Minutes to keep the server running after a manual start"
+        required: false
+        type: number
+        default: 240
+  workflow_call:
+    inputs:
+      action:
+        description: "PostgreSQL action"
+        required: false
+        type: string
+        default: start
+      keep_running_minutes:
+        description: "Minutes to keep the server running after deploy start"
+        required: false
+        type: number
+        default: 120
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-control:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-coderats-dev' }}
+      AZURE_POSTGRES_SERVER: ${{ vars.AZURE_POSTGRES_SERVER || 'psql-coderats-dev-gug04' }}
+      REQUESTED_ACTION: ${{ inputs.action || 'auto-stop' }}
+      KEEP_RUNNING_MINUTES: ${{ inputs.keep_running_minutes || 240 }}
+
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Control PostgreSQL Flexible Server
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          action="${REQUESTED_ACTION}"
+          keep_minutes="${KEEP_RUNNING_MINUTES}"
+          now_epoch="$(date -u +%s)"
+          now_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          echo "Action: ${action}"
+          echo "Server: ${AZURE_POSTGRES_SERVER}"
+          echo "Resource group: ${AZURE_RESOURCE_GROUP}"
+
+          server_json="$(az postgres flexible-server show \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --name "${AZURE_POSTGRES_SERVER}" \
+            --output json)"
+
+          state="$(jq -r '.state // empty' <<< "${server_json}")"
+          keep_until="$(jq -r '.tags.keepRunningUntil // empty' <<< "${server_json}")"
+
+          echo "Current state: ${state:-unknown}"
+          echo "keepRunningUntil: ${keep_until:-not-set}"
+
+          apply_scheduler_tags() {
+            local keep_until_value="$1"
+            local last_field="$2"
+
+            az postgres flexible-server update \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --name "${AZURE_POSTGRES_SERVER}" \
+              --tags \
+                project=coderats \
+                environment=dev \
+                managed_by=terraform \
+                owner=platform \
+                costcenter=dev \
+                autoStopManagedBy=github-actions \
+                keepRunningUntil="${keep_until_value}" \
+                "${last_field}=${now_iso}" \
+              --output none
+          }
+
+          start_server() {
+            local marker="$1"
+            local until_iso
+            until_iso="$(date -u -d "+${keep_minutes} minutes" +%Y-%m-%dT%H:%M:%SZ)"
+
+            if [[ "${state}" == "Ready" ]]; then
+              echo "PostgreSQL is already running."
+            else
+              echo "Starting PostgreSQL..."
+              az postgres flexible-server start \
+                --resource-group "${AZURE_RESOURCE_GROUP}" \
+                --name "${AZURE_POSTGRES_SERVER}" \
+                --output none
+            fi
+
+            apply_scheduler_tags "${until_iso}" "${marker}"
+            echo "Server will be protected from auto-stop until ${until_iso}."
+          }
+
+          stop_server() {
+            if [[ "${state}" == "Stopped" ]]; then
+              echo "PostgreSQL is already stopped."
+            else
+              echo "Stopping PostgreSQL..."
+              az postgres flexible-server stop \
+                --resource-group "${AZURE_RESOURCE_GROUP}" \
+                --name "${AZURE_POSTGRES_SERVER}" \
+                --output none
+            fi
+
+            apply_scheduler_tags "1970-01-01T00:00:00Z" "lastAutoStop"
+          }
+
+          case "${action}" in
+            status)
+              echo "No changes requested."
+              ;;
+            start)
+              if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+                start_server "lastDeployStart"
+              else
+                start_server "lastManualStart"
+              fi
+              ;;
+            stop)
+              stop_server
+              ;;
+            auto-stop)
+              if [[ "${state}" != "Ready" ]]; then
+                echo "Server is not running; nothing to stop."
+                exit 0
+              fi
+
+              if [[ -n "${keep_until}" ]]; then
+                keep_until_epoch="$(date -u -d "${keep_until}" +%s 2>/dev/null || echo 0)"
+                if (( keep_until_epoch > now_epoch )); then
+                  echo "Keep-alive window is active until ${keep_until}; skipping stop."
+                  exit 0
+                fi
+              fi
+
+              stop_server
+              ;;
+            *)
+              echo "Unsupported action: ${action}" >&2
+              exit 1
+              ;;
+          esac

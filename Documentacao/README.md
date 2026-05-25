@@ -12,6 +12,7 @@ Este diretório centraliza os artefatos de planejamento, requisitos e especifica
 2. [Fluxo GitHub e Governança](overview/doc_gitflow.md)
 3. [Índice da Série Técnica](overview/README.md)
 4. [Storage de imagens — Azure Blob](09-storage-imagens-azure-blob.md)
+5. [Infraestrutura Azure com Terraform](../infra/azure/terraform/README.md)
 
 ## PDF
 

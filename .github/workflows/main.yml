@@ -1,60 +1,171 @@
-name: Coderats CI/CD
+name: CodeRats Azure CI/CD
 
 on:
   push:
     branches:
       - main
       - development
-      - 'feature/**'
+      - "feature/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-coderats-dev' }}
+  AZURE_ACR_NAME: ${{ vars.AZURE_ACR_NAME || 'crcoderatsdevgug01' }}
+  AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME || 'ca-coderats-dev-backend' }}
+  BACKEND_IMAGE_NAME: coderats-backend
 
 jobs:
-  # ------------------------------------------------------------
-  # 1. Backend — Build & Push Docker Image (sempre Conta 1)
-  # ------------------------------------------------------------
   backend:
+    name: Build and Push Backend
     runs-on: ubuntu-latest
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_SYSTEM_PROMPT: ${{ vars.OPENAI_SYSTEM_PROMPT }}
     outputs:
-      image_tag: ${{ steps.meta.outputs.tag }}
+      image: ${{ steps.image.outputs.image }}
+      tag: ${{ steps.meta.outputs.tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (Conta 1 - ECR)
-        uses: aws-actions/configure-aws-credentials@v3
+      - name: Azure login
+        uses: azure/login@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Export backend env vars
-        run: |
-          echo "ECR_REPO_API=${{ vars.ECR_REPO_API }}" >> $GITHUB_ENV
-
-      - name: Define tag (prod/staging)
+      - name: Define image tags
         id: meta
+        shell: bash
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "tag=prod" >> $GITHUB_OUTPUT
+          set -euo pipefail
+
+          short_sha="${GITHUB_SHA::12}"
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            env_tag="prod"
+          elif [[ "${GITHUB_REF_NAME}" == "development" ]]; then
+            env_tag="dev"
           else
-            echo "tag=staging" >> $GITHUB_OUTPUT
+            env_tag="staging"
           fi
 
-      - name: Build and push backend image
-        run: |
-          echo "📦 Buildando e enviando imagem do backend..."
-          docker build -t $ECR_REPO_API:${{ steps.meta.outputs.tag }} ./Codigo/apps/backend
-          docker push $ECR_REPO_API:${{ steps.meta.outputs.tag }}
+          echo "tag=${env_tag}-${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "alias=${env_tag}" >> "$GITHUB_OUTPUT"
 
-  # ------------------------------------------------------------
-  # 2. Mobile Android — Build APK (depende do backend)
-  # ------------------------------------------------------------
+      - name: Resolve ACR login server
+        id: acr
+        shell: bash
+        run: |
+          set -euo pipefail
+          login_server="$(az acr show \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --name "${AZURE_ACR_NAME}" \
+            --query loginServer \
+            --output tsv)"
+          echo "login_server=${login_server}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to ACR
+        shell: bash
+        run: az acr login --name "${AZURE_ACR_NAME}"
+
+      - name: Build and push backend image
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image="${{ steps.acr.outputs.login_server }}/${BACKEND_IMAGE_NAME}:${{ steps.meta.outputs.tag }}"
+          alias_image="${{ steps.acr.outputs.login_server }}/${BACKEND_IMAGE_NAME}:${{ steps.meta.outputs.alias }}"
+
+          docker build \
+            -f Codigo/apps/backend/Dockerfile \
+            -t "${image}" \
+            -t "${alias_image}" \
+            Codigo/apps/backend
+
+          docker push "${image}"
+          docker push "${alias_image}"
+
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+
+  start-postgres:
+    name: Start PostgreSQL for Deploy
+    needs: backend
+    if: github.ref_name == 'main' || github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
+    uses: ./.github/workflows/azure-postgres-scheduler.yml
+    with:
+      action: start
+      keep_running_minutes: 120
+    secrets: inherit
+
+  deploy-backend:
+    name: Deploy Backend to Azure Container Apps
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - start-postgres
+    if: github.ref_name == 'main' || github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
+    env:
+      DB_PASS: ${{ secrets.DB_PASS }}
+      SECURITY_JWT_SECRET: ${{ secrets.SECURITY_JWT_SECRET }}
+      GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.GITHUB_OAUTH_CLIENT_SECRET }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Validate deploy secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=0
+          for name in DB_PASS SECURITY_JWT_SECRET GITHUB_OAUTH_CLIENT_SECRET OPENAI_API_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required secret: ${name}"
+              missing=1
+            fi
+          done
+
+          if [[ "${missing}" -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Configure Container App secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          az containerapp secret set \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --name "${AZURE_CONTAINER_APP_NAME}" \
+            --secrets \
+              db-pass="${DB_PASS}" \
+              security-jwt-secret="${SECURITY_JWT_SECRET}" \
+              github-oauth-client-secret="${GITHUB_OAUTH_CLIENT_SECRET}" \
+              openai-api-key="${OPENAI_API_KEY}" \
+            --output none
+
+      - name: Deploy image to Container App
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          az containerapp update \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --name "${AZURE_CONTAINER_APP_NAME}" \
+            --image "${{ needs.backend.outputs.image }}" \
+            --set-env-vars \
+              DB_PASS=secretref:db-pass \
+              SECURITY_JWT_SECRET=secretref:security-jwt-secret \
+              GITHUB_OAUTH_CLIENT_SECRET_DEV=secretref:github-oauth-client-secret \
+              GITHUB_OAUTH_CLIENT_SECRET_PROD=secretref:github-oauth-client-secret \
+              OPENAI_API_KEY=secretref:openai-api-key \
+            --output none
+
   mobile-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
     needs: backend
     steps:
@@ -82,9 +193,10 @@ jobs:
 
       - name: Sanitize branch name
         id: sanitize
+        shell: bash
         run: |
-          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          branch_name="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -92,10 +204,8 @@ jobs:
           name: coderats-apk-${{ steps.sanitize.outputs.branch_name }}
           path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
 
-  # ------------------------------------------------------------
-  # 2b. Mobile iOS — Build IPA (sem assinatura) em macOS
-  # ------------------------------------------------------------
   mobile-ios:
+    name: Build iOS IPA
     runs-on: macos-latest
     needs: backend
     steps:
@@ -115,7 +225,7 @@ jobs:
         working-directory: Codigo/apps/mobile/ios
         run: pod install --repo-update
 
-      - name: Build iOS IPA (no code sign)
+      - name: Build iOS IPA without code signing
         working-directory: Codigo/apps/mobile
         run: flutter build ipa --release --no-codesign
 
@@ -129,15 +239,12 @@ jobs:
           cd build/ios
           /usr/bin/zip -r ipa/Runner.ipa Payload
 
-      - name: List IPA outputs (debug)
-        working-directory: Codigo/apps/mobile
-        run: ls -R build/ios
-
       - name: Sanitize branch name
         id: sanitize
+        shell: bash
         run: |
-          BRANCH_NAME="${GITHUB_REF_NAME//\//-}"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          branch_name="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
@@ -146,12 +253,8 @@ jobs:
           path: Codigo/apps/mobile/build/ios/ipa/*.ipa
           if-no-files-found: error
 
-  # ------------------------------------------------------------
-  # 3. Web — Build (Flutter) e Deploy no S3
-  #    - main      -> Conta 2 (prod)
-  #    - dev/feat  -> Conta 1 (dev/staging)
-  # ------------------------------------------------------------
   web:
+    name: Build Flutter Web
     runs-on: ubuntu-latest
     needs: backend
     steps:
@@ -171,89 +274,15 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: flutter build web --release
 
-      # Credenciais Conta 1 — usadas em development + feature/**
-      - name: Configure AWS credentials (Conta 1 - dev/staging)
-        if: github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      # Credenciais Conta 2 — usadas em main
-      - name: Configure AWS credentials (Conta 2 - prod)
-        if: github.ref_name == 'main'
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS2_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION_ACCOUNT2 }}
-
-      - name: Deploy Web to S3 (main - Conta 2)
-        if: github.ref_name == 'main'
+      - name: Sanitize branch name
+        id: sanitize
+        shell: bash
         run: |
-          echo "🚀 Publicando versão WEB em PRODUÇÃO (Conta 2 - S3_BUCKET_WEB_PROD_ACCOUNT2)"
-          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_PROD_ACCOUNT2 }} --delete
+          branch_name="${GITHUB_REF_NAME//\//-}"
+          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy Web to S3 (development - Conta 1)
-        if: github.ref_name == 'development'
-        run: |
-          echo "🚧 Publicando versão WEB em DEVELOPMENT (Conta 1 - S3_BUCKET_WEB_DEVELOP)"
-          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_DEVELOP }} --delete
-
-      - name: Deploy Web to S3 (feature to staging - Conta 1)
-        if: startsWith(github.ref, 'refs/heads/feature/')
-        run: |
-          echo "🚧 Publicando versão WEB em STAGING (Conta 1 - S3_BUCKET_WEB_STAGING)"
-          aws s3 sync Codigo/apps/mobile/build/web s3://${{ vars.S3_BUCKET_WEB_STAGING }} --delete
-
-  # ------------------------------------------------------------
-  # 4. Deploy Backend to EC2 (ASG)
-  #    - main       -> Conta 2 (prod)
-  #    - development-> Conta 1 (staging)
-  # ------------------------------------------------------------
-  deploy-backend:
-    runs-on: ubuntu-latest
-    needs: backend
-    if: github.ref_name == 'main' || github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_SYSTEM_PROMPT: ${{ vars.OPENAI_SYSTEM_PROMPT }}
-    steps:
-      # Credenciais Conta 1 — usadas em development
-      - name: Configure AWS credentials (Conta 1 - staging)
-        if: github.ref_name == 'development' || startsWith(github.ref, 'refs/heads/feature/')
-        uses: aws-actions/configure-aws-credentials@v3
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
         with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ vars.AWS_REGION }}
-
-      # Credenciais Conta 2 — usadas em main
-      - name: Configure AWS credentials (Conta 2 - prod)
-        if: github.ref_name == 'main'
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id:     ${{ secrets.AWS2_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS2_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ vars.AWS_REGION_ACCOUNT2 }}
-
-      - name: Trigger ASG refresh
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            ASG_NAME="${{ vars.ASG_NAME_PROD_ACCOUNT2 }}"
-            echo "🚀 Atualizando ambiente de PRODUÇÃO (Conta 2): $ASG_NAME"
-            aws autoscaling start-instance-refresh \
-             --region ${{ vars.AWS_REGION_ACCOUNT2}} \
-             --auto-scaling-group-name "$ASG_NAME" \
-             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
-          else
-            ASG_NAME="${{ vars.ASG_NAME_STAGING }}"
-            echo "🚧 Atualizando ambiente de STAGING (Conta 1): $ASG_NAME"
-            aws autoscaling start-instance-refresh \
-             --region ${{ vars.AWS_REGION }} \
-             --auto-scaling-group-name "$ASG_NAME" \
-             --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
-          fi
-
-          
+          name: coderats-web-${{ steps.sanitize.outputs.branch_name }}
+          path: Codigo/apps/mobile/build/web
