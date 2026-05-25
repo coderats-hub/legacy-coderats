@@ -17,6 +17,7 @@ env:
   AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME || 'ca-coderats-dev-backend' }}
   BACKEND_IMAGE_NAME: coderats-backend
   BASE_API_URL: ${{ vars.BASE_API_URL || 'https://ca-coderats-dev-backend.redocean-3abdf16b.eastus.azurecontainerapps.io' }}
+  CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS || 'http://localhost:8082,http://localhost:8081,http://localhost:8080,https://stcoderatsdevgug01.z13.web.core.windows.net' }}
 
 jobs:
   backend:
@@ -196,7 +197,8 @@ jobs:
               SECURITY_JWT_SECRET=secretref:security-jwt-secret \
               OAUTH_CLIENT_SECRET_DEV=secretref:github-oauth-client-secret \
               OAUTH_CLIENT_SECRET_PROD=secretref:github-oauth-client-secret \
-              OPENAI_API_KEY=secretref:openai-api-key
+              OPENAI_API_KEY=secretref:openai-api-key \
+              CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS}"
 
   mobile-android:
     name: Build Android APK
