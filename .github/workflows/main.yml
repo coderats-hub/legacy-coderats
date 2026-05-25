@@ -69,7 +69,12 @@ jobs:
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         run: |
           set -euo pipefail
-          echo "${ACR_PASSWORD}" | docker login "${{ steps.acr.outputs.login_server }}" -u "${AZURE_ACR_NAME}" --password-stdin
+          if [[ -n "${ACR_PASSWORD:-}" ]] && echo "${ACR_PASSWORD}" | docker login "${{ steps.acr.outputs.login_server }}" -u "${AZURE_ACR_NAME}" --password-stdin; then
+            echo "Authenticated to ACR with ACR_PASSWORD."
+          else
+            echo "ACR_PASSWORD login failed. Falling back to az acr login."
+            az acr login --name "${AZURE_ACR_NAME}"
+          fi
 
       - name: Build and push backend image
         id: image
@@ -160,12 +165,21 @@ jobs:
         run: |
           set -euo pipefail
           login_server=$(az acr show --name "$AZURE_ACR_NAME" --resource-group "$AZURE_RESOURCE_GROUP" --query loginServer -o tsv)
-          az containerapp registry set \
+          if az containerapp registry set \
             --name "$AZURE_CONTAINER_APP_NAME" \
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --server "$login_server" \
-            --username "$AZURE_ACR_NAME" \
-            --password "$ACR_PASSWORD"
+            --identity system; then
+            echo "Configured Container App registry with managed identity."
+          else
+            echo "Managed identity registry setup failed. Falling back to ACR_PASSWORD."
+            az containerapp registry set \
+              --name "$AZURE_CONTAINER_APP_NAME" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --server "$login_server" \
+              --username "$AZURE_ACR_NAME" \
+              --password "$ACR_PASSWORD"
+          fi
 
       - name: Deploy image to Container App
         shell: bash
