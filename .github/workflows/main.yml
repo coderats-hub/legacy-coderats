@@ -208,7 +208,17 @@ jobs:
 
       - name: Build APK
         working-directory: Codigo/apps/mobile
-        run: flutter build apk --release
+        run: flutter build apk --release --target-platform android-arm,android-arm64,android-x64 --split-per-abi
+
+      - name: Validate APK integrity
+        working-directory: Codigo/apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh build/app/outputs/flutter-apk/
+          unzip -t build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          unzip -t build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          unzip -t build/app/outputs/flutter-apk/app-x86_64-release.apk
 
       - name: Sanitize branch name
         id: sanitize
@@ -221,7 +231,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coderats-apk-${{ steps.sanitize.outputs.branch_name }}
-          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/*.apk
 
   mobile-ios:
     name: Build iOS IPA
@@ -276,6 +286,8 @@ jobs:
     name: Build Flutter Web
     runs-on: ubuntu-latest
     needs: backend
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-coderats-dev' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -292,6 +304,46 @@ jobs:
       - name: Build Flutter Web
         working-directory: Codigo/apps/mobile
         run: flutter build web --release
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Resolve storage account for static website
+        id: storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          storage_account=$(az storage account list \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "[?primaryEndpoints.web != null] | [0].name" \
+            -o tsv)
+          if [[ -z "${storage_account}" ]]; then
+            echo "::error::No Storage Account with static website endpoint found in ${AZURE_RESOURCE_GROUP}."
+            exit 1
+          fi
+          echo "name=${storage_account}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Flutter Web to Azure Storage static website
+        shell: bash
+        run: |
+          set -euo pipefail
+          connection_string=$(az storage account show-connection-string \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "${{ steps.storage.outputs.name }}" \
+            -o tsv)
+          az storage blob upload-batch \
+            --source Codigo/apps/mobile/build/web \
+            --destination '$web' \
+            --account-name "${{ steps.storage.outputs.name }}" \
+            --connection-string "$connection_string" \
+            --overwrite
+          web_url=$(az storage account show \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "${{ steps.storage.outputs.name }}" \
+            --query "primaryEndpoints.web" -o tsv)
+          echo "Web published to: ${web_url}"
 
       - name: Sanitize branch name
         id: sanitize
