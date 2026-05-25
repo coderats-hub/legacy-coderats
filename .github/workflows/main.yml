@@ -1,4 +1,4 @@
-name: CodeRats Azure CI/CD
+﻿name: CodeRats Azure CI/CD
 
 on:
   push:
@@ -65,9 +65,11 @@ jobs:
 
       - name: Login to ACR
         shell: bash
+        env:
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
         run: |
           set -euo pipefail
-          az acr login --name "${AZURE_ACR_NAME}"
+          echo "${ACR_PASSWORD}" | docker login "${{ steps.acr.outputs.login_server }}" -u "${AZURE_ACR_NAME}" --password-stdin
 
       - name: Build and push backend image
         id: image
@@ -206,17 +208,7 @@ jobs:
 
       - name: Build APK
         working-directory: Codigo/apps/mobile
-        run: flutter build apk --release --target-platform android-arm,android-arm64,android-x64 --split-per-abi
-
-      - name: Validate APK integrity
-        working-directory: Codigo/apps/mobile
-        shell: bash
-        run: |
-          set -euo pipefail
-          ls -lh build/app/outputs/flutter-apk/
-          unzip -t build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-          unzip -t build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-          unzip -t build/app/outputs/flutter-apk/app-x86_64-release.apk
+        run: flutter build apk --release
 
       - name: Sanitize branch name
         id: sanitize
@@ -229,7 +221,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coderats-apk-${{ steps.sanitize.outputs.branch_name }}
-          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/*.apk
+          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
 
   mobile-ios:
     name: Build iOS IPA
