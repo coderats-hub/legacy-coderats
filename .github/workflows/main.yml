@@ -16,6 +16,7 @@ env:
   AZURE_ACR_NAME: ${{ vars.AZURE_ACR_NAME || 'crcoderatsdevgug01' }}
   AZURE_CONTAINER_APP_NAME: ${{ vars.AZURE_CONTAINER_APP_NAME || 'ca-coderats-dev-backend' }}
   BACKEND_IMAGE_NAME: coderats-backend
+  BASE_API_URL: ${{ vars.BASE_API_URL || 'https://ca-coderats-dev-backend.redocean-3abdf16b.eastus.azurecontainerapps.io' }}
 
 jobs:
   backend:
@@ -222,7 +223,28 @@ jobs:
 
       - name: Build APK
         working-directory: Codigo/apps/mobile
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
+          flutter build apk --debug
+
+      - name: Validate APK files
+        working-directory: Codigo/apps/mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          APKSIGNER_BIN="$(command -v apksigner || true)"
+          if [[ -z "$APKSIGNER_BIN" ]]; then
+            APKSIGNER_BIN="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -type f -name apksigner | sort | tail -n1)"
+          fi
+          if [[ -z "$APKSIGNER_BIN" ]]; then
+            echo "::error::apksigner not found on runner."
+            exit 1
+          fi
+          ls -lh build/app/outputs/flutter-apk/
+          unzip -t build/app/outputs/flutter-apk/app-release.apk
+          unzip -t build/app/outputs/flutter-apk/app-debug.apk
+          "$APKSIGNER_BIN" verify --verbose --print-certs build/app/outputs/flutter-apk/app-release.apk
+          "$APKSIGNER_BIN" verify --verbose --print-certs build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Sanitize branch name
         id: sanitize
@@ -234,7 +256,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coderats-apk-${{ steps.sanitize.outputs.branch_name }}
-          path: Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            Codigo/apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+            Codigo/apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
 
   mobile-ios:
     name: Build iOS IPA
@@ -306,7 +330,7 @@ jobs:
         working-directory: Codigo/apps/mobile
         run: |
           flutter build web --release \
-            --dart-define=BASE_API_URL=https://ca-coderats-dev-backend.redocean-3abdf16b.eastus.azurecontainerapps.io
+            --dart-define=BASE_API_URL="${BASE_API_URL}"
 
       - name: Sanitize branch name
         id: sanitize
