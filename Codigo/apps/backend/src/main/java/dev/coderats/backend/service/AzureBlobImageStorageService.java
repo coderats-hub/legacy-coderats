@@ -45,9 +45,6 @@ public class AzureBlobImageStorageService implements ImageStorageService {
         }
 
         this.containerClient = serviceClient.getBlobContainerClient(containerName);
-        if (!this.containerClient.exists()) {
-            this.containerClient.create();
-        }
         this.basePath = normalizeBasePath(basePath);
         this.publicBaseUrl = trimTrailingSlash(publicBaseUrl);
     }
@@ -65,6 +62,11 @@ public class AzureBlobImageStorageService implements ImageStorageService {
 
         String extension = extractExtension(file.getOriginalFilename());
         String blobName = basePath + UUID.randomUUID() + extension;
+
+        // Lazy container check avoids crashing the whole app at startup when Blob auth is temporarily unavailable.
+        if (!containerClient.exists()) {
+            containerClient.create();
+        }
 
         BlockBlobClient blobClient = containerClient.getBlobClient(blobName).getBlockBlobClient();
         try (InputStream is = file.getInputStream()) {
