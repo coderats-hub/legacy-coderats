@@ -89,8 +89,8 @@ jobs:
           docker push "${image}"
           docker push "${alias_image}"
 
-          short_image="${BACKEND_IMAGE_NAME}:${{ steps.meta.outputs.tag }}"
-          echo "image=${short_image}" >> "$GITHUB_OUTPUT"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+
 
   start-postgres:
     name: Start PostgreSQL for Deploy
