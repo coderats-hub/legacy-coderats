@@ -304,7 +304,9 @@ jobs:
 
       - name: Build Flutter Web
         working-directory: Codigo/apps/mobile
-        run: flutter build web --release
+        run: |
+          flutter build web --release \
+            --dart-define=BASE_API_URL=https://ca-coderats-dev-backend.redocean-3abdf16b.eastus.azurecontainerapps.io
 
       - name: Sanitize branch name
         id: sanitize
