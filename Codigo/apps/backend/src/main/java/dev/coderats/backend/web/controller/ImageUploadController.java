@@ -39,17 +39,17 @@ public class ImageUploadController {
             @RequestParam(value = "targetType", required = false) String targetType,
             @RequestParam(value = "entityId", required = false) String entityId) {
         try {
-            UUID actorId = getCurrentUserId();
-
             if (StringUtils.hasText(targetType) ^ StringUtils.hasText(entityId)) {
                 return ResponseEntity.badRequest().build();
             }
 
             UUID parsedEntityId = null;
             String normalizedTarget = null;
+            UUID actorId = null;
             if (StringUtils.hasText(targetType) && StringUtils.hasText(entityId)) {
                 parsedEntityId = UUID.fromString(entityId);
                 normalizedTarget = TargetType.from(targetType).name();
+                actorId = getCurrentUserId();
             }
 
             var uploaded = imageStorageService.upload(file);
