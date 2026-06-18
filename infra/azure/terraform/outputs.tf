@@ -38,6 +38,11 @@ output "storage_public_base_url" {
   value       = local.storage_public_base_url
 }
 
+output "storage_static_website_endpoint" {
+  description = "Static website endpoint for the web app."
+  value       = azurerm_storage_account.images.primary_web_endpoint
+}
+
 output "key_vault_name" {
   description = "Key Vault name."
   value       = azurerm_key_vault.main.name

@@ -177,13 +177,13 @@ variable "cors_allowed_origins" {
 variable "github_oauth_client_id" {
   description = "GitHub OAuth client id for this environment. Not sensitive."
   type        = string
-  default     = ""
+  default     = "Ov23liYweFfryagjj22c"
 }
 
 variable "github_oauth_redirect_uri" {
   description = "GitHub OAuth redirect URI for this environment."
   type        = string
-  default     = ""
+  default     = "https://ca-coderats-dev-backend.redocean-3abdf16b.eastus.azurecontainerapps.io/auth/github/callback"
 }
 
 variable "openai_base_url" {

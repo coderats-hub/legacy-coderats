@@ -8,7 +8,13 @@ resource "azurerm_storage_account" "images" {
   min_tls_version                 = "TLS1_2"
   https_traffic_only_enabled      = true
   allow_nested_items_to_be_public = true
-  tags                            = local.common_tags
+
+  static_website {
+    index_document     = "index.html"
+    error_404_document = "index.html"
+  }
+
+  tags = local.common_tags
 }
 
 resource "azurerm_storage_container" "images" {
