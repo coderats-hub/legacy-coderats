@@ -1,7 +1,7 @@
 package dev.coderats.backend.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -69,8 +69,9 @@ public class AzureBlobImageStorageService implements ImageStorageService {
         }
 
         BlockBlobClient blobClient = containerClient.getBlobClient(blobName).getBlockBlobClient();
-        try (InputStream is = file.getInputStream()) {
-            blobClient.upload(is, file.getSize(), true);
+        try {
+            byte[] bytes = file.getBytes();
+            blobClient.upload(new ByteArrayInputStream(bytes), bytes.length, true);
             BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
             blobClient.setHttpHeaders(headers);
         } catch (IOException e) {
