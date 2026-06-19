@@ -129,6 +129,9 @@ jobs:
       AZURE_STORAGE_CONTAINER: ${{ vars.AZURE_STORAGE_CONTAINER || 'coderats-images' }}
       AZURE_STORAGE_BASE_PATH: ${{ vars.AZURE_STORAGE_BASE_PATH || 'public/images/' }}
       AZURE_STORAGE_PUBLIC_BASE_URL: ${{ vars.AZURE_STORAGE_PUBLIC_BASE_URL || 'https://coderatsdevstorage.blob.core.windows.net/coderats-images/' }}
+      AZURE_POSTGRES_SERVER: ${{ vars.AZURE_POSTGRES_SERVER || 'psql-coderats-dev-gug04' }}
+      POSTGRES_DATABASE_NAME: ${{ vars.POSTGRES_DATABASE_NAME || 'coderats_db' }}
+      POSTGRES_ADMIN_USERNAME: ${{ vars.POSTGRES_ADMIN_USERNAME || 'coderats_admin' }}
       ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
     steps:
       - name: Azure login
@@ -198,11 +201,20 @@ jobs:
         run: |
           set -euo pipefail
 
+          db_url="jdbc:postgresql://${AZURE_POSTGRES_SERVER}.postgres.database.azure.com:5432/${POSTGRES_DATABASE_NAME}?sslmode=require"
+
+          if [[ "${POSTGRES_ADMIN_USERNAME}" == *"@"* ]]; then
+            echo "::error::POSTGRES_ADMIN_USERNAME must be the Flexible Server login only, for example 'coderats_admin'. Do not use 'user@server'."
+            exit 1
+          fi
+
           az containerapp update \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --name "${AZURE_CONTAINER_APP_NAME}" \
             --image "${{ needs.backend.outputs.image }}" \
             --set-env-vars \
+              DB_URL="${db_url}" \
+              DB_USER="${POSTGRES_ADMIN_USERNAME}" \
               DB_PASS=secretref:db-pass \
               SECURITY_JWT_SECRET=secretref:security-jwt-secret \
               OAUTH_CLIENT_ID_DEV="${OAUTH_CLIENT_ID_DEV}" \
